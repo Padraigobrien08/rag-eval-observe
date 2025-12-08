@@ -1,0 +1,49 @@
+.PHONY: dev lint test typecheck format db migrate seed eval
+
+# Development
+dev:
+	pnpm dev
+
+# Linting
+lint:
+	pnpm lint
+	pnpm format:check
+
+# Testing
+test:
+	pnpm test
+
+# Type checking
+typecheck:
+	pnpm typecheck
+
+# Formatting
+format:
+	pnpm format
+
+# Database operations
+db:
+	docker compose up -d postgres
+
+# Database migrations
+migrate:
+	tsx src/lib/db/migrate.ts
+
+# Database seeding
+seed:
+	tsx src/lib/db/seed.ts
+
+# Evaluation
+eval:
+	cd backend && uv run python eval/run_eval.py
+
+# API (Python FastAPI)
+api:
+	cd backend && uv run uvicorn app.main:app --host 0.0.0.0 --port 8000
+
+api-dev:
+	cd backend && uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+
+api-test:
+	cd backend && uv run pytest
+

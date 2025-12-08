@@ -1,0 +1,49 @@
+{"query": "What is Retrieval-Augmented Generation?", "expected_sources": ["introduction-to-rag"], "expected_answer_contains": ["retrieval", "generation", "information"]}
+{"query": "How do vector embeddings work?", "expected_sources": ["vector-embeddings"], "expected_answer_contains": ["numerical", "semantic", "similarity"]}
+{"query": "What are the different chunking strategies?", "expected_sources": ["chunking-strategies"], "expected_answer_contains": ["fixed-size", "sentence", "semantic"]}
+{"query": "What is HNSW index?", "expected_sources": ["retrieval-methods"], "expected_answer_contains": ["hierarchical", "navigable", "small world"]}
+{"query": "How do you evaluate RAG systems?", "expected_sources": ["evaluation-metrics"], "expected_answer_contains": ["precision", "recall", "faithfulness"]}
+{"query": "What is cosine similarity?", "expected_sources": ["retrieval-methods", "vector-embeddings"], "expected_answer_contains": ["cosine", "angle", "vectors"]}
+{"query": "What are the benefits of RAG?", "expected_sources": ["introduction-to-rag"], "expected_answer_contains": ["accuracy", "up-to-date", "transparency"]}
+{"query": "What embedding models are popular?", "expected_sources": ["vector-embeddings"], "expected_answer_contains": ["OpenAI", "sentence transformers", "Cohere"]}
+{"query": "How does overlap work in chunking?", "expected_sources": ["chunking-strategies"], "expected_answer_contains": ["overlap", "context", "boundary"]}
+{"query": "What is IVFFLAT index?", "expected_sources": ["retrieval-methods"], "expected_answer_contains": ["inverted", "file", "compression"]}
+{"query": "What metrics measure answer quality?", "expected_sources": ["evaluation-metrics"], "expected_answer_contains": ["faithfulness", "relevance", "BLEU"]}
+{"query": "How does RAG combine retrieval and generation?", "expected_sources": ["introduction-to-rag"], "expected_answer_contains": ["retrieval", "generation", "knowledge base"]}
+{"query": "What is semantic chunking?", "expected_sources": ["chunking-strategies"], "expected_answer_contains": ["semantic", "boundaries", "coherence"]}
+{"query": "What is the difference between HNSW and IVFFLAT?", "expected_sources": ["retrieval-methods"], "expected_answer_contains": ["HNSW", "IVFFLAT", "performance"]}
+{"query": "What is precision at K?", "expected_sources": ["evaluation-metrics"], "expected_answer_contains": ["precision", "retrieved", "relevant"]}
+{"query": "How do you measure embedding similarity?", "expected_sources": ["vector-embeddings", "retrieval-methods"], "expected_answer_contains": ["cosine", "distance", "similarity"]}
+{"query": "What are the phases of RAG?", "expected_sources": ["introduction-to-rag"], "expected_answer_contains": ["retrieval", "generation", "phases"]}
+{"query": "What is paragraph-based chunking?", "expected_sources": ["chunking-strategies"], "expected_answer_contains": ["paragraph", "boundaries", "natural"]}
+{"query": "What is hybrid retrieval?", "expected_sources": ["retrieval-methods"], "expected_answer_contains": ["vector", "keyword", "BM25"]}
+{"query": "What is answer relevance?", "expected_sources": ["evaluation-metrics"], "expected_answer_contains": ["relevance", "query", "answer"]}
+{"query": "How do embeddings capture meaning?", "expected_sources": ["vector-embeddings"], "expected_answer_contains": ["semantic", "meaning", "vectors"]}
+{"query": "What is the retrieval phase in RAG?", "expected_sources": ["introduction-to-rag"], "expected_answer_contains": ["retrieval", "search", "knowledge"]}
+{"query": "What is sentence-based chunking?", "expected_sources": ["chunking-strategies"], "expected_answer_contains": ["sentence", "boundaries", "grouping"]}
+{"query": "What is mean reciprocal rank?", "expected_sources": ["evaluation-metrics"], "expected_answer_contains": ["MRR", "reciprocal", "rank"]}
+{"query": "What are the dimensions of OpenAI embeddings?", "expected_sources": ["vector-embeddings"], "expected_answer_contains": ["1536", "3072", "dimensions"]}
+{"query": "How does RAG reduce hallucinations?", "expected_sources": ["introduction-to-rag"], "expected_answer_contains": ["grounding", "retrieved", "documents"]}
+{"query": "What is fixed-size chunking?", "expected_sources": ["chunking-strategies"], "expected_answer_contains": ["fixed", "size", "overlap"]}
+{"query": "What is context utilization?", "expected_sources": ["evaluation-metrics"], "expected_answer_contains": ["context", "utilization", "retrieved"]}
+{"query": "How do you measure retrieval completeness?", "expected_sources": ["evaluation-metrics"], "expected_answer_contains": ["recall", "relevant", "retrieved"]}
+{"query": "What is the generation phase in RAG?", "expected_sources": ["introduction-to-rag"], "expected_answer_contains": ["generation", "language model", "synthesize"]}
+{"query": "What are best practices for chunking?", "expected_sources": ["chunking-strategies"], "expected_answer_contains": ["overlap", "structure", "size"]}
+{"query": "What is ROUGE score?", "expected_sources": ["evaluation-metrics"], "expected_answer_contains": ["ROUGE", "overlap", "n-grams"]}
+{"query": "How do embeddings enable similarity search?", "expected_sources": ["vector-embeddings"], "expected_answer_contains": ["similarity", "search", "vectors"]}
+{"query": "What makes RAG systems transparent?", "expected_sources": ["introduction-to-rag"], "expected_answer_contains": ["transparency", "sources", "documents"]}
+{"query": "What is the optimal chunk size?", "expected_sources": ["chunking-strategies"], "expected_answer_contains": ["size", "model", "context"]}
+{"query": "What is BLEU score used for?", "expected_sources": ["evaluation-metrics"], "expected_answer_contains": ["BLEU", "translation", "n-grams"]}
+{"query": "How do you train embedding models?", "expected_sources": ["vector-embeddings"], "expected_answer_contains": ["training", "corpus", "relationships"]}
+{"query": "What use cases is RAG effective for?", "expected_sources": ["introduction-to-rag"], "expected_answer_contains": ["question answering", "summarization", "chatbots"]}
+{"query": "What is semantic similarity?", "expected_sources": ["vector-embeddings", "retrieval-methods"], "expected_answer_contains": ["semantic", "similarity", "meaning"]}
+{"query": "What is the difference between precision and recall?", "expected_sources": ["evaluation-metrics"], "expected_answer_contains": ["precision", "recall", "accuracy"]}
+{"query": "How do you handle large documents in RAG?", "expected_sources": ["chunking-strategies"], "expected_answer_contains": ["chunking", "large", "documents"]}
+{"query": "What is the cosine distance operator?", "expected_sources": ["retrieval-methods"], "expected_answer_contains": ["cosine", "distance", "operator"]}
+{"query": "What is human evaluation?", "expected_sources": ["evaluation-metrics"], "expected_answer_contains": ["human", "evaluation", "quality"]}
+{"query": "What is the purpose of chunk overlap?", "expected_sources": ["chunking-strategies"], "expected_answer_contains": ["overlap", "context", "preserve"]}
+{"query": "What is the generation phase?", "expected_sources": ["introduction-to-rag"], "expected_answer_contains": ["generation", "language model", "synthesize"]}
+{"query": "What are sentence transformers?", "expected_sources": ["vector-embeddings"], "expected_answer_contains": ["sentence", "transformers", "embeddings"]}
+{"query": "What is exact search?", "expected_sources": ["retrieval-methods"], "expected_answer_contains": ["exact", "search", "accurate"]}
+{"query": "What is context utilization metric?", "expected_sources": ["evaluation-metrics"], "expected_answer_contains": ["context", "utilization", "retrieved"]}
+
