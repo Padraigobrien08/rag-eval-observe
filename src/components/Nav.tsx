@@ -21,9 +21,9 @@ export default function Nav() {
             </Link>
             <div className="flex space-x-1 ml-8">
               <Link
-                href="/playground"
+                href="/"
                 className={`flex items-center px-4 text-sm font-medium transition-colors ${
-                  isActive('/playground')
+                  isActive('/')
                     ? 'text-blue-600 border-b-2 border-blue-600'
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
