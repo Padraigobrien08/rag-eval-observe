@@ -3,19 +3,9 @@
 import { useState } from 'react'
 import ChatConsole from './ChatConsole'
 import DocumentsPanel from './DocumentsPanel'
-import { useRagSettings } from '@/features/settings/useRagSettings'
-import RecentIngests from '@/components/RecentIngests'
+import SettingsPanel from './SettingsPanel'
 
 export default function ConsoleLayout() {
-  const {
-    settings,
-    setTopK,
-    setDebug,
-    setFilters,
-    clearDocumentSelection,
-  } = useRagSettings()
-  const { topK, debug: debugMode, filters } = settings
-  const [filtersExpanded, setFiltersExpanded] = useState(false)
   const [documentsRefreshTrigger, setDocumentsRefreshTrigger] = useState(0)
 
   return (
@@ -29,122 +19,7 @@ export default function ConsoleLayout() {
 
         {/* Settings Section - Bottom Half */}
         <div className="flex-1 overflow-y-auto p-4">
-          <h2 className="text-sm font-semibold text-gray-900 mb-4">Settings</h2>
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="topK" className="block text-sm font-medium text-gray-700 mb-2">
-                Top K
-              </label>
-              <input
-                id="topK"
-                type="number"
-                min="1"
-                max="100"
-                value={topK}
-                onChange={e => setTopK(parseInt(e.target.value) || 8)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-              />
-            </div>
-
-            <div className="border-t pt-4">
-              <button
-                type="button"
-                onClick={() => setFiltersExpanded(!filtersExpanded)}
-                className="flex items-center justify-between w-full text-left mb-3"
-              >
-                <h3 className="text-sm font-medium text-gray-700">Filters</h3>
-                <svg
-                  className={`w-4 h-4 text-gray-400 transform transition-transform ${
-                    filtersExpanded ? 'rotate-180' : ''
-                  }`}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
-              </button>
-              {filtersExpanded && (
-                <div className="space-y-3">
-                  <div>
-                    <label
-                      htmlFor="filterSource"
-                      className="block text-xs font-medium text-gray-600 mb-1"
-                    >
-                      Source
-                    </label>
-                    <input
-                      id="filterSource"
-                      type="text"
-                      value={filters.source || ''}
-                      onChange={e =>
-                        setFilters({ ...filters, source: e.target.value || undefined })
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                      placeholder="Filter by source..."
-                    />
-                  </div>
-                  <div>
-                    <label
-                      htmlFor="filterTitle"
-                      className="block text-xs font-medium text-gray-600 mb-1"
-                    >
-                      Title
-                    </label>
-                    <input
-                      id="filterTitle"
-                      type="text"
-                      value={filters.title || ''}
-                      onChange={e =>
-                        setFilters({ ...filters, title: e.target.value || undefined })
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                      placeholder="Filter by title..."
-                    />
-                  </div>
-                  {(filters.source || filters.title) && (
-                    <button
-                      onClick={clearDocumentSelection}
-                      className="w-full px-3 py-1.5 text-xs text-gray-600 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
-                    >
-                      Clear Filters
-                    </button>
-                  )}
-                  <div className="pt-3 border-t">
-                    <RecentIngests
-                      onSelect={ingest => {
-                        setFilters({
-                          source: ingest.source,
-                          title: ingest.title,
-                        })
-                        if (!filtersExpanded) {
-                          setFiltersExpanded(true)
-                        }
-                      }}
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="flex items-center">
-              <input
-                id="debugMode"
-                type="checkbox"
-                checked={debugMode}
-                onChange={e => setDebug(e.target.checked)}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-              />
-              <label htmlFor="debugMode" className="ml-2 block text-sm text-gray-700">
-                Debug mode
-              </label>
-            </div>
-          </div>
+          <SettingsPanel />
         </div>
       </div>
 
