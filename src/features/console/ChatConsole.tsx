@@ -192,15 +192,8 @@ export default function ChatConsole({ onIngestSuccess }: ChatConsoleProps = {}) 
     [showToast]
   )
 
-  // Debug borders - always show for debugging (remove after fixing)
-  const debugStyles = {
-    root: { border: '2px solid red' },
-    transcript: { border: '2px solid green' },
-    input: { border: '2px solid blue' },
-  }
-
   return (
-    <div className="h-full flex flex-col min-h-0 overflow-hidden" style={{ height: '100%', ...debugStyles.root }}>
+    <div className="h-full flex flex-col min-h-0 overflow-hidden" style={{ height: '100%' }}>
       <UIToastContainer toasts={toasts} onDismiss={dismissToast} />
       <Drawer
         isOpen={ingestDrawerOpen}
@@ -297,7 +290,7 @@ export default function ChatConsole({ onIngestSuccess }: ChatConsoleProps = {}) 
       <div
         ref={transcriptRef}
         className="flex-1 min-h-0 overflow-y-auto bg-neutral-50/50 w-full"
-        style={{ flex: '1 1 0%', minHeight: 0, scrollBehavior: 'smooth', ...debugStyles.transcript }}
+        style={{ flex: '1 1 0%', minHeight: 0, scrollBehavior: 'smooth' }}
       >
         {messages.length === 0 && !isLoading ? (
           <div className="min-h-full flex items-center justify-center w-full">
@@ -341,7 +334,7 @@ export default function ChatConsole({ onIngestSuccess }: ChatConsoleProps = {}) 
       </div>
 
       {/* Input Area - Sticky to bottom */}
-      <div className="shrink-0 border-t border-gray-200 bg-white/80 backdrop-blur" style={debugStyles.input}>
+      <div className="shrink-0 border-t border-gray-200 bg-white/80 backdrop-blur">
         <form onSubmit={handleSubmit} className="w-full">
           <div className="max-w-5xl w-full mx-auto px-6 py-4">
             <div className="flex items-end gap-3">
