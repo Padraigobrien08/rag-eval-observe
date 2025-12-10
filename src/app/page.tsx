@@ -1,13 +1,7 @@
 'use client'
 
-import Nav from '@/components/Nav'
-import PlaygroundView from '@/features/playground/PlaygroundView'
+import ConsoleLayout from '@/features/console/ConsoleLayout'
 
 export default function Home() {
-  return (
-    <>
-      <Nav />
-      <PlaygroundView />
-    </>
-  )
+  return <ConsoleLayout />
 }
