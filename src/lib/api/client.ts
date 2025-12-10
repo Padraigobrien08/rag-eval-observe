@@ -95,6 +95,11 @@ async function apiRequest<T>(
 
     if (!response.ok) {
       const error = await normalizeError(response)
+      // Extract request ID from response headers if available
+      const responseRequestId = response.headers.get('X-Request-Id') || response.headers.get('x-request-id')
+      if (responseRequestId && error.details) {
+        error.details.request_id = responseRequestId
+      }
       throw error
     }
 
@@ -106,20 +111,26 @@ async function apiRequest<T>(
       throw {
         message: 'Request timeout',
         status: 408,
-        details: { timeout: clampedTimeout },
+        details: { timeout: clampedTimeout, request_id: requestId },
       } as ApiError
     }
 
-    // If it's already an ApiError, re-throw it
+    // If it's already an ApiError, ensure request_id is included
     if (error && typeof error === 'object' && 'status' in error) {
-      throw error
+      const apiError = error as ApiError
+      if (apiError.details && !apiError.details.request_id) {
+        apiError.details.request_id = requestId
+      } else if (!apiError.details) {
+        apiError.details = { request_id: requestId }
+      }
+      throw apiError
     }
 
     // Otherwise, wrap it
     throw {
       message: error instanceof Error ? error.message : 'Unknown error occurred',
       status: 0,
-      details: error,
+      details: { ...(error as any), request_id: requestId },
     } as ApiError
   }
 }

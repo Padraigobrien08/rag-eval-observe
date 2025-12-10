@@ -1,8 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { ingestDoc } from '@/lib/api/client'
 import type { IngestRequest, IngestResponse } from '@/lib/api/types'
+import { saveRecentIngest } from '@/lib/storage/recentIngests'
+import RecentIngests from '@/components/RecentIngests'
 
 // Backend constraints (aligned with backend/app/core/config.py)
 const MAX_INGEST_PAYLOAD_SIZE = 10 * 1024 * 1024 // 10MB (10,485,760 chars)
@@ -47,12 +49,14 @@ interface IngestFormProps {
   onSuccess?: (response: IngestResponse, source: string, title?: string) => void
   onError?: (error: { status?: number; message: string }) => void
   showSampleButton?: boolean
+  onUseAsFilter?: (source: string, title?: string) => void
 }
 
 export default function IngestForm({
   onSuccess,
   onError,
   showSampleButton = false,
+  onUseAsFilter,
 }: IngestFormProps) {
   const [source, setSource] = useState('')
   const [title, setTitle] = useState('')
@@ -60,6 +64,7 @@ export default function IngestForm({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<{ status?: number; message: string } | null>(null)
   const [response, setResponse] = useState<IngestResponse | null>(null)
+  const [refreshTrigger, setRefreshTrigger] = useState(0)
 
   const validateForm = (): string | null => {
     if (!source.trim()) {
@@ -99,6 +104,18 @@ export default function IngestForm({
 
       const result = await ingestDoc(payload)
       setResponse(result)
+
+      // Save to recent ingests
+      saveRecentIngest({
+        source: source.trim(),
+        title: title.trim() || undefined,
+        document_id: result.document_id,
+        chunks_created: result.chunks_created,
+        created_at: new Date().toISOString(),
+      })
+
+      // Trigger refresh of recent ingests list
+      setRefreshTrigger(prev => prev + 1)
 
       // Call success callback with result and form values
       onSuccess?.(result, source.trim(), title.trim() || undefined)
@@ -302,6 +319,17 @@ export default function IngestForm({
           </div>
         </div>
       )}
+
+      {/* Recent Ingests */}
+      <div className="border-t pt-6 mt-6">
+        <RecentIngests
+          showUseAsFilter={!!onUseAsFilter}
+          onUseAsFilter={ingest => {
+            onUseAsFilter?.(ingest.source, ingest.title)
+          }}
+          refreshTrigger={refreshTrigger}
+        />
+      </div>
     </div>
   )
 }

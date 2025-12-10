@@ -1,18 +1,24 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import { queryRag } from '@/lib/api/client'
-import type { QueryRequest } from '@/lib/api/types'
+import type { QueryRequest, ApiError } from '@/lib/api/types'
 import type { ChatMessage, ChatOptions, UserChatMessage, AssistantChatMessage } from './types'
 
 export function useChat() {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  
+  // Store last message and options for retry
+  const lastMessageRef = useRef<{ text: string; options: ChatOptions } | null>(null)
 
   const sendMessage = useCallback(
     async (text: string, options: ChatOptions = {}) => {
       if (!text.trim() || isLoading) return
+
+      // Store for potential retry
+      lastMessageRef.current = { text: text.trim(), options }
 
       const userMessage: UserChatMessage = {
         id: `user-${Date.now()}-${Math.random()}`,
@@ -25,6 +31,8 @@ export function useChat() {
       setMessages(prev => [...prev, userMessage])
       setIsLoading(true)
       setError(null)
+
+      let requestId: string | undefined
 
       try {
         const payload: QueryRequest = {
@@ -51,15 +59,46 @@ export function useChat() {
 
         setMessages(prev => [...prev, assistantMessage])
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred'
+        // Extract error details
+        let errorMessage = 'An unknown error occurred'
+        let status: number | undefined
+        let requestIdFromError: string | undefined
+
+        if (err && typeof err === 'object' && 'message' in err) {
+          errorMessage = (err as ApiError).message || errorMessage
+          status = (err as ApiError).status
+          // Try to extract request ID from error details
+          if ((err as ApiError).details) {
+            const details = (err as ApiError).details as any
+            requestIdFromError = details.request_id || details.requestId
+          }
+        } else if (err instanceof Error) {
+          errorMessage = err.message
+        }
+
+        // Log error for debugging
+        console.error('Chat error:', {
+          message: errorMessage,
+          status,
+          requestId: requestIdFromError,
+          error: err,
+        })
+
         setError(errorMessage)
 
-        // Optionally add an error message to the chat
+        // Add error message to chat
         const errorMessageObj: AssistantChatMessage = {
           id: `error-${Date.now()}-${Math.random()}`,
           role: 'assistant',
-          content: `Error: ${errorMessage}`,
+          content: '', // Empty content, error will be shown via meta.error
           createdAt: new Date(),
+          meta: {
+            error: {
+              message: errorMessage,
+              requestId: requestIdFromError,
+              status,
+            },
+          },
         }
         setMessages(prev => [...prev, errorMessageObj])
       } finally {
@@ -68,6 +107,12 @@ export function useChat() {
     },
     [isLoading]
   )
+
+  const retryLastMessage = useCallback(() => {
+    if (lastMessageRef.current) {
+      sendMessage(lastMessageRef.current.text, lastMessageRef.current.options)
+    }
+  }, [sendMessage])
 
   const resetChat = useCallback(() => {
     setMessages([])
@@ -81,5 +126,6 @@ export function useChat() {
     error,
     sendMessage,
     resetChat,
+    retryLastMessage,
   }
 }

@@ -9,6 +9,11 @@ export interface AssistantMessageMeta {
   }
   latencyMs?: number
   debugRetrieved?: RetrievedChunkDebug[]
+  error?: {
+    message: string
+    requestId?: string
+    status?: number
+  }
 }
 
 export interface BaseChatMessage {

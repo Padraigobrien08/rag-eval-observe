@@ -4,12 +4,15 @@ import { useState } from 'react'
 import type { AssistantChatMessage } from './types'
 import Card from '@/components/ui/Card'
 import StatPill from '@/components/ui/StatPill'
+import ErrorMessage from './ErrorMessage'
 
 interface AssistantMessageProps {
   message: AssistantChatMessage
   expandedCitations: Set<string>
   onToggleCitation: (id: string) => void
   debugMode: boolean
+  onRetry?: () => void
+  onCopyAnswer?: (text: string) => void
 }
 
 // Estimate cost based on token usage (rough estimates for GPT-4)
@@ -40,8 +43,57 @@ export default function AssistantMessage({
   expandedCitations,
   onToggleCitation,
   debugMode,
+  onRetry,
+  onCopyAnswer,
 }: AssistantMessageProps) {
   const [copiedCitationId, setCopiedCitationId] = useState<string | null>(null)
+  const [copiedAnswer, setCopiedAnswer] = useState(false)
+
+  const handleCopyAnswer = async () => {
+    if (!message.content) return
+
+    try {
+      await navigator.clipboard.writeText(message.content)
+      setCopiedAnswer(true)
+      setTimeout(() => setCopiedAnswer(false), 2000)
+      onCopyAnswer?.(message.content)
+    } catch (err) {
+      console.error('Failed to copy answer:', err)
+    }
+  }
+
+  // If this is an error message, render error UI
+  if (message.meta?.error) {
+    return (
+      <div className="flex items-start gap-3">
+        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
+          <svg
+            className="w-5 h-5 text-gray-600"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+            />
+          </svg>
+        </div>
+        <div className="flex-1 max-w-2xl">
+          <Card variant="outlined" padding="md">
+            <ErrorMessage
+              message={message.meta.error.message}
+              requestId={message.meta.error.requestId}
+              status={message.meta.error.status}
+              onRetry={onRetry}
+            />
+          </Card>
+        </div>
+      </div>
+    )
+  }
 
   const copyCitation = async (citation: {
     title?: string
@@ -80,8 +132,45 @@ export default function AssistantMessage({
       </div>
       <div className="flex-1 max-w-2xl">
         {/* Answer Text */}
-        <Card variant="outlined" padding="md" className="mb-3">
-          <p className="whitespace-pre-wrap text-sm leading-relaxed text-gray-900">
+        <Card variant="outlined" padding="md" className="mb-3 relative group">
+          <div className="absolute top-2 right-2">
+            <button
+              onClick={handleCopyAnswer}
+              className="p-1.5 text-gray-400 hover:text-gray-600 rounded transition-colors"
+              title="Copy answer"
+            >
+              {copiedAnswer ? (
+                <svg
+                  className="w-4 h-4 text-green-500"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              ) : (
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                  />
+                </svg>
+              )}
+            </button>
+          </div>
+          <p className="whitespace-pre-wrap text-sm leading-relaxed text-gray-900 pr-8">
             {message.content}
           </p>
           <p className="text-xs text-gray-500 mt-3">
