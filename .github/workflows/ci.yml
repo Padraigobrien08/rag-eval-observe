@@ -63,7 +63,7 @@ jobs:
         run: uv sync --dev
 
       - name: Install mypy
-        run: uv add --dev mypy types-all
+        run: uv add --dev mypy
 
       - name: Run mypy
         run: uv run mypy app/ --ignore-missing-imports
