@@ -32,8 +32,6 @@ export function useChat() {
       setIsLoading(true)
       setError(null)
 
-      let requestId: string | undefined
-
       try {
         const payload: QueryRequest = {
           query: text.trim(),

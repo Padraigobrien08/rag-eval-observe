@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { ingestDoc } from '@/lib/api/client'
 import type { IngestRequest, IngestResponse } from '@/lib/api/types'
 import { saveRecentIngest } from '@/lib/storage/recentIngests'

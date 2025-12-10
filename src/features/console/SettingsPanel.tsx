@@ -4,7 +4,7 @@ import { useRagSettings } from '@/features/settings/useRagSettings'
 import { loadPlaygroundSettings, savePlaygroundSettings } from '@/lib/storage/playgroundSettings'
 
 export default function SettingsPanel() {
-  const { settings, setTopK, setDebug, setFilters, clearDocumentSelection } = useRagSettings()
+  const { settings, setTopK, setDebug, clearDocumentSelection } = useRagSettings()
   const { topK, debug } = settings
 
   const handleResetSettings = () => {
@@ -18,7 +18,7 @@ export default function SettingsPanel() {
   }
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="flex flex-col min-h-0">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-sm font-semibold text-gray-900">Settings</h2>

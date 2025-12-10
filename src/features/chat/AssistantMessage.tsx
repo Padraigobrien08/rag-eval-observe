@@ -130,7 +130,7 @@ export default function AssistantMessage({
           />
         </svg>
       </div>
-      <div className="flex-1 max-w-2xl">
+      <div className="flex-1">
         {/* Answer Text */}
         <Card variant="outlined" padding="md" className="mb-2 relative group">
           <div className="absolute top-2 right-2">

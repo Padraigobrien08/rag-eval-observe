@@ -192,8 +192,15 @@ export default function ChatConsole({ onIngestSuccess }: ChatConsoleProps = {}) 
     [showToast]
   )
 
+  // Debug borders - always show for debugging (remove after fixing)
+  const debugStyles = {
+    root: { border: '2px solid red' },
+    transcript: { border: '2px solid green' },
+    input: { border: '2px solid blue' },
+  }
+
   return (
-    <>
+    <div className="h-full flex flex-col min-h-0 overflow-hidden" style={{ height: '100%', ...debugStyles.root }}>
       <UIToastContainer toasts={toasts} onDismiss={dismissToast} />
       <Drawer
         isOpen={ingestDrawerOpen}
@@ -209,7 +216,7 @@ export default function ChatConsole({ onIngestSuccess }: ChatConsoleProps = {}) 
       </Drawer>
 
       {/* Top Header */}
-      <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
+      <div className="shrink-0 bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <h1 className="text-lg font-semibold text-gray-900">RAG Eval</h1>
           {connectionStatus && (
@@ -289,70 +296,76 @@ export default function ChatConsole({ onIngestSuccess }: ChatConsoleProps = {}) 
       {/* Chat Transcript - Scrollable */}
       <div
         ref={transcriptRef}
-        className="flex-1 overflow-y-auto bg-gray-50"
-        style={{ scrollBehavior: 'smooth' }}
+        className="flex-1 min-h-0 overflow-y-auto bg-neutral-50/50 w-full"
+        style={{ flex: '1 1 0%', minHeight: 0, scrollBehavior: 'smooth', ...debugStyles.transcript }}
       >
         {messages.length === 0 && !isLoading ? (
-          <div className="h-full flex items-center justify-center p-6">
-            <EmptyState onSelectPrompt={handleExamplePrompt} />
+          <div className="min-h-full flex items-center justify-center w-full">
+            <div className="max-w-5xl w-full mx-auto px-6 py-6">
+              <EmptyState onSelectPrompt={handleExamplePrompt} />
+            </div>
           </div>
         ) : (
-          <div className="max-w-4xl mx-auto px-6 py-8">
-            <div className="space-y-8">
-              {messages.map((message, index) => {
-                // Group messages by turn (user + assistant)
-                const prevMessage = index > 0 ? messages[index - 1] : null
-                const isNewTurn = !prevMessage || prevMessage.role !== message.role
-                const showSpacing = isNewTurn && index > 0
+          <div className="w-full">
+            <div className="max-w-5xl w-full mx-auto px-6 py-6">
+              <div className="space-y-8">
+                {messages.map((message, index) => {
+                  // Group messages by turn (user + assistant)
+                  const prevMessage = index > 0 ? messages[index - 1] : null
+                  const isNewTurn = !prevMessage || prevMessage.role !== message.role
+                  const showSpacing = isNewTurn && index > 0
 
-                return (
-                  <div key={message.id} className={showSpacing ? 'pt-4' : ''}>
-                    {message.role === 'user' ? (
-                      <UserMessage message={message} />
-                    ) : (
-                      <AssistantMessage
-                        message={message}
-                        expandedCitations={expandedCitations}
-                        onToggleCitation={toggleCitation}
-                        debugMode={debugMode}
-                        onRetry={retryLastMessage}
-                        onCopyAnswer={handleCopyAnswer}
-                      />
-                    )}
-                  </div>
-                )
-              })}
-              {isLoading && <LoadingSkeleton />}
-              <div ref={chatEndRef} />
+                  return (
+                    <div key={message.id} className={showSpacing ? 'pt-4' : ''}>
+                      {message.role === 'user' ? (
+                        <UserMessage message={message} />
+                      ) : (
+                        <AssistantMessage
+                          message={message}
+                          expandedCitations={expandedCitations}
+                          onToggleCitation={toggleCitation}
+                          debugMode={debugMode}
+                          onRetry={retryLastMessage}
+                          onCopyAnswer={handleCopyAnswer}
+                        />
+                      )}
+                    </div>
+                  )
+                })}
+                {isLoading && <LoadingSkeleton />}
+                <div ref={chatEndRef} />
+              </div>
             </div>
           </div>
         )}
       </div>
 
       {/* Input Area - Sticky to bottom */}
-      <div className="bg-white border-t border-gray-200 px-4 py-4 flex-shrink-0">
-        <form onSubmit={handleSubmit} className="max-w-4xl mx-auto">
-          <div className="flex items-end gap-3">
-            <textarea
-              value={inputText}
-              onChange={e => setInputText(e.target.value)}
-              onKeyDown={handleKeyDown}
-              rows={1}
-              className="flex-1 px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none text-sm"
-              placeholder="Message RAG Eval..."
-              disabled={isLoading}
-              style={{ maxHeight: '200px' }}
-              onInput={e => {
-                const target = e.target as HTMLTextAreaElement
-                target.style.height = 'auto'
-                target.style.height = `${Math.min(target.scrollHeight, 200)}px`
-              }}
-            />
-            <button
-              type="submit"
-              disabled={isLoading || !inputText.trim()}
-              className="px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
+      <div className="shrink-0 border-t border-gray-200 bg-white/80 backdrop-blur" style={debugStyles.input}>
+        <form onSubmit={handleSubmit} className="w-full">
+          <div className="max-w-5xl w-full mx-auto px-6 py-4">
+            <div className="flex items-end gap-3">
+              <textarea
+                value={inputText}
+                onChange={e => setInputText(e.target.value)}
+                onKeyDown={handleKeyDown}
+                rows={1}
+                className="flex-1 px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none text-sm"
+                placeholder="Message RAG Eval..."
+                disabled={isLoading}
+                style={{ maxHeight: '144px' }}
+                onInput={e => {
+                  const target = e.target as HTMLTextAreaElement
+                  target.style.height = 'auto'
+                  // 6 lines max: line-height ~24px * 6 = 144px
+                  target.style.height = `${Math.min(target.scrollHeight, 144)}px`
+                }}
+              />
+              <button
+                type="submit"
+                disabled={isLoading || !inputText.trim()}
+                className="px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0"
+              >
               {isLoading ? (
                 <svg
                   className="w-5 h-5 animate-spin"
@@ -377,11 +390,12 @@ export default function ChatConsole({ onIngestSuccess }: ChatConsoleProps = {}) 
                   />
                 </svg>
               )}
-            </button>
+              </button>
+            </div>
+            {error && <div className="mt-2 text-sm text-red-600">{error}</div>}
           </div>
-          {error && <div className="mt-2 text-sm text-red-600">{error}</div>}
         </form>
       </div>
-    </>
+    </div>
   )
 }

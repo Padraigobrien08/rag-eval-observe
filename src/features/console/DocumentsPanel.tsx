@@ -29,7 +29,7 @@ export default function DocumentsPanel({ refreshTrigger }: DocumentsPanelProps) 
   }
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="flex flex-col min-h-0">
       {/* Header */}
       <div className="flex items-center justify-between mb-3 px-1">
         <h2 className="text-sm font-semibold text-gray-900">Documents</h2>
