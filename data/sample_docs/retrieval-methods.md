@@ -49,4 +49,3 @@ Combine vector search with keyword search (BM25) for better results:
 3. Merge and re-rank results
 
 This approach leverages both semantic understanding and exact keyword matching.
-

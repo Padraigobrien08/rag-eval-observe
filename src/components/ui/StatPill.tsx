@@ -12,4 +12,3 @@ export default function StatPill({ label, value, className = '' }: StatPillProps
     </div>
   )
 }
-

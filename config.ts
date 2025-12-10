@@ -14,7 +14,7 @@ const envSchema = z.object({
 
 type EnvConfig = z.infer<typeof envSchema>
 
-export interface Config extends EnvConfig {
+export interface Config extends Omit<EnvConfig, 'EMBEDDING_DIMENSION' | 'DATABASE_URL'> {
   DATABASE_URL: string
   EMBEDDING_DIMENSION: number
 }
@@ -22,13 +22,14 @@ export interface Config extends EnvConfig {
 function loadConfig(): Config {
   try {
     const parsed = envSchema.parse(process.env)
-    const databaseUrl = parsed.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/rag_eval'
+    const databaseUrl =
+      parsed.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/rag_eval'
     const embeddingDimension = parseInt(parsed.EMBEDDING_DIMENSION, 10)
-    
+
     if (isNaN(embeddingDimension) || embeddingDimension <= 0) {
       throw new Error('EMBEDDING_DIMENSION must be a positive integer')
     }
-    
+
     return {
       ...parsed,
       DATABASE_URL: databaseUrl,
@@ -37,7 +38,7 @@ function loadConfig(): Config {
   } catch (error) {
     if (error instanceof z.ZodError) {
       console.error('Invalid environment variables:')
-      error.errors.forEach((err) => {
+      error.errors.forEach(err => {
         console.error(`  ${err.path.join('.')}: ${err.message}`)
       })
       throw new Error('Invalid environment configuration')
@@ -47,4 +48,3 @@ function loadConfig(): Config {
 }
 
 export const config = loadConfig()
-

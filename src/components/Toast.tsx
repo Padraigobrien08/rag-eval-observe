@@ -30,22 +30,22 @@ export default function Toast({ toast, onDismiss }: ToastProps) {
     toast.type === 'success'
       ? 'bg-green-50 border-green-200'
       : toast.type === 'error'
-      ? 'bg-red-50 border-red-200'
-      : 'bg-blue-50 border-blue-200'
+        ? 'bg-red-50 border-red-200'
+        : 'bg-blue-50 border-blue-200'
 
   const textColor =
     toast.type === 'success'
       ? 'text-green-800'
       : toast.type === 'error'
-      ? 'text-red-800'
-      : 'text-blue-800'
+        ? 'text-red-800'
+        : 'text-blue-800'
 
   const iconColor =
     toast.type === 'success'
       ? 'text-green-400'
       : toast.type === 'error'
-      ? 'text-red-400'
-      : 'text-blue-400'
+        ? 'text-red-400'
+        : 'text-blue-400'
 
   return (
     <div
@@ -114,15 +114,20 @@ export default function Toast({ toast, onDismiss }: ToastProps) {
   )
 }
 
-export function ToastContainer({ toasts, onDismiss }: { toasts: Toast[]; onDismiss: (id: string) => void }) {
+export function ToastContainer({
+  toasts,
+  onDismiss,
+}: {
+  toasts: Toast[]
+  onDismiss: (id: string) => void
+}) {
   if (toasts.length === 0) return null
 
   return (
     <div className="fixed top-4 right-4 z-50 flex flex-col items-end">
-      {toasts.map((toast) => (
+      {toasts.map(toast => (
         <Toast key={toast.id} toast={toast} onDismiss={onDismiss} />
       ))}
     </div>
   )
 }
-

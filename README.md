@@ -37,6 +37,7 @@ This application provides a complete solution for building, testing, and monitor
 ### Key Components
 
 **Frontend:**
+
 - **`src/app/`**: Next.js App Router pages and API routes
 - **`src/lib/`**: Core RAG logic and utilities
 - **`rag/`**: RAG pipeline modules (chunk, embed, retrieve, answer)
@@ -44,6 +45,7 @@ This application provides a complete solution for building, testing, and monitor
 - **`tests/`**: Unit and integration tests
 
 **Backend:**
+
 - **`backend/app/`**: FastAPI application
 - **`backend/app/api/`**: API routes and endpoints
 - **`backend/app/db/`**: Database queries and session management
@@ -51,6 +53,7 @@ This application provides a complete solution for building, testing, and monitor
 - **`backend/tests/`**: Backend test suite
 
 **Shared:**
+
 - **`src/lib/db/`**: Database migrations and schema
 - **`eval/`**: Offline evaluation harness
 
@@ -66,12 +69,14 @@ This application provides a complete solution for building, testing, and monitor
 ### Installation
 
 1. Clone the repository:
+
 ```bash
 git clone <repository-url>
 cd rag-eval-observability
 ```
 
 2. Install dependencies:
+
 ```bash
 # Frontend dependencies
 pnpm install
@@ -81,27 +86,32 @@ cd backend && uv sync && cd ..
 ```
 
 3. Set up environment variables:
+
 ```bash
 cp .env.example .env
 # Edit .env with your configuration
 ```
 
 4. Start the database:
+
 ```bash
 make db
 ```
 
 5. Run migrations:
+
 ```bash
 make migrate
 ```
 
 6. Seed the database:
+
 ```bash
 make seed
 ```
 
 7. Start the development servers:
+
 ```bash
 # Start Next.js frontend (in one terminal)
 make dev
@@ -146,6 +156,7 @@ NODE_ENV=development
 Query the RAG system with a natural language question.
 
 **Request Body:**
+
 ```json
 {
   "query": "What is RAG?"
@@ -153,6 +164,7 @@ Query the RAG system with a natural language question.
 ```
 
 **Response:**
+
 ```json
 {
   "query": "What is RAG?",
@@ -178,6 +190,7 @@ make eval
 ```
 
 This will:
+
 1. Load test cases from `backend/eval/dataset.jsonl`
 2. Execute each query through the RAG pipeline (directly, not via HTTP)
 3. Calculate retrieval metrics (Hit@K, MRR)
@@ -187,10 +200,12 @@ This will:
 ### Evaluation Metrics
 
 **Retrieval Metrics:**
+
 - **Hit@K**: Whether any expected source appears in top K retrieved results
 - **MRR (Mean Reciprocal Rank)**: Average reciprocal rank of first relevant result
 
 **LLM Judge Metrics** (optional, requires `EVAL_USE_LLM_JUDGE=true`):
+
 - **Correctness**: Does the answer correctly address the question?
 - **Faithfulness**: Is the answer grounded in context, not hallucinated?
 
@@ -199,7 +214,11 @@ This will:
 Edit `backend/eval/dataset.jsonl` to add test cases (one JSON object per line):
 
 ```json
-{"query": "Your question here", "expected_sources": ["source-id"], "expected_answer_contains": ["keyword1", "keyword2"]}
+{
+  "query": "Your question here",
+  "expected_sources": ["source-id"],
+  "expected_answer_contains": ["keyword1", "keyword2"]
+}
 ```
 
 ### Environment Variables
@@ -211,6 +230,7 @@ Edit `backend/eval/dataset.jsonl` to add test cases (one JSON object per line):
 ### Local Development
 
 1. **Start PostgreSQL:**
+
    ```bash
    make db
    # or
@@ -218,16 +238,19 @@ Edit `backend/eval/dataset.jsonl` to add test cases (one JSON object per line):
    ```
 
 2. **Run migrations:**
+
    ```bash
    make migrate
    ```
 
 3. **Seed database (optional):**
+
    ```bash
    make seed
    ```
 
 4. **Start API backend:**
+
    ```bash
    make api-dev
    ```
@@ -246,10 +269,12 @@ docker compose up -d
 ```
 
 This starts:
+
 - PostgreSQL with pgvector
 - FastAPI backend API
 
 Access:
+
 - API: http://localhost:8000
 - API Docs: http://localhost:8000/docs
 
@@ -270,11 +295,13 @@ OPENAI_CHAT_MODEL=gpt-4-turbo-preview
 ## API Endpoints Examples
 
 ### Health Check
+
 ```bash
 curl http://localhost:8000/api/v1/health
 ```
 
 ### Ingest Document
+
 ```bash
 curl -X POST http://localhost:8000/api/v1/ingest \
   -H "Content-Type: application/json" \
@@ -286,6 +313,7 @@ curl -X POST http://localhost:8000/api/v1/ingest \
 ```
 
 ### Query RAG System
+
 ```bash
 curl -X POST http://localhost:8000/api/v1/query \
   -H "Content-Type: application/json" \
@@ -296,6 +324,7 @@ curl -X POST http://localhost:8000/api/v1/query \
 ```
 
 ### Search Chunks
+
 ```bash
 curl -X POST http://localhost:8000/api/v1/search \
   -H "Content-Type: application/json" \
@@ -343,6 +372,7 @@ See `backend/README.md` for detailed deployment notes.
 ## Makefile Targets
 
 ### Frontend (Next.js)
+
 - `make dev` - Start Next.js development server
 - `make lint` - Run ESLint and Prettier checks
 - `make test` - Run test suite
@@ -350,16 +380,19 @@ See `backend/README.md` for detailed deployment notes.
 - `make format` - Format code with Prettier
 
 ### Backend (FastAPI)
+
 - `make api` - Start FastAPI production server
 - `make api-dev` - Start FastAPI development server (with reload)
 - `make api-test` - Run backend tests
 
 ### Database
+
 - `make db` - Start PostgreSQL database (Docker)
 - `make migrate` - Run database migrations
 - `make seed` - Seed database with sample data
 
 ### Evaluation
+
 - `make eval` - Run evaluation harness (Python backend)
 
 ## Development
@@ -400,4 +433,3 @@ rag-eval-observability/
 ## License
 
 MIT
-

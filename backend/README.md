@@ -13,29 +13,34 @@ FastAPI backend for RAG evaluation and observability.
 ### Installation
 
 1. Install dependencies:
+
 ```bash
 uv sync
 ```
 
 2. Set up environment variables:
+
 ```bash
 cp .env.example .env
 # Edit .env with your configuration
 ```
 
 3. Start PostgreSQL (using Docker Compose):
+
 ```bash
 # From project root
 docker compose up -d postgres
 ```
 
 4. Run migrations:
+
 ```bash
 # From project root
 make migrate
 ```
 
 5. Seed database (optional):
+
 ```bash
 make seed
 ```
@@ -121,6 +126,7 @@ curl http://localhost:8000/api/v1/health
 ```
 
 **Response:**
+
 ```json
 {
   "ok": true,
@@ -143,6 +149,7 @@ curl -X POST http://localhost:8000/api/v1/ingest \
 ```
 
 **Response:**
+
 ```json
 {
   "document_id": "source-title",
@@ -166,6 +173,7 @@ curl -X POST http://localhost:8000/api/v1/query \
 ```
 
 **Response:**
+
 ```json
 {
   "answer": "RAG stands for Retrieval-Augmented Generation [1]...",
@@ -238,6 +246,7 @@ The API is configured to accept direct browser requests from specified origins. 
 ### Request ID Middleware
 
 All requests automatically include an `X-Request-ID` header:
+
 - If the client provides `X-Request-Id`, it is used
 - If missing, a UUID is generated automatically
 - The request ID is:
@@ -248,16 +257,19 @@ All requests automatically include an `X-Request-ID` header:
 ### Example Configuration
 
 **Local Development:**
+
 ```bash
 CORS_ALLOW_ORIGINS=http://localhost:3000
 ```
 
 **Production (Vercel):**
+
 ```bash
 CORS_ALLOW_ORIGINS=http://localhost:3000,https://your-app.vercel.app
 ```
 
 **Multiple Domains:**
+
 ```bash
 CORS_ALLOW_ORIGINS=http://localhost:3000,https://app.example.com,https://staging.example.com
 ```
@@ -308,7 +320,7 @@ Returns application metrics in JSON format:
   "routes": {
     "/api/v1/query": {
       "request_count": 100,
-      "status_counts": {"200": 95, "500": 5},
+      "status_counts": { "200": 95, "500": 5 },
       "latency_buckets": {
         "<100ms": 10,
         "100-500ms": 50,
@@ -341,6 +353,7 @@ Returns application metrics in JSON format:
 4. **No aggregation**: Each instance maintains its own metrics independently
 
 For production deployments with multiple instances, consider:
+
 - Using a dedicated metrics service (Prometheus, Datadog, etc.)
 - Implementing distributed metrics collection
 - Persisting metrics to a time-series database
@@ -364,6 +377,7 @@ docker compose up -d
 ```
 
 This starts:
+
 - PostgreSQL with pgvector extension
 - FastAPI backend service
 
@@ -395,6 +409,7 @@ services:
 ```
 
 Run with:
+
 ```bash
 docker compose -f docker compose.yml -f docker compose.prod.yml up -d
 ```
@@ -402,6 +417,7 @@ docker compose -f docker compose.yml -f docker compose.prod.yml up -d
 #### Health Checks
 
 The API includes health check endpoints:
+
 - `GET /api/v1/health` - Health check with DB connectivity
 - `GET /` - Root endpoint
 
@@ -410,6 +426,7 @@ Use these for container health checks and load balancer probes.
 #### Rate Limiting Notes
 
 The rate limiter is **per-instance** and **in-memory**. For production with multiple instances:
+
 - Use a shared rate limiter (e.g., Redis-based)
 - Or rely on API gateway rate limiting
 

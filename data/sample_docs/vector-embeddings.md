@@ -30,4 +30,3 @@ For example, the words "king" and "queen" would have embeddings that are closer 
 - Recommendation systems
 - Anomaly detection
 - RAG systems for retrieval
-

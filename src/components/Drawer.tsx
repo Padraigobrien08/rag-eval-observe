@@ -30,7 +30,7 @@ export default function Drawer({ isOpen, onClose, title, children }: DrawerProps
         className="fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity"
         onClick={onClose}
       />
-      
+
       {/* Drawer */}
       <div className="fixed right-0 top-0 h-full w-full max-w-2xl bg-white shadow-xl z-50 transform transition-transform duration-300 ease-in-out overflow-y-auto">
         <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10">
@@ -40,12 +40,7 @@ export default function Drawer({ isOpen, onClose, title, children }: DrawerProps
             className="text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-md p-1"
             aria-label="Close drawer"
           >
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -60,4 +55,3 @@ export default function Drawer({ isOpen, onClose, title, children }: DrawerProps
     </>
   )
 }
-

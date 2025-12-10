@@ -67,4 +67,3 @@ export interface ApiError {
   status: number
   details?: any
 }
-

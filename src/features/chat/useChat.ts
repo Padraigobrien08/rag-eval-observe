@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react'
 import { queryRag } from '@/lib/api/client'
-import type { QueryRequest, QueryResponse } from '@/lib/api/types'
+import type { QueryRequest } from '@/lib/api/types'
 import type { ChatMessage, ChatOptions, UserChatMessage, AssistantChatMessage } from './types'
 
 export function useChat() {
@@ -22,7 +22,7 @@ export function useChat() {
       }
 
       // Append user message immediately
-      setMessages((prev) => [...prev, userMessage])
+      setMessages(prev => [...prev, userMessage])
       setIsLoading(true)
       setError(null)
 
@@ -49,10 +49,9 @@ export function useChat() {
           },
         }
 
-        setMessages((prev) => [...prev, assistantMessage])
+        setMessages(prev => [...prev, assistantMessage])
       } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : 'An unknown error occurred'
+        const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred'
         setError(errorMessage)
 
         // Optionally add an error message to the chat
@@ -62,7 +61,7 @@ export function useChat() {
           content: `Error: ${errorMessage}`,
           createdAt: new Date(),
         }
-        setMessages((prev) => [...prev, errorMessageObj])
+        setMessages(prev => [...prev, errorMessageObj])
       } finally {
         setIsLoading(false)
       }
@@ -84,4 +83,3 @@ export function useChat() {
     resetChat,
   }
 }
-

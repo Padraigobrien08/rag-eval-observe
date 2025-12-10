@@ -58,9 +58,7 @@ export default function IngestForm({
   const [title, setTitle] = useState('')
   const [text, setText] = useState('')
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<{ status?: number; message: string } | null>(
-    null
-  )
+  const [error, setError] = useState<{ status?: number; message: string } | null>(null)
   const [response, setResponse] = useState<IngestResponse | null>(null)
 
   const validateForm = (): string | null => {
@@ -101,10 +99,10 @@ export default function IngestForm({
 
       const result = await ingestDoc(payload)
       setResponse(result)
-      
+
       // Call success callback with result and form values
       onSuccess?.(result, source.trim(), title.trim() || undefined)
-      
+
       // Clear form on success
       setSource('')
       setTitle('')
@@ -116,7 +114,7 @@ export default function IngestForm({
 
       if (err instanceof Error) {
         errorMessage = err.message
-        
+
         // Try to extract status code from error message
         const statusMatch = errorMessage.match(/HTTP (\d+)/)
         if (statusMatch) {
@@ -153,38 +151,30 @@ export default function IngestForm({
     <div className="space-y-6">
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
-          <label
-            htmlFor="source"
-            className="block text-sm font-medium text-gray-700 mb-2"
-          >
+          <label htmlFor="source" className="block text-sm font-medium text-gray-700 mb-2">
             Source <span className="text-red-500">*</span>
           </label>
           <input
             id="source"
             type="text"
             value={source}
-            onChange={(e) => setSource(e.target.value)}
+            onChange={e => setSource(e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             placeholder="e.g., doc-001, article-2024-01"
             required
           />
-          <p className="mt-1 text-xs text-gray-500">
-            Unique identifier for the document source
-          </p>
+          <p className="mt-1 text-xs text-gray-500">Unique identifier for the document source</p>
         </div>
 
         <div>
-          <label
-            htmlFor="title"
-            className="block text-sm font-medium text-gray-700 mb-2"
-          >
+          <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
             Title (optional)
           </label>
           <input
             id="title"
             type="text"
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            onChange={e => setTitle(e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             placeholder="Document title"
           />
@@ -192,10 +182,7 @@ export default function IngestForm({
 
         <div>
           <div className="flex items-center justify-between mb-2">
-            <label
-              htmlFor="text"
-              className="block text-sm font-medium text-gray-700"
-            >
+            <label htmlFor="text" className="block text-sm font-medium text-gray-700">
               Text Content <span className="text-red-500">*</span>
             </label>
             <div className="text-xs text-gray-500">
@@ -204,44 +191,38 @@ export default function IngestForm({
                   isOverLimit
                     ? 'text-red-600 font-medium'
                     : isNearLimit
-                    ? 'text-yellow-600'
-                    : isOverWarning
-                    ? 'text-orange-600'
-                    : ''
+                      ? 'text-yellow-600'
+                      : isOverWarning
+                        ? 'text-orange-600'
+                        : ''
                 }
               >
-                {characterCount.toLocaleString()} /{' '}
-                {MAX_INGEST_PAYLOAD_SIZE.toLocaleString()} characters
-                {isOverWarning && !isNearLimit && (
-                  <span className="ml-2">(Large document)</span>
-                )}
+                {characterCount.toLocaleString()} / {MAX_INGEST_PAYLOAD_SIZE.toLocaleString()}{' '}
+                characters
+                {isOverWarning && !isNearLimit && <span className="ml-2">(Large document)</span>}
               </span>
             </div>
           </div>
           <textarea
             id="text"
             value={text}
-            onChange={(e) => setText(e.target.value)}
+            onChange={e => setText(e.target.value)}
             rows={20}
             className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm ${
               isOverLimit
                 ? 'border-red-300 bg-red-50'
                 : isNearLimit
-                ? 'border-yellow-300 bg-yellow-50'
-                : isOverWarning
-                ? 'border-orange-200 bg-orange-50'
-                : 'border-gray-300'
+                  ? 'border-yellow-300 bg-yellow-50'
+                  : isOverWarning
+                    ? 'border-orange-200 bg-orange-50'
+                    : 'border-gray-300'
             }`}
             placeholder="Enter document text content here..."
             required
           />
           <p className="mt-1 text-xs text-gray-500">
             Maximum size: {MAX_INGEST_PAYLOAD_SIZE.toLocaleString()} characters
-            {isOverLimit && (
-              <span className="text-red-600 font-medium ml-2">
-                (Exceeds limit)
-              </span>
-            )}
+            {isOverLimit && <span className="text-red-600 font-medium ml-2">(Exceeds limit)</span>}
           </p>
         </div>
 
@@ -271,11 +252,7 @@ export default function IngestForm({
         <div className="bg-red-50 border border-red-200 rounded-lg p-4">
           <div className="flex items-start">
             <div className="flex-shrink-0">
-              <svg
-                className="h-5 w-5 text-red-400"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
+              <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
                 <path
                   fillRule="evenodd"
                   d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
@@ -298,11 +275,7 @@ export default function IngestForm({
         <div className="bg-green-50 border border-green-200 rounded-lg p-4">
           <div className="flex items-start">
             <div className="flex-shrink-0">
-              <svg
-                className="h-5 w-5 text-green-400"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
+              <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
                 <path
                   fillRule="evenodd"
                   d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
@@ -322,8 +295,7 @@ export default function IngestForm({
                   </code>
                 </p>
                 <p>
-                  <span className="font-medium">Chunks Created:</span>{' '}
-                  {response.chunks_created}
+                  <span className="font-medium">Chunks Created:</span> {response.chunks_created}
                 </p>
               </div>
             </div>
@@ -333,4 +305,3 @@ export default function IngestForm({
     </div>
   )
 }
-

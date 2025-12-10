@@ -15,27 +15,27 @@ interface DocumentFile {
 
 function loadSampleDocuments(): DocumentFile[] {
   const docsDir = join(process.cwd(), 'data', 'sample_docs')
-  
+
   if (!existsSync(docsDir)) {
     throw new Error(`data/sample_docs directory not found at ${docsDir}`)
   }
 
   try {
-    const files = readdirSync(docsDir).filter((file) => file.endsWith('.md'))
+    const files = readdirSync(docsDir).filter(file => file.endsWith('.md'))
 
-  return files.map((filename) => {
-    const filePath = join(docsDir, filename)
-    const content = readFileSync(filePath, 'utf-8')
-    
-    const titleMatch = content.match(/^#\s+(.+)$/m)
-    const title = titleMatch ? titleMatch[1] : filename.replace('.md', '')
+    return files.map(filename => {
+      const filePath = join(docsDir, filename)
+      const content = readFileSync(filePath, 'utf-8')
 
-    return {
-      filename,
-      content,
-      title,
-    }
-  })
+      const titleMatch = content.match(/^#\s+(.+)$/m)
+      const title = titleMatch ? titleMatch[1] : filename.replace('.md', '')
+
+      return {
+        filename,
+        content,
+        title,
+      }
+    })
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
       throw new Error(`data/sample_docs directory not found at ${docsDir}`)
@@ -45,26 +45,21 @@ function loadSampleDocuments(): DocumentFile[] {
 }
 
 function generateDocumentId(filename: string): string {
-  return filename.replace('.md', '').replace(/[^a-z0-9-]/gi, '-').toLowerCase()
+  return filename
+    .replace('.md', '')
+    .replace(/[^a-z0-9-]/gi, '-')
+    .toLowerCase()
 }
 
 // Note: Document creation is now handled by the API ingest endpoint
 // This function is kept for compatibility but doesn't need to check/insert
-async function seedDocument(
-  docId: string,
-  title: string,
-  source: string
-): Promise<boolean> {
+async function seedDocument(_docId: string, _title: string, _source: string): Promise<boolean> {
   // The API will handle idempotency, so we always return true
   // to allow the ingest to proceed
   return true
 }
 
-async function seedDocumentViaAPI(
-  source: string,
-  title: string,
-  content: string
-): Promise<void> {
+async function seedDocumentViaAPI(source: string, title: string, content: string): Promise<void> {
   try {
     const response = await fetch(`${API_BASE_URL}/ingest`, {
       method: 'POST',
@@ -114,7 +109,7 @@ async function seed() {
       console.log(`Processing: ${doc.title} (${docId})`)
 
       const isNew = await seedDocument(docId, doc.title, source)
-      
+
       if (isNew) {
         newDocs++
         console.log(`  → Creating document: ${docId}`)
@@ -141,4 +136,3 @@ async function seed() {
 }
 
 seed()
-

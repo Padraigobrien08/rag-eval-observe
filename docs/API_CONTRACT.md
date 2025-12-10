@@ -83,6 +83,7 @@ Ingest a document into the RAG system. The document will be chunked, embedded, a
 #### Error Responses
 
 - **400 Bad Request**: Source or text is empty
+
   ```json
   {
     "detail": "Source cannot be empty"
@@ -90,6 +91,7 @@ Ingest a document into the RAG system. The document will be chunked, embedded, a
   ```
 
 - **413 Payload Too Large**: Text exceeds maximum size (10MB)
+
   ```json
   {
     "detail": "Payload size (10485761 chars) exceeds maximum (10485760 chars)"
@@ -219,6 +221,7 @@ Query the RAG system with a natural language question. Returns an answer with ci
 #### Error Responses
 
 - **400 Bad Request**: Query is empty or too long
+
   ```json
   {
     "detail": "Query exceeds maximum length of 5000 characters"
@@ -357,6 +360,7 @@ Most endpoints use FastAPI's `HTTPException`, which returns:
 ```
 
 **Status Codes:**
+
 - `400`: Bad Request (validation errors, empty fields)
 - `413`: Payload Too Large (document exceeds size limit)
 - `429`: Too Many Requests (rate limit exceeded)
@@ -375,6 +379,7 @@ When rate limit is exceeded:
 ```
 
 **Headers:**
+
 - `Retry-After`: Number of seconds to wait before retrying
 - `X-RateLimit-Remaining`: Number of requests remaining
 - `X-RateLimit-Limit`: Maximum number of requests per window
@@ -544,4 +549,3 @@ Get all chunks for a document.
 
 **Last Updated**: 2024-12-08  
 **API Version**: 0.1.0
-

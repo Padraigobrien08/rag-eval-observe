@@ -47,6 +47,7 @@ Measures how much of the retrieved context is used in the answer.
 ## Human Evaluation
 
 While automated metrics are useful, human evaluation remains the gold standard for:
+
 - Answer quality
 - Factual correctness
 - Coherence and fluency
@@ -59,4 +60,3 @@ While automated metrics are useful, human evaluation remains the gold standard f
 - Monitor metrics in production
 - A/B test different configurations
 - Regularly update evaluation datasets
-

@@ -1,4 +1,4 @@
-import { Pool, QueryResult } from 'pg'
+import { Pool, QueryResult, QueryResultRow } from 'pg'
 import { config } from '../../../config'
 
 class DatabaseError extends Error {
@@ -23,12 +23,12 @@ class DatabaseConnection {
       connectionTimeoutMillis: 2000,
     })
 
-    this.pool.on('error', (err) => {
+    this.pool.on('error', err => {
       console.error('Unexpected error on idle client', err)
     })
   }
 
-  async query<T = unknown>(
+  async query<T extends QueryResultRow = QueryResultRow>(
     text: string,
     params?: unknown[]
   ): Promise<QueryResult<T>> {
@@ -37,15 +37,11 @@ class DatabaseConnection {
       return result
     } catch (error) {
       const pgError = error as { code?: string; message: string }
-      throw new DatabaseError(
-        pgError.message || 'Database query failed',
-        pgError.code,
-        text
-      )
+      throw new DatabaseError(pgError.message || 'Database query failed', pgError.code, text)
     }
   }
 
-  async queryOne<T = unknown>(
+  async queryOne<T extends QueryResultRow = QueryResultRow>(
     text: string,
     params?: unknown[]
   ): Promise<T | null> {
@@ -53,7 +49,7 @@ class DatabaseConnection {
     return result.rows[0] || null
   }
 
-  async queryMany<T = unknown>(
+  async queryMany<T extends QueryResultRow = QueryResultRow>(
     text: string,
     params?: unknown[]
   ): Promise<T[]> {
@@ -62,7 +58,9 @@ class DatabaseConnection {
   }
 
   async transaction<T>(
-    callback: (query: (text: string, params?: unknown[]) => Promise<QueryResult>) => Promise<T>
+    callback: (
+      query: (text: string, params?: unknown[]) => Promise<QueryResult<QueryResultRow>>
+    ) => Promise<T>
   ): Promise<T> {
     const client = await this.pool.connect()
     try {
@@ -90,4 +88,3 @@ class DatabaseConnection {
 
 export const db = new DatabaseConnection()
 export { DatabaseError }
-

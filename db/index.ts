@@ -12,12 +12,15 @@ export const db = {
   query: async (text: string, params?: unknown[]) => {
     const result = await pool.query(text, params)
     return {
-      rows: result.rows.map((row) => ({
+      rows: result.rows.map(row => ({
         ...row,
-        embedding: row.embedding ? (typeof row.embedding === 'string' ? JSON.parse(row.embedding) : row.embedding) : null,
+        embedding: row.embedding
+          ? typeof row.embedding === 'string'
+            ? JSON.parse(row.embedding)
+            : row.embedding
+          : null,
       })),
     }
   },
   end: () => pool.end(),
 }
-

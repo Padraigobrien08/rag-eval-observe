@@ -20,9 +20,9 @@ RAG systems operate in two main phases:
 ## Common Use Cases
 
 RAG is particularly effective for:
+
 - Question answering systems
 - Document summarization
 - Technical support chatbots
 - Research assistants
 - Enterprise knowledge bases
-

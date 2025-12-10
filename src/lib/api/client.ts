@@ -11,8 +11,7 @@ import type {
   ApiError,
 } from './types'
 
-const API_BASE_URL =
-  `${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'}/api/v1`
+const API_BASE_URL = `${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'}/api/v1`
 
 // Configurable timeout (10-30s, default 30s)
 const DEFAULT_TIMEOUT = 30000 // 30 seconds
@@ -38,9 +37,7 @@ function createTimeoutController(timeoutMs: number = DEFAULT_TIMEOUT) {
 /**
  * Normalize error response to consistent format
  */
-async function normalizeError(
-  response: Response
-): Promise<ApiError> {
+async function normalizeError(response: Response): Promise<ApiError> {
   let errorData: any = {}
   try {
     errorData = await response.json()
@@ -76,10 +73,7 @@ async function apiRequest<T>(
   timeoutMs: number = DEFAULT_TIMEOUT
 ): Promise<T> {
   // Clamp timeout between min and max
-  const clampedTimeout = Math.max(
-    MIN_TIMEOUT,
-    Math.min(MAX_TIMEOUT, timeoutMs)
-  )
+  const clampedTimeout = Math.max(MIN_TIMEOUT, Math.min(MAX_TIMEOUT, timeoutMs))
 
   const { controller, timeoutId } = createTimeoutController(clampedTimeout)
 
@@ -133,9 +127,7 @@ async function apiRequest<T>(
 /**
  * Ingest a document into the RAG system
  */
-export async function ingestDoc(
-  payload: IngestRequest
-): Promise<IngestResponse> {
+export async function ingestDoc(payload: IngestRequest): Promise<IngestResponse> {
   return apiRequest<IngestResponse>('/ingest', {
     method: 'POST',
     body: JSON.stringify(payload),
@@ -145,9 +137,7 @@ export async function ingestDoc(
 /**
  * Query the RAG system
  */
-export async function queryRag(
-  payload: QueryRequest
-): Promise<QueryResponse> {
+export async function queryRag(payload: QueryRequest): Promise<QueryResponse> {
   return apiRequest<QueryResponse>('/query', {
     method: 'POST',
     body: JSON.stringify(payload),
@@ -172,4 +162,3 @@ export async function health(): Promise<HealthResponse> {
   })
   return data
 }
-

@@ -14,7 +14,7 @@ async function getAppliedMigrations(): Promise<number[]> {
     const result = await db.query<{ version: number }>(
       'SELECT version FROM schema_migrations ORDER BY version'
     )
-    return result.rows.map((row) => row.version)
+    return result.rows.map(row => row.version)
   } catch (error) {
     return []
   }
@@ -33,10 +33,10 @@ async function ensureMigrationsTable(): Promise<void> {
 function loadMigrations(): Migration[] {
   const migrationsDir = join(__dirname, 'migrations')
   const files = readdirSync(migrationsDir)
-    .filter((file) => file.endsWith('.sql'))
+    .filter(file => file.endsWith('.sql'))
     .sort()
 
-  return files.map((filename) => {
+  return files.map(filename => {
     const match = filename.match(/^(\d+)_(.+)\.sql$/)
     if (!match) {
       throw new Error(`Invalid migration filename: ${filename}`)
@@ -56,13 +56,13 @@ async function applyMigration(migration: Migration): Promise<void> {
   const client = await db.getPool().connect()
   try {
     await client.query('BEGIN')
-    
+
     await client.query(sql)
-    await client.query(
-      'INSERT INTO schema_migrations (version, name) VALUES ($1, $2)',
-      [migration.version, migration.name]
-    )
-    
+    await client.query('INSERT INTO schema_migrations (version, name) VALUES ($1, $2)', [
+      migration.version,
+      migration.name,
+    ])
+
     await client.query('COMMIT')
   } catch (error) {
     await client.query('ROLLBACK')
@@ -80,9 +80,7 @@ async function runMigrations() {
     const appliedMigrations = await getAppliedMigrations()
     const allMigrations = loadMigrations()
 
-    const pendingMigrations = allMigrations.filter(
-      (m) => !appliedMigrations.includes(m.version)
-    )
+    const pendingMigrations = allMigrations.filter(m => !appliedMigrations.includes(m.version))
 
     if (pendingMigrations.length === 0) {
       console.log('No pending migrations')
@@ -107,4 +105,3 @@ async function runMigrations() {
 }
 
 runMigrations()
-

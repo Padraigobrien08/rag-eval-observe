@@ -5,6 +5,7 @@ Effective chunking is crucial for RAG performance. The way you split documents i
 ## Why Chunking Matters
 
 Chunks serve as the atomic units for retrieval. If chunks are too large, they may contain irrelevant information. If they're too small, they may lack necessary context. The goal is to create chunks that are:
+
 - Semantically coherent
 - Appropriately sized for the model's context window
 - Overlapping to preserve context across boundaries
@@ -45,4 +46,3 @@ Use embeddings or language models to identify semantic boundaries.
 - Consider document structure (headers, sections, lists)
 - Adjust chunk size based on your embedding model and use case
 - Test different strategies and measure retrieval performance
-

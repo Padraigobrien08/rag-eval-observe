@@ -13,21 +13,25 @@ interface AssistantMessageProps {
 }
 
 // Estimate cost based on token usage (rough estimates for GPT-4)
-function estimateCost(tokenUsage?: AssistantChatMessage['meta']['tokenUsage']): string | null {
+function estimateCost(tokenUsage?: {
+  total_tokens?: number
+  prompt_tokens?: number
+  completion_tokens?: number
+}): string | null {
   if (!tokenUsage) return null
-  
+
   // Rough estimates (as of 2024):
   // GPT-4 Turbo: ~$0.01 per 1K input tokens, ~$0.03 per 1K output tokens
   const inputCostPer1K = 0.01
   const outputCostPer1K = 0.03
-  
+
   const inputTokens = tokenUsage.prompt_tokens || 0
   const outputTokens = tokenUsage.completion_tokens || 0
-  
+
   const cost = (inputTokens / 1000) * inputCostPer1K + (outputTokens / 1000) * outputCostPer1K
-  
+
   if (cost < 0.001) return null // Don't show if less than $0.001
-  
+
   return `$${cost.toFixed(4)}`
 }
 
@@ -46,7 +50,7 @@ export default function AssistantMessage({
     document_id?: string
   }) => {
     const citationText = `Title: ${citation.title || 'Untitled'}\nSource: ${citation.source || 'Unknown'}\nChunk Index: ${citation.chunk_index ?? 'N/A'}\nDocument ID: ${citation.document_id || 'N/A'}`
-    
+
     try {
       await navigator.clipboard.writeText(citationText)
       const citationId = citation.document_id || 'unknown'
@@ -115,25 +119,17 @@ export default function AssistantMessage({
             <div className="space-y-2">
               {message.meta.citations.map((citation, idx) => {
                 const citationId =
-                  citation.chunk_id ||
-                  `${citation.document_id}-${citation.chunk_index || idx}`
+                  citation.chunk_id || `${citation.document_id}-${citation.chunk_index || idx}`
                 const isExpanded = expandedCitations.has(citationId)
                 const debugChunk = citation.chunk_id
-                  ? message.meta?.debugRetrieved?.find(
-                      (c) => c.chunk_id === citation.chunk_id
-                    )
+                  ? message.meta?.debugRetrieved?.find(c => c.chunk_id === citation.chunk_id)
                   : undefined
 
                 // Prefer debug retrieved snippet if available, otherwise use a placeholder
                 const snippet = debugChunk?.content_snippet || 'No snippet available'
 
                 return (
-                  <Card
-                    key={citationId}
-                    variant="outlined"
-                    padding="sm"
-                    className="bg-gray-50"
-                  >
+                  <Card key={citationId} variant="outlined" padding="sm" className="bg-gray-50">
                     <div className="flex items-start justify-between gap-2">
                       <button
                         onClick={() => onToggleCitation(citationId)}
@@ -232,9 +228,7 @@ export default function AssistantMessage({
             <details className="group">
               <summary className="cursor-pointer text-sm font-semibold text-gray-900 mb-3 list-none">
                 <div className="flex items-center justify-between">
-                  <span>
-                    Retrieved Context ({message.meta.debugRetrieved.length})
-                  </span>
+                  <span>Retrieved Context ({message.meta.debugRetrieved.length})</span>
                   <svg
                     className="w-4 h-4 text-gray-400 transform transition-transform group-open:rotate-180"
                     fill="none"
@@ -251,13 +245,8 @@ export default function AssistantMessage({
                 </div>
               </summary>
               <div className="space-y-2 mt-3">
-                {message.meta.debugRetrieved.map((chunk) => (
-                  <Card
-                    key={chunk.chunk_id}
-                    variant="outlined"
-                    padding="sm"
-                    className="bg-gray-50"
-                  >
+                {message.meta.debugRetrieved.map(chunk => (
+                  <Card key={chunk.chunk_id} variant="outlined" padding="sm" className="bg-gray-50">
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex-1">
                         <div className="text-sm font-medium text-gray-900">
@@ -265,8 +254,7 @@ export default function AssistantMessage({
                         </div>
                         <div className="text-xs text-gray-500 mt-0.5">
                           {chunk.source}
-                          {chunk.chunk_index !== undefined &&
-                            ` • Chunk ${chunk.chunk_index}`}
+                          {chunk.chunk_index !== undefined && ` • Chunk ${chunk.chunk_index}`}
                         </div>
                       </div>
                       <div className="text-xs font-mono text-gray-600 ml-4">
@@ -286,4 +274,3 @@ export default function AssistantMessage({
     </div>
   )
 }
-

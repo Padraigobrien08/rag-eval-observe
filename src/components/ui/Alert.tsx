@@ -6,11 +6,7 @@ interface AlertProps {
   className?: string
 }
 
-export default function Alert({
-  children,
-  variant = 'info',
-  className = '',
-}: AlertProps) {
+export default function Alert({ children, variant = 'info', className = '' }: AlertProps) {
   const variantClasses = {
     info: 'bg-blue-50 border-blue-200 text-blue-800',
     success: 'bg-green-50 border-green-200 text-green-800',
@@ -19,11 +15,8 @@ export default function Alert({
   }
 
   return (
-    <div
-      className={`rounded-lg border p-4 ${variantClasses[variant]} ${className}`}
-    >
+    <div className={`rounded-lg border p-4 ${variantClasses[variant]} ${className}`}>
       {children}
     </div>
   )
 }
-
