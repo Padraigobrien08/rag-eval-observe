@@ -232,9 +232,7 @@ class TestChatCompletions:
             mock_client.request = AsyncMock(return_value=mock_response_obj)
 
             messages = [{"role": "user", "content": "Test"}]
-            result = await client.create_chat_completion(
-                messages, temperature=0.9, max_tokens=100
-            )
+            result = await client.create_chat_completion(messages, temperature=0.9, max_tokens=100)
 
             # Verify parameters were passed
             call_args = mock_client.request.call_args
@@ -264,9 +262,10 @@ class TestRetryLogic:
             "usage": {"total_tokens": 5},
         }
 
-        with patch("httpx.AsyncClient") as mock_client_class, patch(
-            "asyncio.sleep", new_callable=AsyncMock
-        ) as mock_sleep:
+        with (
+            patch("httpx.AsyncClient") as mock_client_class,
+            patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep,
+        ):
             mock_client = AsyncMock()
             mock_client_class.return_value.__aenter__.return_value = mock_client
             mock_client.request = AsyncMock(
@@ -295,14 +294,13 @@ class TestRetryLogic:
             "usage": {"total_tokens": 5},
         }
 
-        with patch("httpx.AsyncClient") as mock_client_class, patch(
-            "asyncio.sleep", new_callable=AsyncMock
-        ) as mock_sleep:
+        with (
+            patch("httpx.AsyncClient") as mock_client_class,
+            patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep,
+        ):
             mock_client = AsyncMock()
             mock_client_class.return_value.__aenter__.return_value = mock_client
-            mock_client.request = AsyncMock(
-                side_effect=[mock_response_500, mock_response_200]
-            )
+            mock_client.request = AsyncMock(side_effect=[mock_response_500, mock_response_200])
 
             result = await client.create_embedding("test")
 
@@ -322,9 +320,10 @@ class TestRetryLogic:
             "usage": {"total_tokens": 5},
         }
 
-        with patch("httpx.AsyncClient") as mock_client_class, patch(
-            "asyncio.sleep", new_callable=AsyncMock
-        ) as mock_sleep:
+        with (
+            patch("httpx.AsyncClient") as mock_client_class,
+            patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep,
+        ):
             mock_client = AsyncMock()
             mock_client_class.return_value.__aenter__.return_value = mock_client
             mock_client.request = AsyncMock(
@@ -350,8 +349,9 @@ class TestRetryLogic:
         mock_response_429.headers = {}
         mock_response_429.json.return_value = {"error": {"message": "Rate limit"}}
 
-        with patch("httpx.AsyncClient") as mock_client_class, patch(
-            "asyncio.sleep", new_callable=AsyncMock
+        with (
+            patch("httpx.AsyncClient") as mock_client_class,
+            patch("asyncio.sleep", new_callable=AsyncMock),
         ):
             mock_client = AsyncMock()
             mock_client_class.return_value.__aenter__.return_value = mock_client
@@ -380,14 +380,13 @@ class TestRetryLogic:
             "usage": {"total_tokens": 5},
         }
 
-        with patch("httpx.AsyncClient") as mock_client_class, patch(
-            "asyncio.sleep", new_callable=AsyncMock
-        ) as mock_sleep:
+        with (
+            patch("httpx.AsyncClient") as mock_client_class,
+            patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep,
+        ):
             mock_client = AsyncMock()
             mock_client_class.return_value.__aenter__.return_value = mock_client
-            mock_client.request = AsyncMock(
-                side_effect=[mock_response_429, mock_response_200]
-            )
+            mock_client.request = AsyncMock(side_effect=[mock_response_429, mock_response_200])
 
             await client.create_embedding("test")
 
@@ -406,9 +405,7 @@ class TestErrorHandling:
 
         mock_response_400 = MagicMock()
         mock_response_400.status_code = 400
-        mock_response_400.json.return_value = {
-            "error": {"message": "Invalid request"}
-        }
+        mock_response_400.json.return_value = {"error": {"message": "Invalid request"}}
 
         with patch("httpx.AsyncClient") as mock_client_class:
             mock_client = AsyncMock()
@@ -433,8 +430,9 @@ class TestErrorHandling:
             "usage": {"total_tokens": 5},
         }
 
-        with patch("httpx.AsyncClient") as mock_client_class, patch(
-            "asyncio.sleep", new_callable=AsyncMock
+        with (
+            patch("httpx.AsyncClient") as mock_client_class,
+            patch("asyncio.sleep", new_callable=AsyncMock),
         ):
             mock_client = AsyncMock()
             mock_client_class.return_value.__aenter__.return_value = mock_client
@@ -525,6 +523,7 @@ class TestGlobalClient:
 
             # Reset module-level client
             import app.llm.openai_client as client_module
+
             client_module._client = None
 
             client1 = get_openai_client()
@@ -537,10 +536,10 @@ class TestGlobalClient:
         """Test setting global client."""
         # Reset global client first
         import app.llm.openai_client as client_module
+
         client_module._client = None
 
         custom_client = OpenAIClient(api_key="custom-key")
         set_openai_client(custom_client)
 
         assert get_openai_client() is custom_client
-

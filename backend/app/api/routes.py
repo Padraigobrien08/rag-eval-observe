@@ -488,4 +488,3 @@ async def get_metrics_endpoint(request: Request):
             status_code=500,
             detail="Failed to retrieve metrics",
         )
-

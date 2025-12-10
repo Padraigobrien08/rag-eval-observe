@@ -218,9 +218,7 @@ class TestIDontKnowBehavior:
         mock_completion.content = "I don't know based on the provided documents."
         mock_completion.token_usage = None
         mock_completion.finish_reason = "stop"
-        mock_openai_client.create_chat_completion = AsyncMock(
-            return_value=mock_completion
-        )
+        mock_openai_client.create_chat_completion = AsyncMock(return_value=mock_completion)
 
         with patch("app.rag.answer.get_openai_client", return_value=mock_openai_client):
             result = await generate_answer("What is RAG?", [])
@@ -259,9 +257,7 @@ class TestIDontKnowBehavior:
                 # Should succeed but with "I don't know" answer
                 assert response.status_code == 200
                 data = response.json()
-                assert "don't know" in data["answer"].lower() or "don't know" in str(
-                    data
-                ).lower()
+                assert "don't know" in data["answer"].lower() or "don't know" in str(data).lower()
 
 
 class TestErrorCodes:
@@ -311,9 +307,10 @@ class TestErrorCodes:
         if not allowed:
             client = TestClient(app)
             # Mock the IP to be rate limited
-            with patch(
-                "app.main.get_rate_limiter", return_value=limiter
-            ), patch("app.main.get_client_ip", return_value="test-ip"):
+            with (
+                patch("app.main.get_rate_limiter", return_value=limiter),
+                patch("app.main.get_client_ip", return_value="test-ip"),
+            ):
                 response = client.get("/api/v1/health")
                 # May be 429 if rate limited
                 assert response.status_code in [200, 429, 503]
@@ -335,4 +332,3 @@ class TestErrorCodes:
 
             assert response.status_code == 500
             assert "Internal server error" in response.json()["detail"]
-

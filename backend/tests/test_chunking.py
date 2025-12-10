@@ -240,14 +240,10 @@ class TestEdgeCases:
         with pytest.raises(ValueError, match="chunk_overlap must be non-negative"):
             TextChunker(chunk_size=100, chunk_overlap=-1)
 
-        with pytest.raises(
-            ValueError, match="chunk_overlap must be less than chunk_size"
-        ):
+        with pytest.raises(ValueError, match="chunk_overlap must be less than chunk_size"):
             TextChunker(chunk_size=100, chunk_overlap=100)
 
-        with pytest.raises(
-            ValueError, match="chunk_overlap must be less than chunk_size"
-        ):
+        with pytest.raises(ValueError, match="chunk_overlap must be less than chunk_size"):
             TextChunker(chunk_size=100, chunk_overlap=150)
 
     def test_zero_overlap(self):
@@ -290,4 +286,3 @@ class TestConvenienceFunction:
         chunks = chunk_text(text, is_markdown=False)
 
         assert len(chunks) > 0
-

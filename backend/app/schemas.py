@@ -78,9 +78,7 @@ class QueryRequest(BaseModel):
 
     query: str = Field(..., description="Query text")
     top_k: int = Field(8, ge=1, le=100, description="Number of chunks to retrieve")
-    filters: Optional[Dict[str, Any]] = Field(
-        None, description="Optional filters (source, title)"
-    )
+    filters: Optional[Dict[str, Any]] = Field(None, description="Optional filters (source, title)")
     debug: bool = Field(False, description="Include debug information in response")
 
 
@@ -103,4 +101,3 @@ class QueryResponse(BaseModel):
     latency_ms: int
     token_usage: Optional[Dict[str, int]] = None
     debug: Optional[Dict[str, Any]] = None
-

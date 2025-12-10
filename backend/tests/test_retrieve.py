@@ -15,9 +15,7 @@ class TestRetrieveBasic:
         mock_openai_client = AsyncMock()
         mock_embedding_response = MagicMock()
         mock_embedding_response.embedding = [0.1, 0.2, 0.3] * 512  # 1536 dims
-        mock_openai_client.create_embedding = AsyncMock(
-            return_value=mock_embedding_response
-        )
+        mock_openai_client.create_embedding = AsyncMock(return_value=mock_embedding_response)
 
         # Mock database
         mock_pool = AsyncMock()
@@ -47,8 +45,9 @@ class TestRetrieveBasic:
 
         mock_conn.fetch = AsyncMock(return_value=[mock_row1, mock_row2])
 
-        with patch("app.rag.retrieve.get_openai_client", return_value=mock_openai_client), patch(
-            "app.rag.retrieve.get_db_pool", return_value=mock_pool
+        with (
+            patch("app.rag.retrieve.get_openai_client", return_value=mock_openai_client),
+            patch("app.rag.retrieve.get_db_pool", return_value=mock_pool),
         ):
             results = await retrieve("test query", top_k=5)
 
@@ -65,9 +64,7 @@ class TestRetrieveBasic:
         mock_openai_client = AsyncMock()
         mock_embedding_response = MagicMock()
         mock_embedding_response.embedding = [0.1, 0.2, 0.3] * 512
-        mock_openai_client.create_embedding = AsyncMock(
-            return_value=mock_embedding_response
-        )
+        mock_openai_client.create_embedding = AsyncMock(return_value=mock_embedding_response)
 
         mock_pool = AsyncMock()
         mock_conn = AsyncMock()
@@ -86,8 +83,9 @@ class TestRetrieveBasic:
 
         mock_conn.fetch = AsyncMock(return_value=[mock_row])
 
-        with patch("app.rag.retrieve.get_openai_client", return_value=mock_openai_client), patch(
-            "app.rag.retrieve.get_db_pool", return_value=mock_pool
+        with (
+            patch("app.rag.retrieve.get_openai_client", return_value=mock_openai_client),
+            patch("app.rag.retrieve.get_db_pool", return_value=mock_pool),
         ):
             filters = {"source": "filtered-source", "title": "Filtered Doc"}
             results = await retrieve("test query", top_k=5, filters=filters)
@@ -106,9 +104,7 @@ class TestRetrieveBasic:
         mock_openai_client = AsyncMock()
         mock_embedding_response = MagicMock()
         mock_embedding_response.embedding = [0.1, 0.2, 0.3] * 512
-        mock_openai_client.create_embedding = AsyncMock(
-            return_value=mock_embedding_response
-        )
+        mock_openai_client.create_embedding = AsyncMock(return_value=mock_embedding_response)
 
         mock_pool = AsyncMock()
         mock_conn = AsyncMock()
@@ -118,8 +114,9 @@ class TestRetrieveBasic:
 
         mock_conn.fetch = AsyncMock(return_value=[])
 
-        with patch("app.rag.retrieve.get_openai_client", return_value=mock_openai_client), patch(
-            "app.rag.retrieve.get_db_pool", return_value=mock_pool
+        with (
+            patch("app.rag.retrieve.get_openai_client", return_value=mock_openai_client),
+            patch("app.rag.retrieve.get_db_pool", return_value=mock_pool),
         ):
             filters = {"source": "test-source"}
             results = await retrieve("test query", top_k=5, filters=filters)
@@ -132,9 +129,7 @@ class TestRetrieveBasic:
         mock_openai_client = AsyncMock()
         mock_embedding_response = MagicMock()
         mock_embedding_response.embedding = [0.1, 0.2, 0.3] * 512
-        mock_openai_client.create_embedding = AsyncMock(
-            return_value=mock_embedding_response
-        )
+        mock_openai_client.create_embedding = AsyncMock(return_value=mock_embedding_response)
 
         mock_pool = AsyncMock()
         mock_conn = AsyncMock()
@@ -153,8 +148,9 @@ class TestRetrieveBasic:
 
         mock_conn.fetch = AsyncMock(return_value=[mock_row])
 
-        with patch("app.rag.retrieve.get_openai_client", return_value=mock_openai_client), patch(
-            "app.rag.retrieve.get_db_pool", return_value=mock_pool
+        with (
+            patch("app.rag.retrieve.get_openai_client", return_value=mock_openai_client),
+            patch("app.rag.retrieve.get_db_pool", return_value=mock_pool),
         ):
             filters = {"title": None}
             results = await retrieve("test query", top_k=5, filters=filters)
@@ -180,9 +176,7 @@ class TestRetrieveOrdering:
         query_embedding = [1.0] + [0.0] * 1535
         mock_embedding_response = MagicMock()
         mock_embedding_response.embedding = query_embedding
-        mock_openai_client.create_embedding = AsyncMock(
-            return_value=mock_embedding_response
-        )
+        mock_openai_client.create_embedding = AsyncMock(return_value=mock_embedding_response)
 
         mock_pool = AsyncMock()
         mock_conn = AsyncMock()
@@ -218,12 +212,11 @@ class TestRetrieveOrdering:
         mock_row3.content = "Least similar"
         mock_row3.similarity = 0.50
 
-        mock_conn.fetch = AsyncMock(
-            return_value=[mock_row1, mock_row2, mock_row3]
-        )
+        mock_conn.fetch = AsyncMock(return_value=[mock_row1, mock_row2, mock_row3])
 
-        with patch("app.rag.retrieve.get_openai_client", return_value=mock_openai_client), patch(
-            "app.rag.retrieve.get_db_pool", return_value=mock_pool
+        with (
+            patch("app.rag.retrieve.get_openai_client", return_value=mock_openai_client),
+            patch("app.rag.retrieve.get_db_pool", return_value=mock_pool),
         ):
             results = await retrieve("test query", top_k=5)
 
@@ -240,9 +233,7 @@ class TestRetrieveOrdering:
         mock_openai_client = AsyncMock()
         mock_embedding_response = MagicMock()
         mock_embedding_response.embedding = [0.1, 0.2, 0.3] * 512
-        mock_openai_client.create_embedding = AsyncMock(
-            return_value=mock_embedding_response
-        )
+        mock_openai_client.create_embedding = AsyncMock(return_value=mock_embedding_response)
 
         mock_pool = AsyncMock()
         mock_conn = AsyncMock()
@@ -265,8 +256,9 @@ class TestRetrieveOrdering:
 
         mock_conn.fetch = AsyncMock(return_value=mock_rows)
 
-        with patch("app.rag.retrieve.get_openai_client", return_value=mock_openai_client), patch(
-            "app.rag.retrieve.get_db_pool", return_value=mock_pool
+        with (
+            patch("app.rag.retrieve.get_openai_client", return_value=mock_openai_client),
+            patch("app.rag.retrieve.get_db_pool", return_value=mock_pool),
         ):
             # Request top_k=3, but mock returns 10
             # The LIMIT in SQL should handle this, but we test the function behavior
@@ -296,9 +288,7 @@ class TestRetrieveErrors:
         from app.llm.openai_client import OpenAIError
 
         mock_openai_client = AsyncMock()
-        mock_openai_client.create_embedding = AsyncMock(
-            side_effect=OpenAIError("API error")
-        )
+        mock_openai_client.create_embedding = AsyncMock(side_effect=OpenAIError("API error"))
 
         with patch("app.rag.retrieve.get_openai_client", return_value=mock_openai_client):
             with pytest.raises(RetrieveError, match="Failed to generate embedding"):
@@ -310,9 +300,7 @@ class TestRetrieveErrors:
         mock_openai_client = AsyncMock()
         mock_embedding_response = MagicMock()
         mock_embedding_response.embedding = [0.1, 0.2, 0.3] * 512
-        mock_openai_client.create_embedding = AsyncMock(
-            return_value=mock_embedding_response
-        )
+        mock_openai_client.create_embedding = AsyncMock(return_value=mock_embedding_response)
 
         mock_pool = AsyncMock()
         mock_conn = AsyncMock()
@@ -322,8 +310,9 @@ class TestRetrieveErrors:
 
         mock_conn.fetch = AsyncMock(side_effect=Exception("Database error"))
 
-        with patch("app.rag.retrieve.get_openai_client", return_value=mock_openai_client), patch(
-            "app.rag.retrieve.get_db_pool", return_value=mock_pool
+        with (
+            patch("app.rag.retrieve.get_openai_client", return_value=mock_openai_client),
+            patch("app.rag.retrieve.get_db_pool", return_value=mock_pool),
         ):
             with pytest.raises(RetrieveError, match="Failed to retrieve chunks"):
                 await retrieve("test query", top_k=5)
@@ -338,9 +327,7 @@ class TestRetrieveScoreMeaning:
         mock_openai_client = AsyncMock()
         mock_embedding_response = MagicMock()
         mock_embedding_response.embedding = [0.1, 0.2, 0.3] * 512
-        mock_openai_client.create_embedding = AsyncMock(
-            return_value=mock_embedding_response
-        )
+        mock_openai_client.create_embedding = AsyncMock(return_value=mock_embedding_response)
 
         mock_pool = AsyncMock()
         mock_conn = AsyncMock()
@@ -363,8 +350,9 @@ class TestRetrieveScoreMeaning:
 
         mock_conn.fetch = AsyncMock(return_value=mock_rows)
 
-        with patch("app.rag.retrieve.get_openai_client", return_value=mock_openai_client), patch(
-            "app.rag.retrieve.get_db_pool", return_value=mock_pool
+        with (
+            patch("app.rag.retrieve.get_openai_client", return_value=mock_openai_client),
+            patch("app.rag.retrieve.get_db_pool", return_value=mock_pool),
         ):
             results = await retrieve("test query", top_k=5)
 
@@ -377,9 +365,7 @@ class TestRetrieveScoreMeaning:
         mock_openai_client = AsyncMock()
         mock_embedding_response = MagicMock()
         mock_embedding_response.embedding = [0.1, 0.2, 0.3] * 512
-        mock_openai_client.create_embedding = AsyncMock(
-            return_value=mock_embedding_response
-        )
+        mock_openai_client.create_embedding = AsyncMock(return_value=mock_embedding_response)
 
         mock_pool = AsyncMock()
         mock_conn = AsyncMock()
@@ -399,8 +385,9 @@ class TestRetrieveScoreMeaning:
 
         mock_conn.fetch = AsyncMock(return_value=[mock_row])
 
-        with patch("app.rag.retrieve.get_openai_client", return_value=mock_openai_client), patch(
-            "app.rag.retrieve.get_db_pool", return_value=mock_pool
+        with (
+            patch("app.rag.retrieve.get_openai_client", return_value=mock_openai_client),
+            patch("app.rag.retrieve.get_db_pool", return_value=mock_pool),
         ):
             results = await retrieve("test query", top_k=5)
 
@@ -419,9 +406,7 @@ class TestRetrieveFilterValidation:
         mock_openai_client = AsyncMock()
         mock_embedding_response = MagicMock()
         mock_embedding_response.embedding = [0.1, 0.2, 0.3] * 512
-        mock_openai_client.create_embedding = AsyncMock(
-            return_value=mock_embedding_response
-        )
+        mock_openai_client.create_embedding = AsyncMock(return_value=mock_embedding_response)
 
         mock_pool = AsyncMock()
         mock_conn = AsyncMock()
@@ -440,8 +425,9 @@ class TestRetrieveFilterValidation:
 
         mock_conn.fetch = AsyncMock(return_value=[mock_row])
 
-        with patch("app.rag.retrieve.get_openai_client", return_value=mock_openai_client), patch(
-            "app.rag.retrieve.get_db_pool", return_value=mock_pool
+        with (
+            patch("app.rag.retrieve.get_openai_client", return_value=mock_openai_client),
+            patch("app.rag.retrieve.get_db_pool", return_value=mock_pool),
         ):
             filters = {"source": "exact-source"}
             results = await retrieve("test query", top_k=5, filters=filters)
@@ -460,9 +446,7 @@ class TestRetrieveFilterValidation:
         mock_openai_client = AsyncMock()
         mock_embedding_response = MagicMock()
         mock_embedding_response.embedding = [0.1, 0.2, 0.3] * 512
-        mock_openai_client.create_embedding = AsyncMock(
-            return_value=mock_embedding_response
-        )
+        mock_openai_client.create_embedding = AsyncMock(return_value=mock_embedding_response)
 
         mock_pool = AsyncMock()
         mock_conn = AsyncMock()
@@ -481,8 +465,9 @@ class TestRetrieveFilterValidation:
 
         mock_conn.fetch = AsyncMock(return_value=[mock_row])
 
-        with patch("app.rag.retrieve.get_openai_client", return_value=mock_openai_client), patch(
-            "app.rag.retrieve.get_db_pool", return_value=mock_pool
+        with (
+            patch("app.rag.retrieve.get_openai_client", return_value=mock_openai_client),
+            patch("app.rag.retrieve.get_db_pool", return_value=mock_pool),
         ):
             filters = {"title": "Exact Title"}
             results = await retrieve("test query", top_k=5, filters=filters)
@@ -496,9 +481,7 @@ class TestRetrieveFilterValidation:
         mock_openai_client = AsyncMock()
         mock_embedding_response = MagicMock()
         mock_embedding_response.embedding = [0.1, 0.2, 0.3] * 512
-        mock_openai_client.create_embedding = AsyncMock(
-            return_value=mock_embedding_response
-        )
+        mock_openai_client.create_embedding = AsyncMock(return_value=mock_embedding_response)
 
         mock_pool = AsyncMock()
         mock_conn = AsyncMock()
@@ -517,8 +500,9 @@ class TestRetrieveFilterValidation:
 
         mock_conn.fetch = AsyncMock(return_value=[mock_row])
 
-        with patch("app.rag.retrieve.get_openai_client", return_value=mock_openai_client), patch(
-            "app.rag.retrieve.get_db_pool", return_value=mock_pool
+        with (
+            patch("app.rag.retrieve.get_openai_client", return_value=mock_openai_client),
+            patch("app.rag.retrieve.get_db_pool", return_value=mock_pool),
         ):
             filters = {"source": "combined-source", "title": "Combined Title"}
             results = await retrieve("test query", top_k=5, filters=filters)
@@ -526,4 +510,3 @@ class TestRetrieveFilterValidation:
             assert len(results) == 1
             assert results[0].source == "combined-source"
             assert results[0].title == "Combined Title"
-

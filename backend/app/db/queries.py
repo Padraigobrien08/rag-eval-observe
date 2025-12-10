@@ -131,4 +131,3 @@ async def count_documents() -> int:
     async with pool.acquire() as conn:
         count = await conn.fetchval("SELECT COUNT(*) FROM documents")
         return count or 0
-

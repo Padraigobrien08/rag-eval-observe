@@ -64,4 +64,3 @@ def log_request(
         latency_ms=latency_ms,
         **kwargs,
     )
-

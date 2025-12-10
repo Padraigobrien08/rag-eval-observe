@@ -4,6 +4,7 @@ Evaluation harness for RAG system.
 
 Runs evaluation directly (not via HTTP) and produces metrics and report.
 """
+
 import asyncio
 import json
 import os
@@ -88,17 +89,13 @@ def load_dataset(dataset_path: Path) -> List[EvaluationCase]:
                     EvaluationCase(
                         query=data["query"],
                         expected_sources=data.get("expected_sources", []),
-                        expected_answer_contains=data.get(
-                            "expected_answer_contains", []
-                        ),
+                        expected_answer_contains=data.get("expected_answer_contains", []),
                     )
                 )
     return cases
 
 
-def calculate_hit_at_k(
-    retrieved_sources: List[str], expected_sources: List[str], k: int
-) -> bool:
+def calculate_hit_at_k(retrieved_sources: List[str], expected_sources: List[str], k: int) -> bool:
     """Calculate hit@k: whether any expected source is in top k retrieved."""
     if not expected_sources:
         return False
@@ -112,9 +109,7 @@ def calculate_hit_at_k(
     return False
 
 
-def calculate_mrr(
-    retrieved_sources: List[str], expected_sources: List[str]
-) -> float:
+def calculate_mrr(retrieved_sources: List[str], expected_sources: List[str]) -> float:
     """Calculate Mean Reciprocal Rank."""
     if not expected_sources:
         return 0.0
@@ -198,18 +193,14 @@ Respond in JSON format:
         }
 
 
-async def evaluate_case(
-    case: EvaluationCase, use_llm_judge: bool = False
-) -> EvaluationResult:
+async def evaluate_case(case: EvaluationCase, use_llm_judge: bool = False) -> EvaluationResult:
     """Evaluate a single case."""
     try:
         # Retrieve chunks
         retrieved_chunks = await retrieve(query=case.query, top_k=8)
 
         # Extract retrieved sources
-        retrieved_sources = [
-            chunk.source for chunk in retrieved_chunks if chunk.source
-        ]
+        retrieved_sources = [chunk.source for chunk in retrieved_chunks if chunk.source]
 
         # Calculate retrieval metrics
         hit_at_1 = calculate_hit_at_k(retrieved_sources, case.expected_sources, 1)
@@ -219,9 +210,7 @@ async def evaluate_case(
         mrr = calculate_mrr(retrieved_sources, case.expected_sources)
 
         # Generate answer
-        answer_response = await generate_answer(
-            query=case.query, retrieved_chunks=retrieved_chunks
-        )
+        answer_response = await generate_answer(query=case.query, retrieved_chunks=retrieved_chunks)
         answer = answer_response.answer
 
         # LLM judgment (optional)
@@ -360,21 +349,9 @@ async def run_evaluation():
 
     # LLM judge metrics
     if use_llm_judge:
-        correctness_count = sum(
-            1
-            for r in results
-            if r.llm_judge_correctness is True
-        )
-        faithfulness_count = sum(
-            1
-            for r in results
-            if r.llm_judge_faithfulness is True
-        )
-        judged_count = sum(
-            1
-            for r in results
-            if r.llm_judge_correctness is not None
-        )
+        correctness_count = sum(1 for r in results if r.llm_judge_correctness is True)
+        faithfulness_count = sum(1 for r in results if r.llm_judge_faithfulness is True)
+        judged_count = sum(1 for r in results if r.llm_judge_correctness is not None)
 
         if judged_count > 0:
             summary.llm_judge_correctness_rate = correctness_count / judged_count
@@ -438,4 +415,3 @@ if __name__ == "__main__":
     except Exception as e:
         logger.error("Evaluation failed", error=str(e), exc_info=True)
         sys.exit(1)
-

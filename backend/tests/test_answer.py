@@ -194,14 +194,10 @@ class TestGenerateAnswer:
         mock_openai_client = AsyncMock()
         mock_completion = ChatCompletionResponse(
             content="RAG stands for Retrieval-Augmented Generation [1].",
-            token_usage=TokenUsage(
-                prompt_tokens=100, completion_tokens=50, total_tokens=150
-            ),
+            token_usage=TokenUsage(prompt_tokens=100, completion_tokens=50, total_tokens=150),
             finish_reason="stop",
         )
-        mock_openai_client.create_chat_completion = AsyncMock(
-            return_value=mock_completion
-        )
+        mock_openai_client.create_chat_completion = AsyncMock(return_value=mock_completion)
 
         with patch("app.rag.answer.get_openai_client", return_value=mock_openai_client):
             result = await generate_answer("What is RAG?", chunks)
@@ -220,14 +216,10 @@ class TestGenerateAnswer:
         mock_openai_client = AsyncMock()
         mock_completion = ChatCompletionResponse(
             content="I don't know based on the provided documents.",
-            token_usage=TokenUsage(
-                prompt_tokens=50, completion_tokens=10, total_tokens=60
-            ),
+            token_usage=TokenUsage(prompt_tokens=50, completion_tokens=10, total_tokens=60),
             finish_reason="stop",
         )
-        mock_openai_client.create_chat_completion = AsyncMock(
-            return_value=mock_completion
-        )
+        mock_openai_client.create_chat_completion = AsyncMock(return_value=mock_completion)
 
         with patch("app.rag.answer.get_openai_client", return_value=mock_openai_client):
             result = await generate_answer("What is RAG?", [])
@@ -254,9 +246,7 @@ class TestGenerateAnswer:
         ]
 
         mock_openai_client = AsyncMock()
-        mock_openai_client.create_chat_completion = AsyncMock(
-            side_effect=OpenAIError("API error")
-        )
+        mock_openai_client.create_chat_completion = AsyncMock(side_effect=OpenAIError("API error"))
 
         with patch("app.rag.answer.get_openai_client", return_value=mock_openai_client):
             with pytest.raises(AnswerError, match="Failed to generate answer"):
@@ -289,14 +279,10 @@ class TestGenerateAnswer:
         mock_openai_client = AsyncMock()
         mock_completion = ChatCompletionResponse(
             content="Answer with citation [1] and another [2].",
-            token_usage=TokenUsage(
-                prompt_tokens=100, completion_tokens=20, total_tokens=120
-            ),
+            token_usage=TokenUsage(prompt_tokens=100, completion_tokens=20, total_tokens=120),
             finish_reason="stop",
         )
-        mock_openai_client.create_chat_completion = AsyncMock(
-            return_value=mock_completion
-        )
+        mock_openai_client.create_chat_completion = AsyncMock(return_value=mock_completion)
 
         with patch("app.rag.answer.get_openai_client", return_value=mock_openai_client):
             result = await generate_answer("Test query", chunks)
@@ -306,4 +292,3 @@ class TestGenerateAnswer:
             assert result.citations[1]["chunk_id"] == "chunk-2"
             assert "chunk-1" in result.used_chunk_ids
             assert "chunk-2" in result.used_chunk_ids
-

@@ -26,9 +26,7 @@ class DocumentTooLargeError(IngestError):
     pass
 
 
-async def find_existing_document(
-    source: str, title: Optional[str]
-) -> Optional[Dict[str, Any]]:
+async def find_existing_document(source: str, title: Optional[str]) -> Optional[Dict[str, Any]]:
     """
     Find existing document by source and title.
 
@@ -139,8 +137,7 @@ async def ingest_document(
     # Validate document size
     if len(text) > MAX_DOCUMENT_SIZE:
         raise DocumentTooLargeError(
-            f"Document size ({len(text)} chars) exceeds maximum "
-            f"({MAX_DOCUMENT_SIZE} chars)"
+            f"Document size ({len(text)} chars) exceeds maximum ({MAX_DOCUMENT_SIZE} chars)"
         )
 
     # Check for existing document
@@ -214,8 +211,7 @@ async def ingest_document(
 
     if len(embedding_responses) != len(chunks):
         raise IngestError(
-            f"Embedding count mismatch: expected {len(chunks)}, "
-            f"got {len(embedding_responses)}"
+            f"Embedding count mismatch: expected {len(chunks)}, got {len(embedding_responses)}"
         )
 
     # Insert document and chunks in a transaction
@@ -238,9 +234,7 @@ async def ingest_document(
                 )
 
                 # Insert chunks
-                for i, (chunk, embedding_response) in enumerate(
-                    zip(chunks, embedding_responses)
-                ):
+                for i, (chunk, embedding_response) in enumerate(zip(chunks, embedding_responses)):
                     embedding = embedding_response.embedding
                     embedding_str = "[" + ",".join(map(str, embedding)) + "]"
 
@@ -287,4 +281,3 @@ async def ingest_document(
                     exc_info=True,
                 )
                 raise IngestError(f"Failed to ingest document: {str(e)}") from e
-

@@ -147,9 +147,7 @@ Do not make up information or use any knowledge outside of what was provided."""
         if chunk.source:
             citation_info += f" ({chunk.source})"
 
-        context_parts.append(
-            f"{citation_info}\n{chunk.content}\n---"
-        )
+        context_parts.append(f"{citation_info}\n{chunk.content}\n---")
 
     context = "\n\n".join(context_parts)
 
@@ -269,9 +267,7 @@ async def generate_answer(
         raise AnswerError(f"Failed to generate answer: {str(e)}") from e
 
 
-def extract_citations(
-    answer: str, chunks: List[RetrievedChunk]
-) -> List[Dict[str, Any]]:
+def extract_citations(answer: str, chunks: List[RetrievedChunk]) -> List[Dict[str, Any]]:
     """
     Extract citations from answer text.
 
@@ -316,4 +312,3 @@ def extract_citations(
             unique_citations.append(citation)
 
     return unique_citations
-

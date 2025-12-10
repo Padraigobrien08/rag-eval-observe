@@ -162,10 +162,7 @@ class TextChunker:
                 continue
 
             # If adding this section would exceed chunk size, finalize current chunk
-            if (
-                current_size > 0
-                and current_size + len(section_text) + 2 > self.chunk_size
-            ):
+            if current_size > 0 and current_size + len(section_text) + 2 > self.chunk_size:
                 # Finalize current chunk
                 chunks.append(
                     Chunk(
@@ -177,9 +174,7 @@ class TextChunker:
                 chunk_index += 1
 
                 # Start new chunk with overlap
-                overlap_text = self._get_overlap_text(
-                    "\n\n".join(current_chunk_content)
-                )
+                overlap_text = self._get_overlap_text("\n\n".join(current_chunk_content))
                 current_chunk_content = [overlap_text] if overlap_text else []
                 current_metadata = {"heading_path": heading_path.copy()}
                 current_size = len(overlap_text)
@@ -209,9 +204,7 @@ class TextChunker:
                     # Merge metadata (prefer more specific heading path)
                     merged_metadata = prev_chunk.metadata.copy()
                     if last_chunk.metadata.get("heading_path"):
-                        merged_metadata["heading_path"] = last_chunk.metadata[
-                            "heading_path"
-                        ]
+                        merged_metadata["heading_path"] = last_chunk.metadata["heading_path"]
 
                     chunks[-2] = Chunk(
                         chunk_index=prev_chunk.chunk_index,
@@ -320,4 +313,3 @@ def chunk_text(
     """
     chunker = TextChunker(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
     return chunker.chunk(text, is_markdown=is_markdown)
-

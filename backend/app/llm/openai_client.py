@@ -137,7 +137,7 @@ class OpenAIClient:
                     # Rate limit (429) - retry with backoff
                     if response.status_code == 429:
                         retry_after = self._get_retry_after(response)
-                        wait_time = retry_after or (2 ** attempt)
+                        wait_time = retry_after or (2**attempt)
 
                         if attempt < self.max_retries:
                             logger.warning(
@@ -155,7 +155,7 @@ class OpenAIClient:
 
                     # Server errors (5xx) - retry with backoff
                     if 500 <= response.status_code < 600:
-                        wait_time = 2 ** attempt
+                        wait_time = 2**attempt
 
                         if attempt < self.max_retries:
                             logger.warning(
@@ -180,7 +180,7 @@ class OpenAIClient:
                     raise OpenAIError(f"{operation} failed: {error_message}")
 
             except httpx.TimeoutException as e:
-                wait_time = 2 ** attempt
+                wait_time = 2**attempt
 
                 if attempt < self.max_retries:
                     logger.warning(
@@ -199,7 +199,7 @@ class OpenAIClient:
 
             except httpx.RequestError as e:
                 # Network errors - retry with backoff
-                wait_time = 2 ** attempt
+                wait_time = 2**attempt
 
                 if attempt < self.max_retries:
                     logger.warning(
@@ -246,9 +246,7 @@ class OpenAIClient:
             total_tokens=usage_data.get("total_tokens", 0),
         )
 
-    async def create_embedding(
-        self, text: str, model: Optional[str] = None
-    ) -> EmbeddingResponse:
+    async def create_embedding(self, text: str, model: Optional[str] = None) -> EmbeddingResponse:
         """
         Create embedding for a single text.
 
@@ -424,4 +422,3 @@ def set_openai_client(client: Optional[OpenAIClient]) -> None:
     """Set global OpenAI client (useful for testing)."""
     global _client
     _client = client
-

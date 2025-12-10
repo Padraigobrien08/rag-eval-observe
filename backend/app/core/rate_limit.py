@@ -17,9 +17,7 @@ class RateLimiter:
     rate limiting, use a shared store like Redis.
     """
 
-    def __init__(
-        self, max_requests: int = None, window_seconds: int = None
-    ):
+    def __init__(self, max_requests: int = None, window_seconds: int = None):
         """
         Initialize rate limiter.
 
@@ -46,9 +44,7 @@ class RateLimiter:
 
         # Clean old requests outside the window
         self.requests[identifier] = [
-            req_time
-            for req_time in self.requests[identifier]
-            if req_time > window_start
+            req_time for req_time in self.requests[identifier] if req_time > window_start
         ]
 
         # Check if limit exceeded
@@ -91,4 +87,3 @@ def get_rate_limiter() -> RateLimiter:
     if _rate_limiter is None:
         _rate_limiter = RateLimiter()
     return _rate_limiter
-

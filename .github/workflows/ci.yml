@@ -36,8 +36,11 @@ jobs:
       - name: Run ruff check (verify)
         run: ruff check . || (echo "Some ruff errors remain. Run 'ruff check --fix --unsafe-fixes .' locally and commit the fixes." && exit 1)
 
+      - name: Run ruff format
+        run: ruff format .
+
       - name: Run ruff format check
-        run: ruff format --check .
+        run: ruff format --check . || (echo "Files were reformatted. Run 'ruff format .' locally and commit the changes." && exit 1)
 
   typecheck:
     runs-on: ubuntu-latest

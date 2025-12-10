@@ -154,4 +154,3 @@ async def retrieve(
             exc_info=True,
         )
         raise RetrieveError(f"Failed to retrieve chunks: {str(e)}") from e
-

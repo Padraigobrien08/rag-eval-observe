@@ -36,9 +36,10 @@ async def test_ingest_document_integration():
     # Mock document insert
     mock_conn.execute = AsyncMock()
 
-    with patch("app.rag.ingest.get_db_pool", return_value=mock_pool), patch(
-        "app.rag.ingest.get_openai_client"
-    ) as mock_openai:
+    with (
+        patch("app.rag.ingest.get_db_pool", return_value=mock_pool),
+        patch("app.rag.ingest.get_openai_client") as mock_openai,
+    ):
         # Mock OpenAI client
         mock_client = AsyncMock()
         mock_openai.return_value = mock_client
@@ -46,9 +47,7 @@ async def test_ingest_document_integration():
         # Mock embedding response
         mock_embedding_response = MagicMock()
         mock_embedding_response.embedding = [0.1, 0.2, 0.3] * 512  # 1536 dims
-        mock_client.create_embeddings = AsyncMock(
-            return_value=[mock_embedding_response]
-        )
+        mock_client.create_embeddings = AsyncMock(return_value=[mock_embedding_response])
 
         # Test data
         source = "test-source"
@@ -122,17 +121,16 @@ async def test_ingest_idempotency():
 
     mock_conn.execute = AsyncMock()
 
-    with patch("app.rag.ingest.get_db_pool", return_value=mock_pool), patch(
-        "app.rag.ingest.get_openai_client"
-    ) as mock_openai:
+    with (
+        patch("app.rag.ingest.get_db_pool", return_value=mock_pool),
+        patch("app.rag.ingest.get_openai_client") as mock_openai,
+    ):
         mock_client = AsyncMock()
         mock_openai.return_value = mock_client
 
         mock_embedding_response = MagicMock()
         mock_embedding_response.embedding = [0.1, 0.2, 0.3] * 512
-        mock_client.create_embeddings = AsyncMock(
-            return_value=[mock_embedding_response]
-        )
+        mock_client.create_embeddings = AsyncMock(return_value=[mock_embedding_response])
 
         text = "This is a test document. " * 50
 
@@ -143,9 +141,7 @@ async def test_ingest_idempotency():
         )
 
         # Verify version 2 was created
-        assert "v2" in result["document_id"] or "v2" in str(
-            mock_conn.execute.call_args_list
-        )
+        assert "v2" in result["document_id"] or "v2" in str(mock_conn.execute.call_args_list)
 
 
 @pytest.mark.asyncio
@@ -166,17 +162,16 @@ async def test_ingest_markdown():
     mock_conn.fetchrow = AsyncMock(return_value=None)
     mock_conn.execute = AsyncMock()
 
-    with patch("app.rag.ingest.get_db_pool", return_value=mock_pool), patch(
-        "app.rag.ingest.get_openai_client"
-    ) as mock_openai:
+    with (
+        patch("app.rag.ingest.get_db_pool", return_value=mock_pool),
+        patch("app.rag.ingest.get_openai_client") as mock_openai,
+    ):
         mock_client = AsyncMock()
         mock_openai.return_value = mock_client
 
         mock_embedding_response = MagicMock()
         mock_embedding_response.embedding = [0.1, 0.2, 0.3] * 512
-        mock_client.create_embeddings = AsyncMock(
-            return_value=[mock_embedding_response]
-        )
+        mock_client.create_embeddings = AsyncMock(return_value=[mock_embedding_response])
 
         markdown_text = """# Title
 
@@ -219,17 +214,16 @@ async def test_ingest_transaction_rollback_on_error():
     # Make execute raise an error
     mock_conn.execute = AsyncMock(side_effect=Exception("Database error"))
 
-    with patch("app.rag.ingest.get_db_pool", return_value=mock_pool), patch(
-        "app.rag.ingest.get_openai_client"
-    ) as mock_openai:
+    with (
+        patch("app.rag.ingest.get_db_pool", return_value=mock_pool),
+        patch("app.rag.ingest.get_openai_client") as mock_openai,
+    ):
         mock_client = AsyncMock()
         mock_openai.return_value = mock_client
 
         mock_embedding_response = MagicMock()
         mock_embedding_response.embedding = [0.1, 0.2, 0.3] * 512
-        mock_client.create_embeddings = AsyncMock(
-            return_value=[mock_embedding_response]
-        )
+        mock_client.create_embeddings = AsyncMock(return_value=[mock_embedding_response])
 
         text = "This is a test document. " * 50
 
@@ -287,16 +281,15 @@ async def test_ingest_embedding_failure():
 
     mock_conn.fetchrow = AsyncMock(return_value=None)
 
-    with patch("app.rag.ingest.get_db_pool", return_value=mock_pool), patch(
-        "app.rag.ingest.get_openai_client"
-    ) as mock_openai:
+    with (
+        patch("app.rag.ingest.get_db_pool", return_value=mock_pool),
+        patch("app.rag.ingest.get_openai_client") as mock_openai,
+    ):
         from app.llm.openai_client import OpenAIError
 
         mock_client = AsyncMock()
         mock_openai.return_value = mock_client
-        mock_client.create_embeddings = AsyncMock(
-            side_effect=OpenAIError("API error")
-        )
+        mock_client.create_embeddings = AsyncMock(side_effect=OpenAIError("API error"))
 
         text = "This is a test document. " * 50
 
@@ -306,4 +299,3 @@ async def test_ingest_embedding_failure():
                 title="Test Document",
                 text=text,
             )
-

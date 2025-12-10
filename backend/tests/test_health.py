@@ -15,4 +15,3 @@ async def test_health_endpoint():
         assert "status" in data
         assert "database" in data
         assert data["version"] == "0.1.0"
-

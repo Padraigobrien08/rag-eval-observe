@@ -48,7 +48,10 @@ app.add_middleware(
 async def rate_limit_middleware(request: Request, call_next):
     """Rate limiting middleware."""
     # Skip rate limiting for health, metrics endpoints, and OPTIONS (CORS preflight)
-    if request.url.path in ["/api/v1/health", "/api/v1/metrics", "/"] or request.method == "OPTIONS":
+    if (
+        request.url.path in ["/api/v1/health", "/api/v1/metrics", "/"]
+        or request.method == "OPTIONS"
+    ):
         return await call_next(request)
 
     # Get client IP
@@ -164,4 +167,3 @@ app.include_router(router, prefix="/api/v1")
 async def root():
     """Root endpoint."""
     return {"message": "RAG Eval Observability API", "version": "0.1.0"}
-

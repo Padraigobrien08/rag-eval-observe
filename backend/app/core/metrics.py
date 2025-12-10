@@ -65,9 +65,7 @@ class MetricsCollector:
         }
         self.start_time = time.time()
 
-    def record_request(
-        self, route: str, status_code: int, latency_ms: int
-    ) -> None:
+    def record_request(self, route: str, status_code: int, latency_ms: int) -> None:
         """
         Record an HTTP request.
 
@@ -163,4 +161,3 @@ def reset_metrics() -> None:
     global _metrics
     if _metrics is not None:
         _metrics.reset()
-
