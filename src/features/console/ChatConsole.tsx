@@ -11,30 +11,19 @@ import UserMessage from '@/features/chat/UserMessage'
 import AssistantMessage from '@/features/chat/AssistantMessage'
 import EmptyState from '@/features/chat/EmptyState'
 import LoadingSkeleton from '@/features/chat/LoadingSkeleton'
-import { loadPlaygroundSettings } from '@/lib/storage/playgroundSettings'
 import { copyTranscript, downloadTranscript } from '@/lib/utils/transcript'
 import { health } from '@/lib/api/client'
+import { useRagSettings } from '@/features/settings/useRagSettings'
 
 interface ChatConsoleProps {
-  settings?: {
-    topK: number
-    debug: boolean
-    filterSource: string
-    filterTitle: string
-  }
   onIngestSuccess?: () => void
 }
 
-export default function ChatConsole({
-  settings: propsSettings,
-  onIngestSuccess,
-}: ChatConsoleProps = {}) {
+export default function ChatConsole({ onIngestSuccess }: ChatConsoleProps = {}) {
   const { messages, isLoading, error, sendMessage, resetChat, retryLastMessage } = useChat()
   const [inputText, setInputText] = useState('')
-  
-  // Use provided settings or load from localStorage
-  const settings = propsSettings || loadPlaygroundSettings()
-  const { topK, debug: debugMode, filterSource, filterTitle } = settings
+  const { settings } = useRagSettings()
+  const { topK, debug: debugMode, filters } = settings
   
   const [ingestDrawerOpen, setIngestDrawerOpen] = useState(false)
   const [toasts, setToasts] = useState<Toast[]>([])
@@ -72,13 +61,7 @@ export default function ChatConsole({
 
     await sendMessage(text, {
       topK,
-      filters:
-        filterSource || filterTitle
-          ? {
-              ...(filterSource && { source: filterSource }),
-              ...(filterTitle && { title: filterTitle }),
-            }
-          : undefined,
+      filters: filters.source || filters.title ? filters : undefined,
       debug: debugMode,
     })
   }

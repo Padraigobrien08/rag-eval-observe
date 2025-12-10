@@ -3,19 +3,18 @@
 import { useState } from 'react'
 import ChatConsole from './ChatConsole'
 import DocumentsPanel from './DocumentsPanel'
-import { useRagSettings } from './useRagSettings'
+import { useRagSettings } from '@/features/settings/useRagSettings'
 import RecentIngests from '@/components/RecentIngests'
 
 export default function ConsoleLayout() {
   const {
     settings,
-    updateTopK,
-    updateDebugMode,
-    updateFilterSource,
-    updateFilterTitle,
-    clearFilters,
+    setTopK,
+    setDebug,
+    setFilters,
+    clearDocumentSelection,
   } = useRagSettings()
-  const { topK, debug: debugMode, filterSource, filterTitle } = settings
+  const { topK, debug: debugMode, filters } = settings
   const [filtersExpanded, setFiltersExpanded] = useState(false)
   const [documentsRefreshTrigger, setDocumentsRefreshTrigger] = useState(0)
 
@@ -42,7 +41,7 @@ export default function ConsoleLayout() {
                 min="1"
                 max="100"
                 value={topK}
-                onChange={e => updateTopK(parseInt(e.target.value) || 8)}
+                onChange={e => setTopK(parseInt(e.target.value) || 8)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
               />
             </div>
@@ -82,8 +81,10 @@ export default function ConsoleLayout() {
                     <input
                       id="filterSource"
                       type="text"
-                      value={filterSource}
-                      onChange={e => updateFilterSource(e.target.value)}
+                      value={filters.source || ''}
+                      onChange={e =>
+                        setFilters({ ...filters, source: e.target.value || undefined })
+                      }
                       className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                       placeholder="Filter by source..."
                     />
@@ -98,15 +99,17 @@ export default function ConsoleLayout() {
                     <input
                       id="filterTitle"
                       type="text"
-                      value={filterTitle}
-                      onChange={e => updateFilterTitle(e.target.value)}
+                      value={filters.title || ''}
+                      onChange={e =>
+                        setFilters({ ...filters, title: e.target.value || undefined })
+                      }
                       className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                       placeholder="Filter by title..."
                     />
                   </div>
-                  {(filterSource || filterTitle) && (
+                  {(filters.source || filters.title) && (
                     <button
-                      onClick={clearFilters}
+                      onClick={clearDocumentSelection}
                       className="w-full px-3 py-1.5 text-xs text-gray-600 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
                     >
                       Clear Filters
@@ -115,10 +118,10 @@ export default function ConsoleLayout() {
                   <div className="pt-3 border-t">
                     <RecentIngests
                       onSelect={ingest => {
-                        updateFilterSource(ingest.source)
-                        if (ingest.title) {
-                          updateFilterTitle(ingest.title)
-                        }
+                        setFilters({
+                          source: ingest.source,
+                          title: ingest.title,
+                        })
                         if (!filtersExpanded) {
                           setFiltersExpanded(true)
                         }
@@ -134,7 +137,7 @@ export default function ConsoleLayout() {
                 id="debugMode"
                 type="checkbox"
                 checked={debugMode}
-                onChange={e => updateDebugMode(e.target.checked)}
+                onChange={e => setDebug(e.target.checked)}
                 className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
               />
               <label htmlFor="debugMode" className="ml-2 block text-sm text-gray-700">
@@ -148,7 +151,6 @@ export default function ConsoleLayout() {
       {/* Main Chat Region - Flex-1 */}
       <div className="flex-1 flex flex-col overflow-hidden">
         <ChatConsole
-          settings={settings}
           onIngestSuccess={() => setDocumentsRefreshTrigger(prev => prev + 1)}
         />
       </div>

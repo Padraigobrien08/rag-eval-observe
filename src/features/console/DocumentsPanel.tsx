@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { useRecentIngests } from '@/features/ingest/useRecentIngests'
-import { useRagSettings } from './useRagSettings'
+import { useRagSettings } from '@/features/settings/useRagSettings'
 import type { RecentIngest } from '@/lib/storage/recentIngests'
 
 interface DocumentsPanelProps {
@@ -12,16 +12,18 @@ interface DocumentsPanelProps {
 export default function DocumentsPanel({ refreshTrigger }: DocumentsPanelProps) {
   const router = useRouter()
   const { ingests } = useRecentIngests(refreshTrigger)
-  const { settings, setDocumentFilter, clearFilters } = useRagSettings()
-  const selectedIngest = ingests.find(i => i.source === settings.filterSource)
+  const { settings, selectDocument, clearDocumentSelection } = useRagSettings()
+  const selectedIngest = ingests.find(
+    i => i.source === settings.activeDocument?.source
+  )
   const selectedDocumentId = selectedIngest?.document_id || null
 
   const handleSelectDocument = (ingest: RecentIngest) => {
-    setDocumentFilter(ingest.source, ingest.title)
+    selectDocument({ source: ingest.source, title: ingest.title })
   }
 
   const handleClearSelection = () => {
-    clearFilters()
+    clearDocumentSelection()
   }
 
   const handleNewDocument = () => {
