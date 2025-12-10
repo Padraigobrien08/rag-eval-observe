@@ -9,7 +9,7 @@ export function useChat() {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  
+
   // Store last message and options for retry
   const lastMessageRef = useRef<{ text: string; options: ChatOptions } | null>(null)
 

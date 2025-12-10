@@ -16,4 +16,3 @@ export function useRecentIngests(refreshTrigger?: number) {
 
   return { ingests, refresh }
 }
-

@@ -84,4 +84,3 @@ export async function copyTranscript(messages: ChatMessage[]): Promise<void> {
   const markdown = formatTranscriptAsMarkdown(messages)
   await navigator.clipboard.writeText(markdown)
 }
-

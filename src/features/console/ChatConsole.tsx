@@ -1,11 +1,11 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import { useChat } from '@/features/chat/useChat'
 import type { IngestResponse } from '@/lib/api/types'
 import Drawer from '@/components/Drawer'
 import IngestForm from '@/features/ingest/IngestForm'
-import { ToastContainer, type Toast } from '@/components/Toast'
 import { ToastContainer as UIToastContainer, useToast } from '@/components/ui/Toast'
 import UserMessage from '@/features/chat/UserMessage'
 import AssistantMessage from '@/features/chat/AssistantMessage'
@@ -20,15 +20,18 @@ interface ChatConsoleProps {
 }
 
 export default function ChatConsole({ onIngestSuccess }: ChatConsoleProps = {}) {
+  const router = useRouter()
   const { messages, isLoading, error, sendMessage, resetChat, retryLastMessage } = useChat()
   const [inputText, setInputText] = useState('')
   const { settings } = useRagSettings()
   const { topK, debug: debugMode, filters } = settings
-  
+  // Note: setFilters is available but not used in this component
+
   const [ingestDrawerOpen, setIngestDrawerOpen] = useState(false)
-  const [toasts, setToasts] = useState<Toast[]>([])
   const [expandedCitations, setExpandedCitations] = useState<Set<string>>(new Set())
-  const [connectionStatus, setConnectionStatus] = useState<{ ok: boolean; db?: boolean } | null>(null)
+  const [connectionStatus, setConnectionStatus] = useState<{ ok: boolean; db?: boolean } | null>(
+    null
+  )
   const chatEndRef = useRef<HTMLDivElement>(null)
   const transcriptRef = useRef<HTMLDivElement>(null)
   const [isAtBottom, setIsAtBottom] = useState(true)
@@ -39,7 +42,7 @@ export default function ChatConsole({ onIngestSuccess }: ChatConsoleProps = {}) 
       try {
         const healthData = await health()
         setConnectionStatus({ ok: healthData.ok, db: healthData.db })
-      } catch (err) {
+      } catch {
         setConnectionStatus({ ok: false, db: false })
       }
     }
@@ -120,28 +123,24 @@ export default function ChatConsole({ onIngestSuccess }: ChatConsoleProps = {}) 
     setExpandedCitations(newExpanded)
   }
 
-  const addToast = (toast: Omit<Toast, 'id'>) => {
-    const id = `toast-${Date.now()}-${Math.random()}`
-    setToasts(prev => [...prev, { ...toast, id }])
-  }
+  const { toasts, showToast, dismissToast } = useToast()
 
-  const removeToast = (id: string) => {
-    setToasts(prev => prev.filter(t => t.id !== id))
-  }
+  const handleIngestSuccess = useCallback(
+    (response: IngestResponse, _source: string, _title?: string) => {
+      setIngestDrawerOpen(false)
+      showToast(
+        `Document ingested successfully! ${response.chunks_created} chunks created.`,
+        'success'
+      )
+      onIngestSuccess?.()
+    },
+    [onIngestSuccess, showToast]
+  )
 
-  const handleIngestSuccess = (response: IngestResponse, source: string, title?: string) => {
-    setIngestDrawerOpen(false)
-    addToast({
-      message: `Document ingested successfully! ${response.chunks_created} chunks created.`,
-      type: 'success',
-    })
-    onIngestSuccess?.()
-  }
-
-  const handleUseAsFilter = (source: string, title?: string) => {
+  const handleUseAsFilter = useCallback((_source: string, _title?: string) => {
     setIngestDrawerOpen(false)
     // This will be handled by the parent layout
-  }
+  }, [])
 
   const handleExamplePrompt = (prompt: string) => {
     setInputText(prompt)
@@ -182,23 +181,20 @@ export default function ChatConsole({ onIngestSuccess }: ChatConsoleProps = {}) 
     }
   }
 
-  const handleCopyAnswer = (text: string) => {
+  const handleCopyAnswer = (_text: string) => {
     showToast('Answer copied to clipboard', 'success')
   }
 
-  const handleIngestError = (error: { status?: number; message: string }) => {
-    addToast({
-      message: `Failed to ingest document: ${error.message}`,
-      type: 'error',
-    })
-  }
-
-  const { toasts: uiToasts, showToast, dismissToast } = useToast()
+  const handleIngestError = useCallback(
+    (error: { status?: number; message: string }) => {
+      showToast(`Failed to ingest document: ${error.message}`, 'error')
+    },
+    [showToast]
+  )
 
   return (
     <>
-      <ToastContainer toasts={toasts} onDismiss={removeToast} />
-      <UIToastContainer toasts={uiToasts} onDismiss={dismissToast} />
+      <UIToastContainer toasts={toasts} onDismiss={dismissToast} />
       <Drawer
         isOpen={ingestDrawerOpen}
         onClose={() => setIngestDrawerOpen(false)}
@@ -234,6 +230,20 @@ export default function ChatConsole({ onIngestSuccess }: ChatConsoleProps = {}) 
           )}
         </div>
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => router.push('/ingest')}
+            className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+            title="Ingest documents"
+          >
+            Ingest
+          </button>
+          <button
+            onClick={() => router.push('/metrics')}
+            className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+            title="View metrics"
+          >
+            Metrics
+          </button>
           {messages.length > 0 && (
             <>
               <button
@@ -292,8 +302,7 @@ export default function ChatConsole({ onIngestSuccess }: ChatConsoleProps = {}) 
               {messages.map((message, index) => {
                 // Group messages by turn (user + assistant)
                 const prevMessage = index > 0 ? messages[index - 1] : null
-                const isNewTurn =
-                  !prevMessage || prevMessage.role !== message.role
+                const isNewTurn = !prevMessage || prevMessage.role !== message.role
                 const showSpacing = isNewTurn && index > 0
 
                 return (
@@ -376,4 +385,3 @@ export default function ChatConsole({ onIngestSuccess }: ChatConsoleProps = {}) 
     </>
   )
 }
-

@@ -56,10 +56,7 @@ export default function RecentIngests({
         <label className="block text-sm font-medium text-gray-700">
           Recent Ingests ({recentIngests.length})
         </label>
-        <button
-          onClick={handleClear}
-          className="text-xs text-gray-500 hover:text-gray-700"
-        >
+        <button onClick={handleClear} className="text-xs text-gray-500 hover:text-gray-700">
           Clear
         </button>
       </div>
@@ -95,9 +92,7 @@ export default function RecentIngests({
       )}
       {selectedId && (
         <div className="text-xs text-gray-500 space-y-1">
-          {recentIngests
-            .find(i => i.document_id === selectedId)
-            ?.created_at && (
+          {recentIngests.find(i => i.document_id === selectedId)?.created_at && (
             <div>
               Ingested:{' '}
               {new Date(
@@ -110,4 +105,3 @@ export default function RecentIngests({
     </div>
   )
 }
-

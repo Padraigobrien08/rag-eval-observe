@@ -55,10 +55,7 @@ function loadSettings(): RagSettings {
   }
 }
 
-function settingsReducer(
-  state: RagSettings,
-  action: RagSettingsAction
-): RagSettings {
+function settingsReducer(state: RagSettings, action: RagSettingsAction): RagSettings {
   switch (action.type) {
     case 'SET_TOP_K':
       return { ...state, topK: action.payload }
@@ -112,9 +109,7 @@ function settingsReducer(
   }
 }
 
-const RagSettingsContext = createContext<RagSettingsContextType | undefined>(
-  undefined
-)
+const RagSettingsContext = createContext<RagSettingsContextType | undefined>(undefined)
 
 export function RagSettingsProvider({ children }: { children: ReactNode }) {
   const [settings, dispatch] = useReducer(settingsReducer, loadSettings())
@@ -172,4 +167,3 @@ export function useRagSettings(): RagSettingsContextType {
   }
   return context
 }
-

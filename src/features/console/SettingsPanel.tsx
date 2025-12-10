@@ -1,14 +1,10 @@
 'use client'
 
 import { useRagSettings } from '@/features/settings/useRagSettings'
-import {
-  loadPlaygroundSettings,
-  savePlaygroundSettings,
-} from '@/lib/storage/playgroundSettings'
+import { loadPlaygroundSettings, savePlaygroundSettings } from '@/lib/storage/playgroundSettings'
 
 export default function SettingsPanel() {
-  const { settings, setTopK, setDebug, setFilters, clearDocumentSelection } =
-    useRagSettings()
+  const { settings, setTopK, setDebug, setFilters, clearDocumentSelection } = useRagSettings()
   const { topK, debug } = settings
 
   const handleResetSettings = () => {
@@ -37,10 +33,7 @@ export default function SettingsPanel() {
       <div className="space-y-4">
         {/* Top K Input */}
         <div>
-          <label
-            htmlFor="settings-topK"
-            className="block text-sm font-medium text-gray-700 mb-2"
-          >
+          <label htmlFor="settings-topK" className="block text-sm font-medium text-gray-700 mb-2">
             Top K
           </label>
           <div className="flex items-center gap-2">
@@ -51,18 +44,8 @@ export default function SettingsPanel() {
               className="px-2 py-1 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               aria-label="Decrease Top K"
             >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M20 12H4"
-                />
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
               </svg>
             </button>
             <input
@@ -86,12 +69,7 @@ export default function SettingsPanel() {
               className="px-2 py-1 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               aria-label="Increase Top K"
             >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -113,24 +91,17 @@ export default function SettingsPanel() {
             onChange={e => setDebug(e.target.checked)}
             className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
           />
-          <label
-            htmlFor="settings-debugMode"
-            className="ml-2 block text-sm text-gray-700"
-          >
+          <label htmlFor="settings-debugMode" className="ml-2 block text-sm text-gray-700">
             Debug mode
           </label>
         </div>
-        <p className="text-xs text-gray-500 -mt-2">
-          Show retrieved chunks and scores in responses
-        </p>
+        <p className="text-xs text-gray-500 -mt-2">Show retrieved chunks and scores in responses</p>
 
         {/* Placeholder: Reranker */}
         <div className="border-t pt-4">
           <div className="flex items-center justify-between opacity-50">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Reranker
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Reranker</label>
               <p className="text-xs text-gray-500">Coming soon</p>
             </div>
             <div className="px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-sm text-gray-400">
@@ -143,9 +114,7 @@ export default function SettingsPanel() {
         <div className="border-t pt-4">
           <div className="flex items-center justify-between opacity-50">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Hybrid search
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Hybrid search</label>
               <p className="text-xs text-gray-500">Coming soon</p>
             </div>
             <div className="px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-sm text-gray-400">
@@ -157,4 +126,3 @@ export default function SettingsPanel() {
     </div>
   )
 }
-

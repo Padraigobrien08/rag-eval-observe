@@ -96,7 +96,8 @@ async function apiRequest<T>(
     if (!response.ok) {
       const error = await normalizeError(response)
       // Extract request ID from response headers if available
-      const responseRequestId = response.headers.get('X-Request-Id') || response.headers.get('x-request-id')
+      const responseRequestId =
+        response.headers.get('X-Request-Id') || response.headers.get('x-request-id')
       if (responseRequestId && error.details) {
         error.details.request_id = responseRequestId
       }

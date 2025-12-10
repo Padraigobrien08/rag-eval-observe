@@ -9,15 +9,11 @@ interface ErrorMessageProps {
   onRetry?: () => void
 }
 
-export default function ErrorMessage({
-  message,
-  requestId,
-  status,
-  onRetry,
-}: ErrorMessageProps) {
+export default function ErrorMessage({ message, requestId, status, onRetry }: ErrorMessageProps) {
   return (
-    <Alert type="error" title={status ? `Error ${status}` : 'Error'}>
+    <Alert variant="error">
       <div className="space-y-3">
+        <div className="font-semibold text-sm mb-2">{status ? `Error ${status}` : 'Error'}</div>
         <p className="text-sm">{message}</p>
         {requestId && (
           <div className="text-xs text-gray-600 font-mono bg-gray-100 px-2 py-1 rounded">
@@ -36,4 +32,3 @@ export default function ErrorMessage({
     </Alert>
   )
 }
-

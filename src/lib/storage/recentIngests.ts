@@ -59,4 +59,3 @@ export function clearRecentIngests(): void {
     console.error('Failed to clear recent ingests:', error)
   }
 }
-

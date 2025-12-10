@@ -25,11 +25,8 @@ export default function ConsoleLayout() {
 
       {/* Main Chat Region - Flex-1 */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        <ChatConsole
-          onIngestSuccess={() => setDocumentsRefreshTrigger(prev => prev + 1)}
-        />
+        <ChatConsole onIngestSuccess={() => setDocumentsRefreshTrigger(prev => prev + 1)} />
       </div>
     </div>
   )
 }
-

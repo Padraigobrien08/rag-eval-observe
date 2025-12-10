@@ -34,9 +34,7 @@ export default function EmptyState({ onSelectPrompt }: EmptyStateProps) {
                 />
               </svg>
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              Start a conversation
-            </h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Start a conversation</h3>
             <p className="text-sm text-gray-500">
               Ask questions about your documents or try one of these example prompts:
             </p>
@@ -57,4 +55,3 @@ export default function EmptyState({ onSelectPrompt }: EmptyStateProps) {
     </div>
   )
 }
-

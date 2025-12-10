@@ -54,4 +54,3 @@ export function savePlaygroundSettings(settings: Partial<PlaygroundSettings>): v
     console.error('Failed to save playground settings:', error)
   }
 }
-
