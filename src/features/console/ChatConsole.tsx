@@ -30,6 +30,8 @@ export default function ChatConsole({ onIngestSuccess }: ChatConsoleProps = {}) 
   const [expandedCitations, setExpandedCitations] = useState<Set<string>>(new Set())
   const [connectionStatus, setConnectionStatus] = useState<{ ok: boolean; db?: boolean } | null>(null)
   const chatEndRef = useRef<HTMLDivElement>(null)
+  const transcriptRef = useRef<HTMLDivElement>(null)
+  const [isAtBottom, setIsAtBottom] = useState(true)
 
   // Check connection status
   useEffect(() => {
@@ -47,10 +49,45 @@ export default function ChatConsole({ onIngestSuccess }: ChatConsoleProps = {}) 
     return () => clearInterval(interval)
   }, [])
 
-  // Auto-scroll to bottom when new messages arrive
+  // Check if user is at bottom of transcript
+  const checkIfAtBottom = useCallback(() => {
+    if (!transcriptRef.current) return false
+    const { scrollTop, scrollHeight, clientHeight } = transcriptRef.current
+    // Allow 50px threshold for "at bottom"
+    return scrollHeight - scrollTop - clientHeight < 50
+  }, [])
+
+  // Handle scroll events to track if user is at bottom
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
+    const transcript = transcriptRef.current
+    if (!transcript) return
+
+    const handleScroll = () => {
+      setIsAtBottom(checkIfAtBottom())
+    }
+
+    transcript.addEventListener('scroll', handleScroll)
+    return () => transcript.removeEventListener('scroll', handleScroll)
+  }, [checkIfAtBottom])
+
+  // Auto-scroll to bottom when new assistant messages arrive (only if user was at bottom)
+  useEffect(() => {
+    if (!transcriptRef.current || !chatEndRef.current) return
+
+    // Check if the last message is from assistant
+    const lastMessage = messages[messages.length - 1]
+    if (lastMessage && lastMessage.role === 'assistant') {
+      // Only auto-scroll if user was at bottom or this is the first message
+      if (isAtBottom || messages.length === 1) {
+        chatEndRef.current.scrollIntoView({ behavior: 'smooth' })
+        setIsAtBottom(true)
+      }
+    } else if (lastMessage && lastMessage.role === 'user') {
+      // Always scroll when user sends a message
+      chatEndRef.current.scrollIntoView({ behavior: 'smooth' })
+      setIsAtBottom(true)
+    }
+  }, [messages, isAtBottom])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -239,45 +276,60 @@ export default function ChatConsole({ onIngestSuccess }: ChatConsoleProps = {}) 
         </div>
       </div>
 
-      {/* Chat Transcript */}
-      <div className="flex-1 overflow-y-auto bg-gray-50">
+      {/* Chat Transcript - Scrollable */}
+      <div
+        ref={transcriptRef}
+        className="flex-1 overflow-y-auto bg-gray-50"
+        style={{ scrollBehavior: 'smooth' }}
+      >
         {messages.length === 0 && !isLoading ? (
-          <EmptyState onSelectPrompt={handleExamplePrompt} />
+          <div className="h-full flex items-center justify-center p-6">
+            <EmptyState onSelectPrompt={handleExamplePrompt} />
+          </div>
         ) : (
-          <div className="max-w-4xl mx-auto p-6 space-y-6">
-            {messages.map(message => {
-              if (message.role === 'user') {
-                return <UserMessage key={message.id} message={message} />
-              } else {
+          <div className="max-w-4xl mx-auto px-6 py-8">
+            <div className="space-y-8">
+              {messages.map((message, index) => {
+                // Group messages by turn (user + assistant)
+                const prevMessage = index > 0 ? messages[index - 1] : null
+                const isNewTurn =
+                  !prevMessage || prevMessage.role !== message.role
+                const showSpacing = isNewTurn && index > 0
+
                 return (
-                  <AssistantMessage
-                    key={message.id}
-                    message={message}
-                    expandedCitations={expandedCitations}
-                    onToggleCitation={toggleCitation}
-                    debugMode={debugMode}
-                    onRetry={retryLastMessage}
-                    onCopyAnswer={handleCopyAnswer}
-                  />
+                  <div key={message.id} className={showSpacing ? 'pt-4' : ''}>
+                    {message.role === 'user' ? (
+                      <UserMessage message={message} />
+                    ) : (
+                      <AssistantMessage
+                        message={message}
+                        expandedCitations={expandedCitations}
+                        onToggleCitation={toggleCitation}
+                        debugMode={debugMode}
+                        onRetry={retryLastMessage}
+                        onCopyAnswer={handleCopyAnswer}
+                      />
+                    )}
+                  </div>
                 )
-              }
-            })}
-            {isLoading && <LoadingSkeleton />}
-            <div ref={chatEndRef} />
+              })}
+              {isLoading && <LoadingSkeleton />}
+              <div ref={chatEndRef} />
+            </div>
           </div>
         )}
       </div>
 
-      {/* Input Area */}
-      <div className="bg-white border-t border-gray-200 p-4">
+      {/* Input Area - Sticky to bottom */}
+      <div className="bg-white border-t border-gray-200 px-4 py-4 flex-shrink-0">
         <form onSubmit={handleSubmit} className="max-w-4xl mx-auto">
-          <div className="flex items-end gap-2">
+          <div className="flex items-end gap-3">
             <textarea
               value={inputText}
               onChange={e => setInputText(e.target.value)}
               onKeyDown={handleKeyDown}
               rows={1}
-              className="flex-1 px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+              className="flex-1 px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none text-sm"
               placeholder="Message RAG Eval..."
               disabled={isLoading}
               style={{ maxHeight: '200px' }}

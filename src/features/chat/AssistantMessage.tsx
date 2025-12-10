@@ -132,7 +132,7 @@ export default function AssistantMessage({
       </div>
       <div className="flex-1 max-w-2xl">
         {/* Answer Text */}
-        <Card variant="outlined" padding="md" className="mb-3 relative group">
+        <Card variant="outlined" padding="md" className="mb-2 relative group">
           <div className="absolute top-2 right-2">
             <button
               onClick={handleCopyAnswer}
@@ -173,7 +173,7 @@ export default function AssistantMessage({
           <p className="whitespace-pre-wrap text-sm leading-relaxed text-gray-900 pr-8">
             {message.content}
           </p>
-          <p className="text-xs text-gray-500 mt-3">
+          <p className="text-xs text-gray-500 mt-2">
             {new Intl.DateTimeFormat('en-US', {
               hour: 'numeric',
               minute: '2-digit',
@@ -183,7 +183,7 @@ export default function AssistantMessage({
 
         {/* Telemetry Row */}
         {message.meta && (
-          <div className="mb-3 flex flex-wrap items-center gap-3 text-xs">
+          <div className="mb-2 flex flex-wrap items-center gap-2 text-xs">
             {message.meta.latencyMs !== undefined && (
               <StatPill label="Latency" value={`${message.meta.latencyMs}ms`} />
             )}
@@ -201,11 +201,11 @@ export default function AssistantMessage({
 
         {/* Citations Section */}
         {message.meta?.citations && message.meta.citations.length > 0 && (
-          <Card variant="outlined" padding="sm" className="mb-3">
-            <h4 className="text-sm font-semibold text-gray-900 mb-3">
+          <Card variant="outlined" padding="sm" className="mb-2">
+            <h4 className="text-xs font-semibold text-gray-900 mb-2">
               Citations ({message.meta.citations.length})
             </h4>
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               {message.meta.citations.map((citation, idx) => {
                 const citationId =
                   citation.chunk_id || `${citation.document_id}-${citation.chunk_index || idx}`
@@ -227,7 +227,7 @@ export default function AssistantMessage({
                       >
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
-                            <div className="text-sm font-medium text-gray-900">
+                            <div className="text-xs font-medium text-gray-900">
                               {citation.title || 'Untitled'}
                             </div>
                             <div className="text-xs text-gray-500 mt-0.5">
@@ -238,7 +238,7 @@ export default function AssistantMessage({
                           </div>
                           {snippet && snippet !== 'No snippet available' && (
                             <svg
-                              className={`w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5 transform transition-transform ${
+                              className={`w-3.5 h-3.5 text-gray-400 flex-shrink-0 mt-0.5 transform transition-transform ${
                                 isExpanded ? 'rotate-180' : ''
                               }`}
                               fill="none"
@@ -257,12 +257,12 @@ export default function AssistantMessage({
                       </button>
                       <button
                         onClick={() => copyCitation(citation)}
-                        className="flex-shrink-0 p-1.5 text-gray-400 hover:text-gray-600 rounded transition-colors"
+                        className="flex-shrink-0 p-1 text-gray-400 hover:text-gray-600 rounded transition-colors"
                         title="Copy citation"
                       >
                         {copiedCitationId === citation.document_id ? (
                           <svg
-                            className="w-4 h-4 text-green-600"
+                            className="w-3.5 h-3.5 text-green-600"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -276,7 +276,7 @@ export default function AssistantMessage({
                           </svg>
                         ) : (
                           <svg
-                            className="w-4 h-4"
+                            className="w-3.5 h-3.5"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -292,14 +292,14 @@ export default function AssistantMessage({
                       </button>
                     </div>
                     {isExpanded && snippet && snippet !== 'No snippet available' && (
-                      <div className="mt-3 pt-3 border-t border-gray-200">
+                      <div className="mt-2 pt-2 border-t border-gray-200">
                         {debugChunk && (
-                          <div className="text-xs text-gray-600 mb-2">
+                          <div className="text-xs text-gray-600 mb-1.5">
                             <span className="font-medium">Score:</span>{' '}
                             {debugChunk.score.toFixed(4)}
                           </div>
                         )}
-                        <div className="text-sm text-gray-700 bg-white p-2 rounded border border-gray-200 font-mono text-xs">
+                        <div className="text-xs text-gray-700 bg-white p-1.5 rounded border border-gray-200 font-mono">
                           {snippet}
                         </div>
                       </div>
@@ -313,13 +313,13 @@ export default function AssistantMessage({
 
         {/* Debug: Retrieved Context */}
         {debugMode && message.meta?.debugRetrieved && message.meta.debugRetrieved.length > 0 && (
-          <Card variant="outlined" padding="sm">
+          <Card variant="outlined" padding="sm" className="mt-2">
             <details className="group">
-              <summary className="cursor-pointer text-sm font-semibold text-gray-900 mb-3 list-none">
+              <summary className="cursor-pointer text-xs font-semibold text-gray-900 mb-2 list-none">
                 <div className="flex items-center justify-between">
                   <span>Retrieved Context ({message.meta.debugRetrieved.length})</span>
                   <svg
-                    className="w-4 h-4 text-gray-400 transform transition-transform group-open:rotate-180"
+                    className="w-3.5 h-3.5 text-gray-400 transform transition-transform group-open:rotate-180"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -333,12 +333,12 @@ export default function AssistantMessage({
                   </svg>
                 </div>
               </summary>
-              <div className="space-y-2 mt-3">
+              <div className="space-y-1.5 mt-2">
                 {message.meta.debugRetrieved.map(chunk => (
                   <Card key={chunk.chunk_id} variant="outlined" padding="sm" className="bg-gray-50">
-                    <div className="flex items-start justify-between mb-2">
+                    <div className="flex items-start justify-between mb-1.5">
                       <div className="flex-1">
-                        <div className="text-sm font-medium text-gray-900">
+                        <div className="text-xs font-medium text-gray-900">
                           {chunk.title || 'Untitled'}
                         </div>
                         <div className="text-xs text-gray-500 mt-0.5">
@@ -347,10 +347,10 @@ export default function AssistantMessage({
                         </div>
                       </div>
                       <div className="text-xs font-mono text-gray-600 ml-4">
-                        Score: {chunk.score.toFixed(4)}
+                        {chunk.score.toFixed(4)}
                       </div>
                     </div>
-                    <div className="text-sm text-gray-700 bg-white p-2 rounded border border-gray-200 font-mono text-xs mt-2">
+                    <div className="text-xs text-gray-700 bg-white p-1.5 rounded border border-gray-200 font-mono mt-1.5">
                       {chunk.content_snippet}
                     </div>
                   </Card>

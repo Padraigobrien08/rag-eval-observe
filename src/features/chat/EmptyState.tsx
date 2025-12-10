@@ -10,6 +10,7 @@ const EXAMPLE_PROMPTS = [
   'How does RAG work?',
   'What are the benefits of retrieval-augmented generation?',
   'Explain the chunking process',
+  'What is vector similarity search?',
 ]
 
 export default function EmptyState({ onSelectPrompt }: EmptyStateProps) {
