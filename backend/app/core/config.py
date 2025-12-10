@@ -41,12 +41,12 @@ class Settings(BaseSettings):
 
     # Legacy support (for backward compatibility)
     @property
-    def EMBEDDING_MODEL(self) -> str:
+    def embedding_model(self) -> str:
         """Legacy property for backward compatibility."""
         return self.OPENAI_EMBEDDING_MODEL
 
     @property
-    def LLM_MODEL(self) -> str:
+    def llm_model(self) -> str:
         """Legacy property for backward compatibility."""
         return self.OPENAI_CHAT_MODEL
 
