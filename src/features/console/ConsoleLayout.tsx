@@ -1,43 +1,23 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import ChatConsole from './ChatConsole'
-import {
-  loadPlaygroundSettings,
-  savePlaygroundSettings,
-} from '@/lib/storage/playgroundSettings'
+import DocumentsPanel from './DocumentsPanel'
+import { useRagSettings } from './useRagSettings'
 import RecentIngests from '@/components/RecentIngests'
-import type { RecentIngest } from '@/lib/storage/recentIngests'
 
 export default function ConsoleLayout() {
-  const [settings, setSettings] = useState(() => loadPlaygroundSettings())
+  const {
+    settings,
+    updateTopK,
+    updateDebugMode,
+    updateFilterSource,
+    updateFilterTitle,
+    clearFilters,
+  } = useRagSettings()
   const { topK, debug: debugMode, filterSource, filterTitle } = settings
   const [filtersExpanded, setFiltersExpanded] = useState(false)
-
-  // Save settings to localStorage whenever they change
-  useEffect(() => {
-    savePlaygroundSettings(settings)
-  }, [settings])
-
-  const updateTopK = (value: number) => {
-    setSettings(prev => ({ ...prev, topK: value }))
-  }
-
-  const updateDebugMode = (value: boolean) => {
-    setSettings(prev => ({ ...prev, debug: value }))
-  }
-
-  const updateFilterSource = (value: string) => {
-    setSettings(prev => ({ ...prev, filterSource: value }))
-  }
-
-  const updateFilterTitle = (value: string) => {
-    setSettings(prev => ({ ...prev, filterTitle: value }))
-  }
-
-  const clearFilters = () => {
-    setSettings(prev => ({ ...prev, filterSource: '', filterTitle: '' }))
-  }
+  const [documentsRefreshTrigger, setDocumentsRefreshTrigger] = useState(0)
 
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50">
@@ -45,8 +25,7 @@ export default function ConsoleLayout() {
       <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
         {/* Documents Section - Top Half */}
         <div className="h-[calc(50vh-1px)] overflow-y-auto p-4 border-b border-gray-200">
-          <h2 className="text-sm font-semibold text-gray-900 mb-4">Documents</h2>
-          <p className="text-xs text-gray-500">Document list will appear here</p>
+          <DocumentsPanel refreshTrigger={documentsRefreshTrigger} />
         </div>
 
         {/* Settings Section - Bottom Half */}
@@ -168,7 +147,10 @@ export default function ConsoleLayout() {
 
       {/* Main Chat Region - Flex-1 */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        <ChatConsole settings={settings} />
+        <ChatConsole
+          settings={settings}
+          onIngestSuccess={() => setDocumentsRefreshTrigger(prev => prev + 1)}
+        />
       </div>
     </div>
   )

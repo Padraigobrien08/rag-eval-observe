@@ -22,9 +22,13 @@ interface ChatConsoleProps {
     filterSource: string
     filterTitle: string
   }
+  onIngestSuccess?: () => void
 }
 
-export default function ChatConsole({ settings: propsSettings }: ChatConsoleProps = {}) {
+export default function ChatConsole({
+  settings: propsSettings,
+  onIngestSuccess,
+}: ChatConsoleProps = {}) {
   const { messages, isLoading, error, sendMessage, resetChat, retryLastMessage } = useChat()
   const [inputText, setInputText] = useState('')
   
@@ -111,6 +115,7 @@ export default function ChatConsole({ settings: propsSettings }: ChatConsoleProp
       message: `Document ingested successfully! ${response.chunks_created} chunks created.`,
       type: 'success',
     })
+    onIngestSuccess?.()
   }
 
   const handleUseAsFilter = (source: string, title?: string) => {
