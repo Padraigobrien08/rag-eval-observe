@@ -20,3 +20,8 @@ export function cosineSimilarity(a: number[], b: number[]): number {
 
   return dotProduct / denominator
 }
+
+// Utility function to merge classNames (similar to clsx)
+export function cn(...classes: (string | undefined | null | false)[]): string {
+  return classes.filter(Boolean).join(' ')
+}

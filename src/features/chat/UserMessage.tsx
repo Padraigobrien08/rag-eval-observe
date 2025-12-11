@@ -8,18 +8,22 @@ interface UserMessageProps {
 
 export default function UserMessage({ message }: UserMessageProps) {
   return (
-    <div className="flex items-start gap-3 justify-end">
-      <div className="flex-1 flex justify-end">
-        <div className="max-w-[85%] rounded-lg px-4 py-3 bg-blue-600 text-white">
+    <div className="flex items-start gap-3 justify-end animate-message-in">
+      {/* Message Content */}
+      <div className="flex-1 flex flex-col items-end max-w-3xl">
+        {/* Message Bubble */}
+        <div className="bg-blue-600 text-white rounded-2xl px-4 py-3 mb-1">
           <p className="whitespace-pre-wrap text-sm leading-relaxed">{message.content}</p>
-          <p className="text-xs mt-2 opacity-70">
-            {new Intl.DateTimeFormat('en-US', {
-              hour: 'numeric',
-              minute: '2-digit',
-            }).format(message.createdAt)}
-          </p>
         </div>
+        {/* Timestamp */}
+        <p className="text-xs text-gray-500">
+          {new Intl.DateTimeFormat('en-US', {
+            hour: 'numeric',
+            minute: '2-digit',
+          }).format(message.createdAt)}
+        </p>
       </div>
+      {/* User Avatar */}
       <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center">
         <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path

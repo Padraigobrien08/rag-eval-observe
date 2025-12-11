@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { fetchMetrics } from '@/lib/api/client'
 import type { MetricsResponse } from '@/lib/api/types'
 import Nav from '@/components/Nav'
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 
 export default function MetricsPage() {
   const [metrics, setMetrics] = useState<MetricsResponse | null>(null)
@@ -81,46 +82,53 @@ export default function MetricsPage() {
           </div>
 
           {error && (
-            <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
+            <Card variant="outlined" padding="md" className="mb-6 bg-red-50 border-red-200">
               <h3 className="text-sm font-medium text-red-800 mb-1">Error</h3>
               <p className="text-sm text-red-600">{error}</p>
-            </div>
+            </Card>
           )}
 
           {loading && !metrics && (
-            <div className="bg-white rounded-lg shadow p-8 text-center">
+            <Card variant="elevated" padding="lg" className="text-center">
               <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
               <p className="mt-4 text-gray-600">Loading metrics...</p>
-            </div>
+            </Card>
           )}
 
           {metrics && (
             <div className="space-y-6">
               {/* System Info */}
               {metrics.uptime_seconds !== undefined && (
-                <div className="bg-white rounded-lg shadow p-6">
-                  <h2 className="text-lg font-semibold text-gray-900 mb-4">System Information</h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <span className="text-sm text-gray-500">Uptime</span>
-                      <p className="text-lg font-medium text-gray-900">
-                        {formatUptime(metrics.uptime_seconds)}
-                      </p>
-                    </div>
-                    {metrics.note && (
+                <Card variant="elevated" padding="lg">
+                  <CardHeader>
+                    <CardTitle>System Information</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <span className="text-sm text-gray-500">Note</span>
-                        <p className="text-sm text-gray-700">{metrics.note}</p>
+                        <span className="text-sm text-gray-500">Uptime</span>
+                        <p className="text-lg font-medium text-gray-900">
+                          {formatUptime(metrics.uptime_seconds)}
+                        </p>
                       </div>
-                    )}
-                  </div>
-                </div>
+                      {metrics.note && (
+                        <div>
+                          <span className="text-sm text-gray-500">Note</span>
+                          <p className="text-sm text-gray-700">{metrics.note}</p>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
               )}
 
               {/* Requests by Route/Status */}
               {metrics.routes && (
-                <div className="bg-white rounded-lg shadow p-6">
-                  <h2 className="text-lg font-semibold text-gray-900 mb-4">Requests by Route</h2>
+                <Card variant="elevated" padding="lg">
+                  <CardHeader>
+                    <CardTitle>Requests by Route</CardTitle>
+                  </CardHeader>
+                  <CardContent>
                   {Object.keys(metrics.routes).length === 0 ? (
                     <p className="text-sm text-gray-500">No requests recorded yet.</p>
                   ) : (
@@ -185,13 +193,17 @@ export default function MetricsPage() {
                       </table>
                     </div>
                   )}
-                </div>
+                  </CardContent>
+                </Card>
               )}
 
               {/* Latency Summary */}
               {metrics.routes && (
-                <div className="bg-white rounded-lg shadow p-6">
-                  <h2 className="text-lg font-semibold text-gray-900 mb-4">Latency Summary</h2>
+                <Card variant="elevated" padding="lg">
+                  <CardHeader>
+                    <CardTitle>Latency Summary</CardTitle>
+                  </CardHeader>
+                  <CardContent>
                   {Object.keys(metrics.routes).length === 0 ? (
                     <p className="text-sm text-gray-500">No latency data available.</p>
                   ) : (
@@ -254,13 +266,17 @@ export default function MetricsPage() {
                       </table>
                     </div>
                   )}
-                </div>
+                  </CardContent>
+                </Card>
               )}
 
               {/* Token Usage */}
               {metrics.token_usage && (
-                <div className="bg-white rounded-lg shadow p-6">
-                  <h2 className="text-lg font-semibold text-gray-900 mb-4">Token Usage</h2>
+                <Card variant="elevated" padding="lg">
+                  <CardHeader>
+                    <CardTitle>Token Usage</CardTitle>
+                  </CardHeader>
+                  <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Embedding Tokens */}
                     <div>
@@ -321,7 +337,8 @@ export default function MetricsPage() {
                       </span>
                     </div>
                   </div>
-                </div>
+                  </CardContent>
+                </Card>
               )}
             </div>
           )}
