@@ -155,7 +155,9 @@ export function RagSettingsProvider({ children }: { children: ReactNode }) {
         clearDocumentSelection,
       }}
     >
-      <div className="h-full w-full" style={{ height: '100%', width: '100%' }}>{children}</div>
+      <div className="h-full w-full" style={{ height: '100%', width: '100%' }}>
+        {children}
+      </div>
     </RagSettingsContext.Provider>
   )
 }

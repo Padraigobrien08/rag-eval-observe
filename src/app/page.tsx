@@ -1,7 +1,7 @@
 'use client'
 
-import ConsoleLayout from '@/features/console/ConsoleLayout'
+import ConsoleLayout from '@/features/ragConsole/ConsoleLayout'
 
-export default function Home() {
+export default function Page() {
   return <ConsoleLayout />
 }

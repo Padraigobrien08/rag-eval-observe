@@ -51,4 +51,3 @@ export function saveSidebarPreferences(preferences: Partial<SidebarPreferences>)
 }
 
 export { MIN_WIDTH, MAX_WIDTH }
-

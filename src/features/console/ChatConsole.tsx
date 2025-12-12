@@ -1,12 +1,12 @@
 'use client'
 
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
 import { useChat } from '@/features/chat/useChat'
 import type { IngestResponse } from '@/lib/api/types'
 import Drawer from '@/components/Drawer'
 import IngestForm from '@/features/ingest/IngestForm'
 import { ToastContainer as UIToastContainer, useToast } from '@/components/ui/Toast'
+import Alert from '@/components/ui/Alert'
 import UserMessage from '@/features/chat/UserMessage'
 import AssistantMessage from '@/features/chat/AssistantMessage'
 import EmptyState from '@/features/chat/EmptyState'
@@ -16,16 +16,44 @@ import { health } from '@/lib/api/client'
 import { useRagSettings } from '@/features/settings/useRagSettings'
 
 interface ChatConsoleProps {
+  sessionId?: string
+  onSessionSwitch?: (sessionId: string) => void
   onIngestSuccess?: () => void
 }
 
-export default function ChatConsole({ onIngestSuccess }: ChatConsoleProps = {}) {
-  const router = useRouter()
-  const { messages, isLoading, error, sendMessage, resetChat, retryLastMessage } = useChat()
+export default function ChatConsole({
+  sessionId,
+  onSessionSwitch,
+  onIngestSuccess,
+}: ChatConsoleProps = {}) {
+  const {
+    messages,
+    isLoading,
+    error,
+    sendMessage,
+    resetChat,
+    retryLastMessage,
+    telemetry,
+    sessionId: currentSessionId,
+  } = useChat(sessionId)
   const [inputText, setInputText] = useState('')
-  const { settings } = useRagSettings()
+  const { settings, setFilters, clearDocumentSelection } = useRagSettings()
   const { topK, debug: debugMode, filters } = settings
   // Note: setFilters is available but not used in this component
+
+  // Sync session switching with parent
+  useEffect(() => {
+    if (onSessionSwitch && currentSessionId && currentSessionId !== sessionId) {
+      onSessionSwitch(currentSessionId)
+    }
+  }, [currentSessionId, sessionId, onSessionSwitch])
+
+  // Handle new chat - creates new session
+  const handleNewChat = useCallback(() => {
+    resetChat()
+    // resetChat already creates a new session, so currentSessionId will update
+    // and the useEffect above will notify the parent
+  }, [resetChat])
 
   const [ingestDrawerOpen, setIngestDrawerOpen] = useState(false)
   const [expandedCitations, setExpandedCitations] = useState<Set<string>>(new Set())
@@ -208,52 +236,27 @@ export default function ChatConsole({ onIngestSuccess }: ChatConsoleProps = {}) 
         />
       </Drawer>
 
-      {/* Top Header - Translucent Sticky */}
-      <div className="sticky top-0 z-10 shrink-0 bg-white/80 backdrop-blur border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <div>
-            <h1 className="text-lg font-semibold text-gray-900">RAG Eval</h1>
-            <p className="text-xs text-gray-500 mt-0.5">RAG evaluation console</p>
-          </div>
-          {connectionStatus && (
-            <div
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
-                connectionStatus.ok && connectionStatus.db
-                  ? 'bg-emerald-50 text-emerald-700'
-                  : 'bg-red-100 text-red-700'
-              }`}
-            >
-              <div
-                className={`w-1.5 h-1.5 rounded-full ${
-                  connectionStatus.ok && connectionStatus.db ? 'bg-emerald-500' : 'bg-red-500'
-                }`}
-              />
-              {connectionStatus.ok && connectionStatus.db ? 'Connected' : 'Disconnected'}
+      {/* Minimal Header - Only show when there are messages */}
+      {messages.length > 0 && (
+        <div className="sticky top-0 z-10 shrink-0 bg-white/80 backdrop-blur-sm border-b border-gray-100">
+          <div className="max-w-3xl mx-auto px-4 py-2 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              {connectionStatus && (
+                <div
+                  className={`w-2 h-2 rounded-full ${
+                    connectionStatus.ok && connectionStatus.db ? 'bg-green-500' : 'bg-red-500'
+                  }`}
+                  title={connectionStatus.ok && connectionStatus.db ? 'Connected' : 'Disconnected'}
+                />
+              )}
+              <span className="text-xs text-gray-500">
+                {telemetry.total_tokens > 0 && `${telemetry.total_tokens.toLocaleString()} tokens`}
+              </span>
             </div>
-          )}
-        </div>
-        <div className="flex items-center gap-2">
-          {/* Ghost Buttons */}
-          <button
-            onClick={() => router.push('/ingest')}
-            className="px-3 py-1.5 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
-            title="Ingest documents"
-          >
-            Ingest
-          </button>
-          <button
-            onClick={() => router.push('/metrics')}
-            className="px-3 py-1.5 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
-            title="View metrics"
-          >
-            Metrics
-          </button>
-          {/* Icon Buttons */}
-          {messages.length > 0 && (
-            <>
+            <div className="flex items-center gap-1">
               <button
                 onClick={handleCopyTranscript}
-                className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                className="p-1.5 text-gray-400 hover:text-gray-600 rounded transition-colors"
                 title="Copy transcript"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -266,56 +269,37 @@ export default function ChatConsole({ onIngestSuccess }: ChatConsoleProps = {}) 
                 </svg>
               </button>
               <button
-                onClick={handleDownloadTranscript}
-                className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
-                title="Download transcript"
+                onClick={handleNewChat}
+                className="px-2.5 py-1 text-xs text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-                  />
-                </svg>
+                New chat
               </button>
-            </>
-          )}
-          {/* Primary Action */}
-          <button
-            onClick={resetChat}
-            disabled={messages.length === 0}
-            className="px-4 py-1.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            New chat
-          </button>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* Chat Transcript - Scrollable */}
+      {/* Chat Transcript - Clean Scrollable Area */}
       <div
         ref={transcriptRef}
-        className="flex-1 min-h-0 overflow-y-auto bg-neutral-50/50 w-full"
+        className="flex-1 min-h-0 overflow-y-auto w-full bg-white"
         style={{ flex: '1 1 0%', minHeight: 0, scrollBehavior: 'smooth' }}
       >
         {messages.length === 0 && !isLoading ? (
-          <div className="min-h-full flex items-center justify-center w-full">
-            <div className="max-w-5xl w-full mx-auto px-6 py-6">
-              <EmptyState onSelectPrompt={handleExamplePrompt} />
-            </div>
+          <div className="w-full h-full flex items-center justify-center px-4">
+            <EmptyState onSelectPrompt={handleExamplePrompt} />
           </div>
         ) : (
           <div className="w-full">
-            <div className="max-w-5xl w-full mx-auto px-6 py-6">
-              <div className="space-y-6">
+            <div className="max-w-3xl w-full mx-auto px-4 py-8">
+              <div className="space-y-8">
                 {messages.map((message, index) => {
-                  // Group messages by turn (user + assistant)
                   const prevMessage = index > 0 ? messages[index - 1] : null
                   const isNewTurn = !prevMessage || prevMessage.role !== message.role
                   const showSpacing = isNewTurn && index > 0
 
                   return (
-                    <div key={message.id} className={showSpacing ? 'pt-4' : ''}>
+                    <div key={message.id} className={showSpacing ? 'pt-6' : ''}>
                       {message.role === 'user' ? (
                         <UserMessage message={message} />
                       ) : (
@@ -339,85 +323,65 @@ export default function ChatConsole({ onIngestSuccess }: ChatConsoleProps = {}) 
         )}
       </div>
 
-      {/* Input Area - Elevated Card */}
-      <div className="shrink-0 border-t border-gray-200 bg-white/90 backdrop-blur shadow-[0_-1px_3px_rgba(0,0,0,0.02)]">
+      {/* Input Area - Clean and Centered */}
+      <div className="shrink-0 bg-white border-t border-gray-100">
         <form onSubmit={handleSubmit} className="w-full">
-          <div className="max-w-4xl w-full mx-auto px-6 py-4">
-            {/* Helper Text (when no messages) */}
-            {messages.length === 0 && (
-              <p className="text-xs text-gray-500 mb-2 px-1">
-                RAG Eval uses your ingested documents to answer questions with citations.
-              </p>
-            )}
-            {/* Input Container */}
-            <div className="flex items-end gap-2">
-              <textarea
-                value={inputText}
-                onChange={e => setInputText(e.target.value)}
-                onKeyDown={handleKeyDown}
-                rows={1}
-                className="flex-1 px-4 py-3 border border-gray-300 rounded-2xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none text-sm"
-                placeholder="Message RAG Eval..."
-                disabled={isLoading}
-                style={{ maxHeight: '144px', borderRadius: '1rem' }}
-                onInput={e => {
-                  const target = e.target as HTMLTextAreaElement
-                  target.style.height = 'auto'
-                  // 6 lines max: line-height ~24px * 6 = 144px
-                  target.style.height = `${Math.min(target.scrollHeight, 144)}px`
-                }}
-              />
-              {/* Send Button - Round Icon Button */}
-              <button
-                type="submit"
-                disabled={isLoading || !inputText.trim()}
-                className="flex items-center justify-center bg-blue-600 text-white rounded-full hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0 shadow-sm"
-                style={{ 
-                  width: '2rem', 
-                  height: '2.5rem', 
-                  minWidth: '2.8rem', 
-                  minHeight: '2.8rem',
-                  borderRadius: '30%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}
-                title="Send message"
-              >
-                {isLoading ? (
-                  <svg
-                    className="w-5 h-5 animate-spin"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    style={{ display: 'block', margin: 0 }}
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                    />
-                  </svg>
-                ) : (
-                  <svg 
-                    className="w-5 h-5" 
-                    fill="none" 
-                    stroke="currentColor" 
-                    viewBox="0 0 24 24"
-                    style={{ display: 'block', margin: 0 }}
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
-                    />
-                  </svg>
-                )}
-              </button>
+          <div className="max-w-3xl w-full mx-auto px-4 py-4">
+            <div className="relative">
+              <div className="flex items-end gap-2 bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow transition-shadow focus-within:border-gray-300 focus-within:shadow-md">
+                <textarea
+                  value={inputText}
+                  onChange={e => setInputText(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  rows={1}
+                  className="flex-1 w-full px-4 py-3 pr-12 bg-transparent border-0 rounded-2xl resize-none text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none disabled:opacity-50"
+                  placeholder="Message RAG Eval..."
+                  disabled={isLoading}
+                  style={{ maxHeight: '200px', minHeight: '48px' }}
+                  onInput={e => {
+                    const target = e.target as HTMLTextAreaElement
+                    target.style.height = 'auto'
+                    target.style.height = `${Math.min(target.scrollHeight, 200)}px`
+                  }}
+                />
+                <button
+                  type="submit"
+                  disabled={isLoading || !inputText.trim()}
+                  className="absolute right-2 bottom-2 flex items-center justify-center w-8 h-8 bg-gray-900 text-white rounded-lg hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                  title="Send message"
+                >
+                  {isLoading ? (
+                    <svg
+                      className="w-4 h-4 animate-spin"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                      />
+                    </svg>
+                  ) : (
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+                      />
+                    </svg>
+                  )}
+                </button>
+              </div>
             </div>
-            {error && <div className="mt-2 text-sm text-red-600 px-1">{error}</div>}
+            {error && (
+              <div className="mt-3">
+                <Alert variant="error" title="Request failed" description={error} />
+              </div>
+            )}
           </div>
         </form>
       </div>

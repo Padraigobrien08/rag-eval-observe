@@ -69,11 +69,7 @@ interface CardTitleProps {
   as?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6'
 }
 
-export function CardTitle({
-  children,
-  className = '',
-  as: Component = 'h3',
-}: CardTitleProps) {
+export function CardTitle({ children, className = '', as: Component = 'h3' }: CardTitleProps) {
   return (
     <Component className={cn('text-lg font-semibold text-gray-900 leading-none', className)}>
       {children}
@@ -87,11 +83,7 @@ interface CardDescriptionProps {
 }
 
 export function CardDescription({ children, className = '' }: CardDescriptionProps) {
-  return (
-    <p className={cn('text-sm text-gray-500', className)}>
-      {children}
-    </p>
-  )
+  return <p className={cn('text-sm text-gray-500', className)}>{children}</p>
 }
 
 interface CardContentProps {

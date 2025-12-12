@@ -9,6 +9,7 @@ export interface AssistantMessageMeta {
   }
   latencyMs?: number
   debugRetrieved?: RetrievedChunkDebug[]
+  used_chunk_ids?: string[]
   error?: {
     message: string
     requestId?: string

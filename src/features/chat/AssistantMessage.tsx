@@ -5,6 +5,342 @@ import type { AssistantChatMessage } from './types'
 import { Card } from '@/components/ui/Card'
 import ErrorMessage from './ErrorMessage'
 
+// Simple markdown renderer component
+function MarkdownRenderer({ content }: { content: string }) {
+  // Split content into lines for processing
+  const lines = content.split('\n')
+  const elements: JSX.Element[] = []
+  let currentParagraph: string[] = []
+  let inCodeBlock = false
+  let codeBlockContent: string[] = []
+  let inList = false
+  let listItems: string[] = []
+  let listOrdered = false
+
+  const flushParagraph = () => {
+    if (currentParagraph.length > 0) {
+      const text = currentParagraph.join('\n')
+      if (text.trim()) {
+        elements.push(
+          <p key={`p-${elements.length}`} className="text-sm leading-relaxed text-gray-900 mb-3">
+            {renderInlineMarkdown(text)}
+          </p>
+        )
+      }
+      currentParagraph = []
+    }
+  }
+
+  const flushCodeBlock = () => {
+    if (codeBlockContent.length > 0) {
+      elements.push(
+        <pre
+          key={`code-${elements.length}`}
+          className="bg-gray-100 border border-gray-200 rounded-lg p-3 overflow-x-auto mb-3"
+        >
+          <code className="text-xs font-mono text-gray-800">{codeBlockContent.join('\n')}</code>
+        </pre>
+      )
+      codeBlockContent = []
+    }
+  }
+
+  const flushList = () => {
+    if (listItems.length > 0) {
+      const ListTag = listOrdered ? 'ol' : 'ul'
+      elements.push(
+        <ListTag
+          key={`list-${elements.length}`}
+          className={`text-sm text-gray-900 mb-3 ${listOrdered ? 'list-decimal' : 'list-disc'} ml-6 space-y-1`}
+        >
+          {listItems.map((item, idx) => (
+            <li key={idx} className="leading-relaxed">
+              {renderInlineMarkdown(item)}
+            </li>
+          ))}
+        </ListTag>
+      )
+      listItems = []
+      inList = false
+    }
+  }
+
+  const renderInlineMarkdown = (text: string): (JSX.Element | string)[] => {
+    const parts: (JSX.Element | string)[] = []
+    let currentIndex = 0
+
+    // Match bold **text** or __text__
+    const boldRegex = /(\*\*|__)(.+?)\1/g
+    // Match inline code `code`
+    const codeRegex = /`([^`]+)`/g
+    // Match links [text](url)
+    const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g
+
+    const matches: Array<{
+      type: 'bold' | 'italic' | 'code' | 'link'
+      start: number
+      end: number
+      content: string
+      url?: string
+    }> = []
+
+    let match
+    while ((match = boldRegex.exec(text)) !== null) {
+      matches.push({
+        type: 'bold',
+        start: match.index,
+        end: match.index + match[0].length,
+        content: match[2],
+      })
+    }
+    while ((match = codeRegex.exec(text)) !== null) {
+      matches.push({
+        type: 'code',
+        start: match.index,
+        end: match.index + match[0].length,
+        content: match[1],
+      })
+    }
+    while ((match = linkRegex.exec(text)) !== null) {
+      matches.push({
+        type: 'link',
+        start: match.index,
+        end: match.index + match[0].length,
+        content: match[1],
+        url: match[2],
+      })
+    }
+
+    // Match italic *text* or _text_ (but not **text** or __text__)
+    // Process after bold/code/links to avoid conflicts
+    // Use a simple approach: find single * or _ that aren't part of ** or __
+    let italicIndex = 0
+    while (italicIndex < text.length) {
+      const char = text[italicIndex]
+      if (char === '*' || char === '_') {
+        // Check if it's part of a bold pattern
+        const isBoldStart =
+          (char === '*' && text[italicIndex + 1] === '*') ||
+          (char === '_' && text[italicIndex + 1] === '_')
+        const isBoldEnd =
+          italicIndex > 0 &&
+          ((text[italicIndex - 1] === '*' && char === '*') ||
+            (text[italicIndex - 1] === '_' && char === '_'))
+
+        if (!isBoldStart && !isBoldEnd) {
+          // Find the closing delimiter
+          const closingIndex = text.indexOf(char, italicIndex + 1)
+          if (closingIndex > italicIndex + 1) {
+            // Check if the closing delimiter is also not part of bold
+            const isClosingBold = closingIndex < text.length - 1 && text[closingIndex + 1] === char
+            const isClosingBoldStart = closingIndex > 0 && text[closingIndex - 1] === char
+
+            if (!isClosingBold && !isClosingBoldStart) {
+              // Check if this range overlaps with any existing match
+              let overlaps = false
+              for (const existingMatch of matches) {
+                if (
+                  (italicIndex >= existingMatch.start && italicIndex < existingMatch.end) ||
+                  (closingIndex + 1 > existingMatch.start && closingIndex + 1 <= existingMatch.end)
+                ) {
+                  overlaps = true
+                  break
+                }
+              }
+
+              if (!overlaps) {
+                matches.push({
+                  type: 'italic',
+                  start: italicIndex,
+                  end: closingIndex + 1,
+                  content: text.substring(italicIndex + 1, closingIndex),
+                })
+                italicIndex = closingIndex + 1
+                continue
+              }
+            }
+          }
+        }
+      }
+      italicIndex++
+    }
+    while ((match = codeRegex.exec(text)) !== null) {
+      matches.push({
+        type: 'code',
+        start: match.index,
+        end: match.index + match[0].length,
+        content: match[1],
+      })
+    }
+    while ((match = linkRegex.exec(text)) !== null) {
+      matches.push({
+        type: 'link',
+        start: match.index,
+        end: match.index + match[0].length,
+        content: match[1],
+        url: match[2],
+      })
+    }
+
+    // Sort matches by start position
+    matches.sort((a, b) => a.start - b.start)
+
+    // Remove overlapping matches (keep first)
+    const filteredMatches: typeof matches = []
+    for (let i = 0; i < matches.length; i++) {
+      const current = matches[i]
+      let overlaps = false
+      for (let j = 0; j < i; j++) {
+        const prev = matches[j]
+        if (
+          (current.start >= prev.start && current.start < prev.end) ||
+          (current.end > prev.start && current.end <= prev.end)
+        ) {
+          overlaps = true
+          break
+        }
+      }
+      if (!overlaps) {
+        filteredMatches.push(current)
+      }
+    }
+
+    // Build parts
+    for (const match of filteredMatches) {
+      // Add text before match
+      if (match.start > currentIndex) {
+        parts.push(text.substring(currentIndex, match.start))
+      }
+
+      // Add matched element
+      const key = `inline-${match.start}`
+      switch (match.type) {
+        case 'bold':
+          parts.push(
+            <strong key={key} className="font-semibold text-gray-900">
+              {match.content}
+            </strong>
+          )
+          break
+        case 'italic':
+          parts.push(
+            <em key={key} className="italic">
+              {match.content}
+            </em>
+          )
+          break
+        case 'code':
+          parts.push(
+            <code key={key} className="bg-gray-100 px-1 py-0.5 rounded text-xs font-mono">
+              {match.content}
+            </code>
+          )
+          break
+        case 'link':
+          parts.push(
+            <a
+              key={key}
+              href={match.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:underline"
+            >
+              {match.content}
+            </a>
+          )
+          break
+      }
+
+      currentIndex = match.end
+    }
+
+    // Add remaining text
+    if (currentIndex < text.length) {
+      parts.push(text.substring(currentIndex))
+    }
+
+    return parts.length > 0 ? parts : [text]
+  }
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]
+    const trimmed = line.trim()
+
+    // Check for code blocks
+    if (trimmed.startsWith('```')) {
+      if (inCodeBlock) {
+        flushCodeBlock()
+        inCodeBlock = false
+      } else {
+        flushParagraph()
+        flushList()
+        inCodeBlock = true
+      }
+      continue
+    }
+
+    if (inCodeBlock) {
+      codeBlockContent.push(line)
+      continue
+    }
+
+    // Check for headers
+    if (trimmed.startsWith('#')) {
+      flushParagraph()
+      flushList()
+      const level = trimmed.match(/^#+/)?.[0].length || 1
+      const text = trimmed.substring(level).trim()
+      const HeadingTag = `h${Math.min(level, 6)}` as 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6'
+      const headingClasses = {
+        h1: 'text-lg font-semibold text-gray-900 mb-2 mt-4',
+        h2: 'text-base font-semibold text-gray-900 mb-2 mt-3',
+        h3: 'text-sm font-semibold text-gray-900 mb-1 mt-2',
+        h4: 'text-sm font-semibold text-gray-900 mb-1 mt-2',
+        h5: 'text-sm font-semibold text-gray-900 mb-1 mt-2',
+        h6: 'text-sm font-semibold text-gray-900 mb-1 mt-2',
+      }
+      elements.push(
+        <HeadingTag key={`h-${elements.length}`} className={headingClasses[HeadingTag]}>
+          {renderInlineMarkdown(text)}
+        </HeadingTag>
+      )
+      continue
+    }
+
+    // Check for list items
+    const listMatch = trimmed.match(/^(\d+\.|\*|\-|\+)\s+(.+)$/)
+    if (listMatch) {
+      flushParagraph()
+      const isOrdered = /^\d+\./.test(listMatch[1])
+      if (!inList || (isOrdered && !listOrdered) || (!isOrdered && listOrdered)) {
+        flushList()
+        inList = true
+        listOrdered = isOrdered
+      }
+      listItems.push(listMatch[2])
+      continue
+    }
+
+    // Regular line
+    if (trimmed === '') {
+      flushParagraph()
+      flushList()
+    } else {
+      if (inList) {
+        flushList()
+      }
+      currentParagraph.push(line)
+    }
+  }
+
+  // Flush remaining
+  flushParagraph()
+  flushList()
+  flushCodeBlock()
+
+  return <div className="markdown-content">{elements}</div>
+}
+
 interface AssistantMessageProps {
   message: AssistantChatMessage
   expandedCitations: Set<string>
@@ -48,6 +384,7 @@ export default function AssistantMessage({
   const [copiedCitationId, setCopiedCitationId] = useState<string | null>(null)
   const [copiedAnswer, setCopiedAnswer] = useState(false)
   const [citationsExpanded, setCitationsExpanded] = useState(false)
+  const [retrievedExpanded, setRetrievedExpanded] = useState(false)
 
   const handleCopyAnswer = async () => {
     if (!message.content) return
@@ -156,10 +493,8 @@ export default function AssistantMessage({
               )}
             </button>
           </div>
-          <div className="prose prose-sm max-w-none pr-8">
-            <p className="text-sm leading-relaxed text-gray-900 whitespace-pre-wrap">
-              {message.content}
-            </p>
+          <div className="pr-8">
+            <MarkdownRenderer content={message.content} />
           </div>
         </div>
 
@@ -323,51 +658,86 @@ export default function AssistantMessage({
 
         {/* Debug: Retrieved Context */}
         {debugMode && message.meta?.debugRetrieved && message.meta.debugRetrieved.length > 0 && (
-          <Card variant="outlined" padding="sm" className="mt-2 rounded-lg">
-            <details className="group">
-              <summary className="cursor-pointer text-xs font-semibold text-gray-900 mb-2 list-none">
-                <div className="flex items-center justify-between">
-                  <span>Retrieved Context ({message.meta.debugRetrieved.length})</span>
-                  <svg
-                    className="w-3.5 h-3.5 text-gray-400 transform transition-transform group-open:rotate-180"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 9l-7 7-7-7"
-                    />
-                  </svg>
-                </div>
-              </summary>
-              <div className="space-y-1.5 mt-2">
-                {message.meta.debugRetrieved.map(chunk => (
-                  <Card key={chunk.chunk_id} variant="outlined" padding="sm" className="bg-slate-50 rounded-lg">
-                    <div className="flex items-start justify-between mb-1.5">
-                      <div className="flex-1">
-                        <div className="text-xs font-medium text-gray-900">
-                          {chunk.title || 'Untitled'}
+          <div className="mt-2">
+            <button
+              onClick={() => setRetrievedExpanded(!retrievedExpanded)}
+              className="flex items-center gap-1.5 text-xs text-gray-600 hover:text-gray-900 transition-colors mb-2"
+            >
+              <span>Retrieved context (top {message.meta.debugRetrieved.length})</span>
+              <svg
+                className={`w-3 h-3 transform transition-transform ${
+                  retrievedExpanded ? 'rotate-180' : ''
+                }`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+            </button>
+
+            {retrievedExpanded && (
+              <div className="bg-slate-50 rounded-lg p-3 space-y-2">
+                {message.meta.debugRetrieved.map((chunk, index) => {
+                  const isUsed = message.meta?.used_chunk_ids?.includes(chunk.chunk_id) || false
+                  return (
+                    <div
+                      key={chunk.chunk_id}
+                      className={`bg-white rounded-md p-2.5 border ${
+                        isUsed ? 'border-blue-200 bg-blue-50/30' : 'border-gray-200'
+                      }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        {/* Rank */}
+                        <div className="flex-shrink-0 w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-xs font-medium text-gray-700">
+                          {index + 1}
                         </div>
-                        <div className="text-xs text-gray-500 mt-0.5">
-                          {chunk.source}
-                          {chunk.chunk_index !== undefined && ` • Chunk ${chunk.chunk_index}`}
+
+                        {/* Content */}
+                        <div className="flex-1 min-w-0 space-y-1.5">
+                          {/* Score and Used Badge */}
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-mono text-gray-600">
+                              Score: {chunk.score.toFixed(4)}
+                            </span>
+                            {isUsed && (
+                              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700 border border-blue-200">
+                                Used
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Snippet */}
+                          <div className="text-xs text-gray-700 bg-slate-50 p-2 rounded border border-gray-200 font-mono leading-relaxed">
+                            {chunk.content_snippet}
+                          </div>
+
+                          {/* Source/Title and Chunk Index */}
+                          <div className="text-xs text-gray-500">
+                            {chunk.title && <span className="font-medium">{chunk.title}</span>}
+                            {chunk.source && (
+                              <span>
+                                {chunk.title ? ' • ' : ''}
+                                {chunk.source}
+                              </span>
+                            )}
+                            {chunk.chunk_index !== undefined && (
+                              <span> • Chunk {chunk.chunk_index}</span>
+                            )}
+                          </div>
                         </div>
                       </div>
-                      <div className="text-xs font-mono text-gray-600 ml-4">
-                        {chunk.score.toFixed(4)}
-                      </div>
                     </div>
-                    <div className="text-xs text-gray-700 bg-white p-1.5 rounded border border-gray-200 font-mono mt-1.5">
-                      {chunk.content_snippet}
-                    </div>
-                  </Card>
-                ))}
+                  )
+                })}
               </div>
-            </details>
-          </Card>
+            )}
+          </div>
         )}
       </div>
     </div>

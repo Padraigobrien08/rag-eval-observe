@@ -13,8 +13,7 @@ export default function DocumentsPanel({ refreshTrigger }: DocumentsPanelProps) 
   const router = useRouter()
   const { ingests } = useRecentIngests(refreshTrigger)
   const { settings, selectDocument, clearDocumentSelection } = useRagSettings()
-  const selectedIngest = ingests.find(i => i.source === settings.activeDocument?.source)
-  const selectedDocumentId = selectedIngest?.document_id || null
+  const { filters } = settings
 
   const handleSelectDocument = (ingest: RecentIngest) => {
     selectDocument({ source: ingest.source, title: ingest.title })
@@ -27,6 +26,9 @@ export default function DocumentsPanel({ refreshTrigger }: DocumentsPanelProps) 
   const handleNewDocument = () => {
     router.push('/ingest')
   }
+
+  // Check if any document is active (matches current filters)
+  const hasActiveFilter = !!(filters.source || filters.title)
 
   return (
     <div className="flex flex-col min-h-0 h-full">
@@ -63,7 +65,7 @@ export default function DocumentsPanel({ refreshTrigger }: DocumentsPanelProps) 
           </div>
         ) : (
           <div className="space-y-1">
-            {selectedDocumentId && (
+            {hasActiveFilter && (
               <div className="mb-2">
                 <button
                   onClick={handleClearSelection}
@@ -74,67 +76,64 @@ export default function DocumentsPanel({ refreshTrigger }: DocumentsPanelProps) 
               </div>
             )}
             {ingests.map(ingest => {
-              const isSelected = selectedDocumentId === ingest.document_id
+              // Check if this document matches current filters
+              const isActive =
+                (filters.source && filters.source === ingest.source) ||
+                (filters.title && filters.title === ingest.title)
+
               return (
-                <button
+                <div
                   key={ingest.document_id}
                   onClick={() => handleSelectDocument(ingest)}
-                  className={`w-full text-left rounded-lg transition-colors ${
-                    isSelected
-                      ? 'bg-blue-50/60 border-l-2 border-blue-500'
-                      : 'hover:bg-slate-100'
+                  className={`relative flex items-start gap-2 rounded-xl px-3 py-2 hover:bg-slate-100 cursor-pointer transition-colors ${
+                    isActive ? 'border border-blue-200 bg-blue-50/70' : ''
                   }`}
                 >
-                  <div className="flex items-start gap-3 px-3 py-2.5">
-                    {/* Document Icon */}
-                    <div className="flex-shrink-0 mt-0.5">
-                      <svg
-                        className="w-4 h-4 text-gray-400"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                        />
-                      </svg>
-                    </div>
+                  {/* Left stripe for active state */}
+                  {isActive && (
+                    <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-blue-500 rounded-l-xl" />
+                  )}
 
-                    {/* Content */}
-                    <div className="flex-1 min-w-0">
-                      <div
-                        className={`text-sm font-semibold truncate ${
-                          isSelected ? 'text-blue-900' : 'text-gray-900'
-                        }`}
-                      >
-                        {ingest.title || ingest.source}
-                      </div>
-                      <div
-                        className={`text-xs mt-0.5 truncate ${
-                          isSelected ? 'text-blue-600' : 'text-gray-500'
-                        }`}
-                      >
-                        {ingest.source}
-                      </div>
-                    </div>
+                  {/* Document Icon */}
+                  <div className="flex-shrink-0 mt-0.5">
+                    <svg
+                      className="w-4 h-4 text-gray-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                      />
+                    </svg>
+                  </div>
 
-                    {/* Chunks Badge */}
-                    <div className="flex-shrink-0">
-                      <span
-                        className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-                          isSelected
-                            ? 'bg-blue-100 text-blue-700'
-                            : 'bg-gray-100 text-gray-600'
-                        }`}
-                      >
-                        {ingest.chunks_created} chunks
-                      </span>
+                  {/* Content */}
+                  <div className="flex-1 min-w-0">
+                    <div
+                      className={`text-sm font-semibold truncate ${
+                        isActive ? 'text-blue-900' : 'text-gray-900'
+                      }`}
+                    >
+                      {ingest.title || ingest.source}
+                    </div>
+                    <div
+                      className={`text-xs mt-0.5 truncate ${
+                        isActive ? 'text-blue-600' : 'text-gray-500'
+                      }`}
+                    >
+                      {ingest.source}
                     </div>
                   </div>
-                </button>
+
+                  {/* Chunks Badge - Right aligned */}
+                  <div className="ml-auto text-xs text-slate-500 flex-shrink-0">
+                    {ingest.chunks_created} chunks
+                  </div>
+                </div>
               )
             })}
           </div>

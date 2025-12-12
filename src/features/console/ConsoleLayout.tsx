@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import ChatConsole from './ChatConsole'
+import ChatsPanel from './ChatsPanel'
 import DocumentsPanel from './DocumentsPanel'
 import SettingsPanel from './SettingsPanel'
 import {
@@ -10,13 +11,22 @@ import {
   MIN_WIDTH,
   MAX_WIDTH,
 } from '@/lib/storage/sidebarPreferences'
+import { createNewSessionId } from '@/lib/storage/chatSessions'
 
 export default function ConsoleLayout() {
   const [documentsRefreshTrigger, setDocumentsRefreshTrigger] = useState(0)
+  const [currentSessionId, setCurrentSessionId] = useState<string>('')
   const [sidebarWidth, setSidebarWidth] = useState(() => loadSidebarPreferences().width)
   const [isCollapsed, setIsCollapsed] = useState(() => loadSidebarPreferences().collapsed)
   const [isResizing, setIsResizing] = useState(false)
   const sidebarRef = useRef<HTMLDivElement>(null)
+
+  // Initialize session ID on client side only
+  useEffect(() => {
+    if (!currentSessionId) {
+      setCurrentSessionId(createNewSessionId())
+    }
+  }, [currentSessionId])
 
   // Load preferences on mount
   useEffect(() => {
@@ -86,17 +96,31 @@ export default function ConsoleLayout() {
             title="Collapse sidebar"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 19l-7-7 7-7"
+              />
             </svg>
           </button>
 
-          {/* Documents Section - Top Half */}
+          {/* Chats Section - Top (smaller) */}
+          <div className="h-64 min-h-0 overflow-y-auto p-4 border-b border-gray-200 scrollbar-thin">
+            <ChatsPanel
+              currentSessionId={currentSessionId}
+              onSelectSession={setCurrentSessionId}
+              onNewChat={() => setCurrentSessionId(createNewSessionId())}
+            />
+          </div>
+
+          {/* Documents Section - Middle (flexible) */}
           <div className="flex-1 min-h-0 overflow-y-auto p-4 border-b border-gray-200 scrollbar-thin">
             <DocumentsPanel refreshTrigger={documentsRefreshTrigger} />
           </div>
 
-          {/* Settings Section - Bottom Half */}
-          <div className="flex-1 min-h-0 overflow-y-auto p-4 border-t border-gray-200 scrollbar-thin">
+          {/* Settings Section - Bottom (smaller) */}
+          <div className="h-64 min-h-0 overflow-y-auto p-4 border-t border-gray-200 scrollbar-thin">
             <SettingsPanel />
           </div>
 
@@ -108,9 +132,13 @@ export default function ConsoleLayout() {
             }`}
             style={{ zIndex: 10 }}
           >
-            <div className={`absolute right-0 top-1/2 -translate-y-1/2 w-1 h-12 rounded-full transition-opacity ${
-              isResizing ? 'bg-blue-500 opacity-100' : 'bg-gray-300 opacity-0 group-hover:opacity-100'
-            }`} />
+            <div
+              className={`absolute right-0 top-1/2 -translate-y-1/2 w-1 h-12 rounded-full transition-opacity ${
+                isResizing
+                  ? 'bg-blue-500 opacity-100'
+                  : 'bg-gray-300 opacity-0 group-hover:opacity-100'
+              }`}
+            />
           </div>
         </div>
       )}
@@ -129,8 +157,15 @@ export default function ConsoleLayout() {
       )}
 
       {/* Main Chat Region - Flex-1 */}
-      <div className="flex-1 min-w-0 h-full flex flex-col min-h-0 overflow-hidden" style={{ height: '100%' }}>
-        <ChatConsole onIngestSuccess={() => setDocumentsRefreshTrigger(prev => prev + 1)} />
+      <div
+        className="flex-1 min-w-0 h-full flex flex-col min-h-0 overflow-hidden"
+        style={{ height: '100%' }}
+      >
+        <ChatConsole
+          sessionId={currentSessionId}
+          onSessionSwitch={setCurrentSessionId}
+          onIngestSuccess={() => setDocumentsRefreshTrigger(prev => prev + 1)}
+        />
       </div>
     </div>
   )
