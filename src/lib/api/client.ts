@@ -1,176 +1,55 @@
-/**
- * API client for FastAPI backend
- */
-import type {
-  IngestRequest,
-  IngestResponse,
-  QueryRequest,
-  QueryResponse,
-  MetricsResponse,
-  HealthResponse,
-  ApiError,
-} from './types'
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000'
 
-const API_BASE_URL = `${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'}/api/v1`
-
-// Configurable timeout (10-30s, default 30s)
-const DEFAULT_TIMEOUT = 30000 // 30 seconds
-const MIN_TIMEOUT = 10000 // 10 seconds
-const MAX_TIMEOUT = 30000 // 30 seconds
-
-/**
- * Generate a unique request ID
- */
-function generateRequestId(): string {
-  return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-}
-
-/**
- * Create an AbortController with timeout
- */
-function createTimeoutController(timeoutMs: number = DEFAULT_TIMEOUT) {
-  const controller = new AbortController()
-  const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
-  return { controller, timeoutId }
-}
-
-/**
- * Normalize error response to consistent format
- */
-async function normalizeError(response: Response): Promise<ApiError> {
-  let errorData: any = {}
-  try {
-    errorData = await response.json()
-  } catch {
-    // If JSON parsing fails, use status text
-  }
-
-  // Extract message from various error formats
-  let message = 'Unknown error'
-  if (errorData.detail) {
-    message = errorData.detail
-  } else if (errorData.message) {
-    message = errorData.message
-  } else if (errorData.error) {
-    message = errorData.error
-  } else {
-    message = response.statusText || `HTTP ${response.status}`
-  }
-
-  return {
-    message,
-    status: response.status,
-    details: errorData,
-  }
-}
-
-/**
- * Make API request with timeout and error handling
- */
-async function apiRequest<T>(
-  endpoint: string,
-  options: RequestInit = {},
-  timeoutMs: number = DEFAULT_TIMEOUT
-): Promise<T> {
-  // Clamp timeout between min and max
-  const clampedTimeout = Math.max(MIN_TIMEOUT, Math.min(MAX_TIMEOUT, timeoutMs))
-
-  const { controller, timeoutId } = createTimeoutController(clampedTimeout)
-
-  // Generate request ID
-  const requestId = generateRequestId()
-
-  try {
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-      ...options,
-      signal: controller.signal,
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Request-Id': requestId,
-        ...options.headers,
-      },
-    })
-
-    clearTimeout(timeoutId)
-
-    if (!response.ok) {
-      const error = await normalizeError(response)
-      // Extract request ID from response headers if available
-      const responseRequestId =
-        response.headers.get('X-Request-Id') || response.headers.get('x-request-id')
-      if (responseRequestId && error.details) {
-        error.details.request_id = responseRequestId
-      }
-      throw error
-    }
-
-    return (await response.json()) as T
-  } catch (error) {
-    clearTimeout(timeoutId)
-
-    if (error instanceof Error && error.name === 'AbortError') {
-      throw {
-        message: 'Request timeout',
-        status: 408,
-        details: { timeout: clampedTimeout, request_id: requestId },
-      } as ApiError
-    }
-
-    // If it's already an ApiError, ensure request_id is included
-    if (error && typeof error === 'object' && 'status' in error) {
-      const apiError = error as ApiError
-      if (apiError.details && !apiError.details.request_id) {
-        apiError.details.request_id = requestId
-      } else if (!apiError.details) {
-        apiError.details = { request_id: requestId }
-      }
-      throw apiError
-    }
-
-    // Otherwise, wrap it
-    throw {
-      message: error instanceof Error ? error.message : 'Unknown error occurred',
-      status: 0,
-      details: { ...(error as any), request_id: requestId },
-    } as ApiError
-  }
-}
-
-/**
- * Ingest a document into the RAG system
- */
-export async function ingestDoc(payload: IngestRequest): Promise<IngestResponse> {
-  return apiRequest<IngestResponse>('/ingest', {
+export async function ragQuery(body: {
+  query: string
+  topK?: number
+  debug?: boolean
+  filters?: Record<string, unknown>
+}) {
+  const res = await fetch(`${API_BASE_URL}/api/v1/query`, {
     method: 'POST',
-    body: JSON.stringify(payload),
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
   })
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => '')
+    throw new Error(text || `Query failed with status ${res.status}`)
+  }
+
+  return res.json()
 }
 
-/**
- * Query the RAG system
- */
-export async function queryRag(payload: QueryRequest): Promise<QueryResponse> {
-  return apiRequest<QueryResponse>('/query', {
+export async function ingestDocument(body: {
+  source: string
+  title?: string
+  text: string
+  is_markdown?: boolean
+}) {
+  const res = await fetch(`${API_BASE_URL}/api/v1/ingest`, {
     method: 'POST',
-    body: JSON.stringify(payload),
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
   })
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => '')
+    throw new Error(text || `Ingest failed with status ${res.status}`)
+  }
+
+  return res.json()
 }
 
-/**
- * Fetch application metrics
- */
-export async function fetchMetrics(): Promise<MetricsResponse> {
-  return apiRequest<MetricsResponse>('/metrics', {
+export async function listDocuments(limit = 100, offset = 0) {
+  const res = await fetch(`${API_BASE_URL}/api/v1/documents?limit=${limit}&offset=${offset}`, {
     method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
   })
-}
 
-/**
- * Check API health
- */
-export async function health(): Promise<HealthResponse> {
-  const data = await apiRequest<HealthResponse>('/health', {
-    method: 'GET',
-  })
-  return data
+  if (!res.ok) {
+    const text = await res.text().catch(() => '')
+    throw new Error(text || `List documents failed with status ${res.status}`)
+  }
+
+  return res.json()
 }
