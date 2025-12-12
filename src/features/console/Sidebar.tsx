@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog'
@@ -10,7 +11,6 @@ import { Switch } from '@/components/ui/switch'
 import { Plus, Settings } from 'lucide-react'
 import IngestDialog from './IngestDialog'
 import { useRagSettings } from '@/features/settings/useRagSettings'
-import { useState } from 'react'
 
 export default function Sidebar() {
   const [ingestOpen, setIngestOpen] = useState(false)
@@ -19,12 +19,14 @@ export default function Sidebar() {
 
   return (
     <>
-      <aside className="h-screen w-64 border-r border-slate-200 bg-white flex flex-col">
+      <aside className="flex h-screen w-64 flex-col border-r border-slate-200 bg-white">
         <ScrollArea className="flex-1 min-h-0 space-y-6">
           {/* Documents */}
           <div>
             <div className="flex items-center justify-between px-4 py-2">
-              <div className="text-xs font-semibold text-slate-500 tracking-wide">DOCUMENTS</div>
+              <div className="text-xs font-semibold tracking-wide text-slate-500">
+                DOCUMENTS
+              </div>
               <Button
                 variant="ghost"
                 size="icon"
@@ -41,13 +43,15 @@ export default function Sidebar() {
           {/* Chats */}
           <div>
             <div className="flex items-center justify-between px-4 py-2">
-              <div className="text-xs font-semibold text-slate-500 tracking-wide">CHATS</div>
+              <div className="text-xs font-semibold tracking-wide text-slate-500">
+                CHATS
+              </div>
               <Button
                 variant="ghost"
                 size="icon"
                 aria-label="New chat"
                 onClick={() => {
-                  // For now just a placeholder – real chat history later
+                  // Placeholder – real chat history later
                 }}
                 className="h-8 w-8"
               >
@@ -66,8 +70,9 @@ export default function Sidebar() {
                 <span>Settings</span>
               </button>
             </DialogTrigger>
-            <DialogContent className="p-6 md:p-10">
-              <div className="space-y-6">
+
+            <DialogContent className="w-[92vw] max-w-lg rounded-2xl border border-slate-200 bg-white p-6 md:p-8">
+              <div className="space-y-7">
                 {/* Header */}
                 <div className="space-y-1">
                   <h2 className="text-lg font-semibold text-slate-900">Query settings</h2>
@@ -77,12 +82,17 @@ export default function Sidebar() {
                 </div>
 
                 {/* Top K section */}
-                <section className="space-y-2">
-                  <Label htmlFor="top-k" className="text-sm font-medium text-slate-800">
-                    Top K
-                  </Label>
-                  <p className="text-xs text-slate-500">Number of chunks to retrieve per query.</p>
-                  <div className="flex flex-col gap-3">
+                <section className="space-y-3">
+                  <div className="space-y-1">
+                    <Label htmlFor="top-k" className="text-sm font-medium text-slate-900">
+                      Top K
+                    </Label>
+                    <p className="text-xs text-slate-500">
+                      Number of chunks to retrieve per query.
+                    </p>
+                  </div>
+
+                  <div className="flex flex-col gap-4">
                     <div className="flex items-center gap-3">
                       <Input
                         id="top-k"
@@ -98,10 +108,11 @@ export default function Sidebar() {
                             setTopK(clamped)
                           }
                         }}
-                        className="w-24 text-sm"
+                        className="w-20 text-sm"
                       />
                       <span className="text-xs text-slate-500">chunks per query</span>
                     </div>
+
                     <Slider
                       min={1}
                       max={50}
@@ -114,21 +125,28 @@ export default function Sidebar() {
                 </section>
 
                 {/* Debug mode section */}
-                <section className="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3">
+                <section className="flex items-center justify-between gap-6 rounded-xl bg-slate-50 px-4 py-3">
                   <div className="space-y-1">
-                    <Label htmlFor="debug-mode" className="text-sm font-medium text-slate-800">
+                    <Label
+                      htmlFor="debug-mode"
+                      className="text-sm font-medium text-slate-900"
+                    >
                       Debug mode
                     </Label>
                     <p className="text-xs text-slate-500">
                       Show retrieved chunks and scores under answers.
                     </p>
                   </div>
-                  <Switch
-                    id="debug-mode"
-                    checked={debug}
-                    onCheckedChange={setDebug}
-                    className="ml-4"
-                  />
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-slate-500">
+                      {debug ? 'On' : 'Off'}
+                    </span>
+                    <Switch
+                      id="debug-mode"
+                      checked={debug}
+                      onCheckedChange={setDebug}
+                    />
+                  </div>
                 </section>
               </div>
             </DialogContent>
@@ -141,7 +159,6 @@ export default function Sidebar() {
         onOpenChange={setIngestOpen}
         onSuccess={() => {
           // TODO: Refresh documents list when implemented
-          // For now, this is a placeholder for future document list refresh
         }}
       />
     </>
