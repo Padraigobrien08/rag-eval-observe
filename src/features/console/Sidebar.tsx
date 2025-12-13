@@ -24,9 +24,7 @@ export default function Sidebar() {
           {/* Documents */}
           <div>
             <div className="flex items-center justify-between px-4 py-2">
-              <div className="text-xs font-semibold tracking-wide text-slate-500">
-                DOCUMENTS
-              </div>
+              <div className="text-xs font-semibold tracking-wide text-slate-500">DOCUMENTS</div>
               <Button
                 variant="ghost"
                 size="icon"
@@ -43,9 +41,7 @@ export default function Sidebar() {
           {/* Chats */}
           <div>
             <div className="flex items-center justify-between px-4 py-2">
-              <div className="text-xs font-semibold tracking-wide text-slate-500">
-                CHATS
-              </div>
+              <div className="text-xs font-semibold tracking-wide text-slate-500">CHATS</div>
               <Button
                 variant="ghost"
                 size="icon"
@@ -127,10 +123,7 @@ export default function Sidebar() {
                 {/* Debug mode section */}
                 <section className="flex items-center justify-between gap-6 rounded-xl bg-slate-50 px-4 py-3">
                   <div className="space-y-1">
-                    <Label
-                      htmlFor="debug-mode"
-                      className="text-sm font-medium text-slate-900"
-                    >
+                    <Label htmlFor="debug-mode" className="text-sm font-medium text-slate-900">
                       Debug mode
                     </Label>
                     <p className="text-xs text-slate-500">
@@ -138,14 +131,8 @@ export default function Sidebar() {
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-slate-500">
-                      {debug ? 'On' : 'Off'}
-                    </span>
-                    <Switch
-                      id="debug-mode"
-                      checked={debug}
-                      onCheckedChange={setDebug}
-                    />
+                    <span className="text-xs text-slate-500">{debug ? 'On' : 'Off'}</span>
+                    <Switch id="debug-mode" checked={debug} onCheckedChange={setDebug} />
                   </div>
                 </section>
               </div>
