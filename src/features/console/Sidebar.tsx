@@ -10,16 +10,17 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
 } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Slider } from '@/components/ui/slider'
 import { Switch } from '@/components/ui/switch'
-import { Plus, Settings, FileText, Loader2, ChevronDown } from 'lucide-react'
+import { Plus, Settings, FileText, Loader2, ChevronDown, Trash2 } from 'lucide-react'
 import IngestDialog from './IngestDialog'
 import { useRagSettings, type RagModel } from '@/features/settings/useRagSettings'
 import { useLocalStorage } from '@/features/settings/useLocalStorage'
-import { listDocuments } from '@/lib/api/client'
+import { listDocuments, deleteDocument } from '@/lib/api/client'
 
 interface Document {
   id: string
@@ -32,6 +33,9 @@ export default function Sidebar() {
   const [ingestOpen, setIngestOpen] = useState(false)
   const [documents, setDocuments] = useState<Document[]>([])
   const [isLoadingDocs, setIsLoadingDocs] = useState(true)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [documentToDelete, setDocumentToDelete] = useState<Document | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
   const { topK, debug, ragModel, setTopK, setDebug, setRagModel } = useRagSettings()
   const [defaultExpandedAnswers, setDefaultExpandedAnswers] = useLocalStorage<boolean>(
     'rag-eval-default-expanded-answers',
@@ -85,6 +89,31 @@ export default function Sidebar() {
     void loadDocuments()
   }
 
+  const handleDeleteClick = (doc: Document, e: React.MouseEvent) => {
+    e.stopPropagation() // Prevent triggering any parent click handlers
+    setDocumentToDelete(doc)
+    setDeleteDialogOpen(true)
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!documentToDelete) return
+
+    setIsDeleting(true)
+    try {
+      await deleteDocument(documentToDelete.id)
+      setDeleteDialogOpen(false)
+      setDocumentToDelete(null)
+      // Reload documents list
+      await loadDocuments()
+    } catch (error) {
+      console.error('Failed to delete document:', error)
+      // You could add a toast notification here
+      alert(`Failed to delete document: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
   return (
     <>
       <aside className="flex h-screen w-64 flex-col border-r border-slate-200 bg-white">
@@ -121,15 +150,24 @@ export default function Sidebar() {
             ) : (
               <div className="space-y-0.5 px-2">
                 {documents.map(doc => (
-                  <button
+                  <div
                     key={doc.id}
-                    type="button"
                     className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-700 hover:bg-slate-50 rounded-md transition-colors group"
-                    title={doc.title || doc.source}
                   >
                     <FileText className="h-3.5 w-3.5 text-slate-400 group-hover:text-slate-600 flex-shrink-0" />
-                    <span className="flex-1 text-left truncate">{doc.title || doc.source}</span>
-                  </button>
+                    <span className="flex-1 text-left truncate" title={doc.title || doc.source}>
+                      {doc.title || doc.source}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={e => handleDeleteClick(doc, e)}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-red-50 rounded text-red-600 hover:text-red-700"
+                      aria-label={`Delete ${doc.title || doc.source}`}
+                      title="Delete document"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
                 ))}
               </div>
             )}
@@ -341,11 +379,50 @@ export default function Sidebar() {
         </div>
       </aside>
 
-      <IngestDialog
-        open={ingestOpen}
-        onOpenChange={setIngestOpen}
-        onSuccess={handleIngestSuccess}
-      />
-    </>
-  )
-}
+          <IngestDialog
+            open={ingestOpen}
+            onOpenChange={setIngestOpen}
+            onSuccess={handleIngestSuccess}
+          />
+
+          {/* Delete Confirmation Dialog */}
+          <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>Delete Document</DialogTitle>
+                <DialogDescription>
+                  Are you sure you want to delete "{documentToDelete?.title || documentToDelete?.source}"?
+                  This action cannot be undone and will remove all associated chunks.
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setDeleteDialogOpen(false)
+                    setDocumentToDelete(null)
+                  }}
+                  disabled={isDeleting}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={handleDeleteConfirm}
+                  disabled={isDeleting}
+                >
+                  {isDeleting ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Deleting...
+                    </>
+                  ) : (
+                    'Delete'
+                  )}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </>
+      )
+    }
