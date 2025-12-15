@@ -18,6 +18,7 @@ import { Slider } from '@/components/ui/slider'
 import { Switch } from '@/components/ui/switch'
 import { Plus, Settings, FileText, Loader2, ChevronDown, Trash2 } from 'lucide-react'
 import IngestDialog from './IngestDialog'
+import DocumentPreviewDialog from './DocumentPreviewDialog'
 import { useRagSettings, type RagModel } from '@/features/settings/useRagSettings'
 import { useLocalStorage } from '@/features/settings/useLocalStorage'
 import { listDocuments, deleteDocument } from '@/lib/api/client'
@@ -36,6 +37,8 @@ export default function Sidebar() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [documentToDelete, setDocumentToDelete] = useState<Document | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [previewDialogOpen, setPreviewDialogOpen] = useState(false)
+  const [documentToPreview, setDocumentToPreview] = useState<Document | null>(null)
   const { topK, debug, ragModel, setTopK, setDebug, setRagModel } = useRagSettings()
   const [defaultExpandedAnswers, setDefaultExpandedAnswers] = useLocalStorage<boolean>(
     'rag-eval-default-expanded-answers',
@@ -87,6 +90,11 @@ export default function Sidebar() {
 
   const handleIngestSuccess = () => {
     void loadDocuments()
+  }
+
+  const handleDocumentClick = (doc: Document) => {
+    setDocumentToPreview(doc)
+    setPreviewDialogOpen(true)
   }
 
   const handleDeleteClick = (doc: Document, e: React.MouseEvent) => {
@@ -154,10 +162,15 @@ export default function Sidebar() {
                     key={doc.id}
                     className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-700 hover:bg-slate-50 rounded-md transition-colors group"
                   >
-                    <FileText className="h-3.5 w-3.5 text-slate-400 group-hover:text-slate-600 flex-shrink-0" />
-                    <span className="flex-1 text-left truncate" title={doc.title || doc.source}>
-                      {doc.title || doc.source}
-                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleDocumentClick(doc)}
+                      className="flex-1 flex items-center gap-2 text-left truncate hover:text-slate-900"
+                      title={`View ${doc.title || doc.source}`}
+                    >
+                      <FileText className="h-3.5 w-3.5 text-slate-400 group-hover:text-slate-600 flex-shrink-0" />
+                      <span className="flex-1 truncate">{doc.title || doc.source}</span>
+                    </button>
                     <button
                       type="button"
                       onClick={e => handleDeleteClick(doc, e)}
@@ -383,6 +396,13 @@ export default function Sidebar() {
             open={ingestOpen}
             onOpenChange={setIngestOpen}
             onSuccess={handleIngestSuccess}
+          />
+
+          {/* Document Preview Dialog */}
+          <DocumentPreviewDialog
+            open={previewDialogOpen}
+            onOpenChange={setPreviewDialogOpen}
+            document={documentToPreview}
           />
 
           {/* Delete Confirmation Dialog */}
