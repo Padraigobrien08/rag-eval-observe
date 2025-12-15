@@ -34,7 +34,11 @@ export default function CitationsDropdown({ citations }: CitationsDropdownProps)
           <ChevronDown className="h-3 w-3" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-80 max-h-[24rem] overflow-y-auto p-1">
+      <DropdownMenuContent 
+        align="end" 
+        className="w-80 max-h-[24rem] overflow-y-auto p-1 bg-white border-slate-200"
+        style={{ backgroundColor: 'white' }}
+      >
         <DropdownMenuLabel className="px-2 py-1.5 text-xs font-semibold text-slate-500 uppercase tracking-wide">
           Sources ({citations.length})
         </DropdownMenuLabel>
