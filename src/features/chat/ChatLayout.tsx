@@ -14,7 +14,12 @@ interface ChatLayoutProps {
   showInput?: boolean
 }
 
-export default function ChatLayout({ messages, isLoading, onSend, showInput = true }: ChatLayoutProps) {
+export default function ChatLayout({
+  messages,
+  isLoading,
+  onSend,
+  showInput = true,
+}: ChatLayoutProps) {
   const [input, setInput] = useState('')
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -44,19 +49,29 @@ export default function ChatLayout({ messages, isLoading, onSend, showInput = tr
   return (
     <div className="flex flex-col h-full" style={{ height: '100%' }} data-testid="chat-layout">
       {/* Messages area - scrollable, fills available space */}
-      <div 
-        className="flex-1 overflow-y-auto" 
-        style={{ 
+      <div
+        className="flex-1 overflow-y-auto"
+        style={{
           minHeight: 0,
           maxHeight: '100%',
-          overflowY: 'auto'
+          overflowY: 'auto',
         }}
       >
-        <div className="mx-auto max-w-3xl w-full px-4" style={{ paddingTop: '1.5rem', paddingBottom: '1.5rem' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-            {messages.map(message => (
-              <MessageBubble key={message.id} message={message} />
-            ))}
+        <div
+          className="mx-auto max-w-3xl w-full px-4"
+          style={{ paddingTop: '1.5rem', paddingBottom: '1.5rem' }}
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+            {messages.map((message, index) => {
+              const previousMessage = index > 0 ? messages[index - 1] : null
+              return (
+                <MessageBubble
+                  key={message.id}
+                  message={message}
+                  previousMessage={previousMessage}
+                />
+              )
+            })}
             {isLoading && (
               <div className="flex justify-start">
                 <div className="rounded-2xl bg-slate-100 px-4 py-3 text-sm text-slate-500">
@@ -71,11 +86,19 @@ export default function ChatLayout({ messages, isLoading, onSend, showInput = tr
 
       {/* Input bar - fixed at bottom with padding */}
       {showInput && (
-        <div 
+        <div
           className="shrink-0 border-t border-slate-200 bg-white/80 backdrop-blur"
           style={{ flexShrink: 0 }}
         >
-          <div className="mx-auto max-w-3xl" style={{ paddingLeft: '1rem', paddingRight: '1rem', paddingTop: '1rem', paddingBottom: '1rem' }}>
+          <div
+            className="mx-auto max-w-3xl"
+            style={{
+              paddingLeft: '1rem',
+              paddingRight: '1rem',
+              paddingTop: '1rem',
+              paddingBottom: '1rem',
+            }}
+          >
             <form onSubmit={handleSubmit} className="flex items-end gap-2">
               <Textarea
                 ref={textareaRef}

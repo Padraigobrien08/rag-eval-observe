@@ -2,3 +2,19 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Citation highlight animation */
+@keyframes citation-pulse {
+  0%, 100% {
+    background-color: rgb(219 234 254);
+    border-color: rgb(147 197 253);
+  }
+  50% {
+    background-color: rgb(191 219 254);
+    border-color: rgb(96 165 250);
+  }
+}
+
+.citation-highlight {
+  animation: citation-pulse 0.5s ease-in-out;
+}
+

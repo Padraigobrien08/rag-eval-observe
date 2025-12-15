@@ -11,6 +11,7 @@ import { Switch } from '@/components/ui/switch'
 import { Plus, Settings, FileText, Loader2, ChevronDown } from 'lucide-react'
 import IngestDialog from './IngestDialog'
 import { useRagSettings, type RagModel } from '@/features/settings/useRagSettings'
+import { useLocalStorage } from '@/features/settings/useLocalStorage'
 import { listDocuments } from '@/lib/api/client'
 
 interface Document {
@@ -25,19 +26,16 @@ export default function Sidebar() {
   const [documents, setDocuments] = useState<Document[]>([])
   const [isLoadingDocs, setIsLoadingDocs] = useState(true)
   const { topK, debug, ragModel, setTopK, setDebug, setRagModel } = useRagSettings()
+  const [defaultExpandedAnswers, setDefaultExpandedAnswers] = useLocalStorage<boolean>(
+    'rag-eval-default-expanded-answers',
+    false
+  )
   const currentTopK = topK ?? 8
-
-  const ragModelLabels: Record<RagModel, string> = {
-    'vector-similarity': 'Vector Similarity Search',
-    'hybrid-search': 'Hybrid Search (Vector + BM25)',
-    'reranking': 'Reranking',
-    'multi-query': 'Multi-Query',
-  }
 
   const ragModelDescriptions: Record<RagModel, string> = {
     'vector-similarity': 'Semantic search using cosine similarity on embeddings.',
     'hybrid-search': 'Combines vector search with keyword matching for better recall.',
-    'reranking': 'Uses a reranking model to improve retrieval accuracy.',
+    reranking: 'Uses a reranking model to improve retrieval accuracy.',
     'multi-query': 'Generates multiple query variations for better coverage.',
   }
 
@@ -72,9 +70,7 @@ export default function Sidebar() {
               <div className="text-xs font-semibold tracking-wide text-slate-500">
                 DOCUMENTS
                 {!isLoadingDocs && documents.length > 0 && (
-                  <span className="ml-1.5 text-slate-400 font-normal">
-                    ({documents.length})
-                  </span>
+                  <span className="ml-1.5 text-slate-400 font-normal">({documents.length})</span>
                 )}
               </div>
               <Button
@@ -95,9 +91,7 @@ export default function Sidebar() {
             ) : documents.length === 0 ? (
               <div className="px-4 py-3">
                 <p className="text-xs text-slate-500">No documents yet.</p>
-                <p className="text-xs text-slate-400 mt-1">
-                  Click + to add your first document.
-                </p>
+                <p className="text-xs text-slate-400 mt-1">Click + to add your first document.</p>
               </div>
             ) : (
               <div className="space-y-0.5 px-2">
@@ -109,9 +103,7 @@ export default function Sidebar() {
                     title={doc.title || doc.source}
                   >
                     <FileText className="h-3.5 w-3.5 text-slate-400 group-hover:text-slate-600 flex-shrink-0" />
-                    <span className="flex-1 text-left truncate">
-                      {doc.title || doc.source}
-                    </span>
+                    <span className="flex-1 text-left truncate">{doc.title || doc.source}</span>
                   </button>
                 ))}
               </div>
@@ -147,7 +139,7 @@ export default function Sidebar() {
               </button>
             </DialogTrigger>
 
-            <DialogContent 
+            <DialogContent
               className="w-[92vw] max-w-lg rounded-2xl border border-slate-200 bg-white"
               style={{ padding: '2rem' }}
             >
@@ -180,15 +172,19 @@ export default function Sidebar() {
                       style={{ paddingRight: '2.5rem' }}
                     >
                       <option value="vector-similarity">Vector Similarity Search</option>
-                      <option value="hybrid-search" disabled>Hybrid Search (Vector + BM25) - Coming soon</option>
-                      <option value="reranking" disabled>Reranking - Coming soon</option>
-                      <option value="multi-query" disabled>Multi-Query - Coming soon</option>
+                      <option value="hybrid-search" disabled>
+                        Hybrid Search (Vector + BM25) - Coming soon
+                      </option>
+                      <option value="reranking" disabled>
+                        Reranking - Coming soon
+                      </option>
+                      <option value="multi-query" disabled>
+                        Multi-Query - Coming soon
+                      </option>
                     </select>
                     <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 pointer-events-none" />
                   </div>
-                  <p className="text-xs text-slate-500 italic">
-                    {ragModelDescriptions[ragModel]}
-                  </p>
+                  <p className="text-xs text-slate-500 italic">{ragModelDescriptions[ragModel]}</p>
                 </section>
 
                 {/* Top K section */}
@@ -242,8 +238,13 @@ export default function Sidebar() {
                 </section>
 
                 {/* Debug mode section */}
-                <section className="flex items-center justify-between rounded-xl bg-slate-50" style={{ padding: '1rem', gap: '2rem' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', flex: 1 }}>
+                <section
+                  className="flex items-center justify-between rounded-xl bg-slate-50"
+                  style={{ padding: '1rem', gap: '2rem' }}
+                >
+                  <div
+                    style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', flex: 1 }}
+                  >
                     <Label htmlFor="debug-mode" className="text-sm font-medium text-slate-900">
                       Debug mode
                     </Label>
@@ -252,15 +253,54 @@ export default function Sidebar() {
                     </p>
                   </div>
                   <div className="flex items-center" style={{ gap: '0.75rem', flexShrink: 0 }}>
-                    <span className={`text-xs font-medium ${debug ? 'text-green-700' : 'text-red-700'}`}>
+                    <span
+                      className={`text-xs font-medium ${debug ? 'text-green-700' : 'text-red-700'}`}
+                    >
                       {debug ? 'On' : 'Off'}
                     </span>
-                    <Switch 
-                      id="debug-mode" 
-                      checked={debug} 
+                    <Switch
+                      id="debug-mode"
+                      checked={debug}
                       onCheckedChange={setDebug}
                       style={{
-                        backgroundColor: debug ? 'rgb(22, 163, 74)' : 'rgb(239, 68, 68)'
+                        backgroundColor: debug ? 'rgb(22, 163, 74)' : 'rgb(239, 68, 68)',
+                      }}
+                    />
+                  </div>
+                </section>
+
+                {/* Default expanded answers section */}
+                <section
+                  className="flex items-center justify-between rounded-xl bg-slate-50"
+                  style={{ padding: '1rem', gap: '2rem' }}
+                >
+                  <div
+                    style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', flex: 1 }}
+                  >
+                    <Label
+                      htmlFor="default-expanded"
+                      className="text-sm font-medium text-slate-900"
+                    >
+                      Default expanded answers
+                    </Label>
+                    <p className="text-xs text-slate-500">
+                      Show full answer text by default instead of summary.
+                    </p>
+                  </div>
+                  <div className="flex items-center" style={{ gap: '0.75rem', flexShrink: 0 }}>
+                    <span
+                      className={`text-xs font-medium ${defaultExpandedAnswers ? 'text-green-700' : 'text-red-700'}`}
+                    >
+                      {defaultExpandedAnswers ? 'On' : 'Off'}
+                    </span>
+                    <Switch
+                      id="default-expanded"
+                      checked={defaultExpandedAnswers}
+                      onCheckedChange={setDefaultExpandedAnswers}
+                      style={{
+                        backgroundColor: defaultExpandedAnswers
+                          ? 'rgb(22, 163, 74)'
+                          : 'rgb(239, 68, 68)',
                       }}
                     />
                   </div>

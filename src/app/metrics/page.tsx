@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { ArrowLeft, RefreshCw, Clock, Activity, DollarSign, Database, TrendingUp } from 'lucide-react'
+import { ArrowLeft, RefreshCw, Clock, Activity, DollarSign, Database } from 'lucide-react'
 import { getMetrics } from '@/lib/api/client'
 
 interface RouteMetrics {
@@ -60,7 +60,8 @@ function calculateCost(tokenUsage: {
 
   const embeddingCost = ((tokenUsage.embedding_total_tokens || 0) / 1000) * embeddingCostPer1K
   const chatPromptCost = ((tokenUsage.chat_prompt_tokens || 0) / 1000) * chatPromptCostPer1K
-  const chatCompletionCost = ((tokenUsage.chat_completion_tokens || 0) / 1000) * chatCompletionCostPer1K
+  const chatCompletionCost =
+    ((tokenUsage.chat_completion_tokens || 0) / 1000) * chatCompletionCostPer1K
 
   return embeddingCost + chatPromptCost + chatCompletionCost
 }
@@ -124,7 +125,10 @@ export default function MetricsPage() {
   if (!metrics) return null
 
   const queryRoute = metrics.routes['/api/v1/query'] || metrics.routes['/query']
-  const totalRequests = Object.values(metrics.routes).reduce((sum, route) => sum + route.request_count, 0)
+  const totalRequests = Object.values(metrics.routes).reduce(
+    (sum, route) => sum + route.request_count,
+    0
+  )
   const totalCost = calculateCost(metrics.token_usage)
 
   return (
@@ -192,7 +196,9 @@ export default function MetricsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {(metrics.token_usage.embedding_total_tokens + metrics.token_usage.chat_total_tokens).toLocaleString()}
+                {(
+                  metrics.token_usage.embedding_total_tokens + metrics.token_usage.chat_total_tokens
+                ).toLocaleString()}
               </div>
               <p className="text-xs text-slate-500 mt-1">Embedding + Chat tokens</p>
             </CardContent>
@@ -210,15 +216,21 @@ export default function MetricsPage() {
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-slate-600">Request Count</span>
-                  <span className="text-lg font-semibold">{queryRoute.request_count.toLocaleString()}</span>
+                  <span className="text-lg font-semibold">
+                    {queryRoute.request_count.toLocaleString()}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-slate-600">Average Latency</span>
-                  <span className="text-lg font-semibold">{queryRoute.avg_latency_ms.toFixed(2)}ms</span>
+                  <span className="text-lg font-semibold">
+                    {queryRoute.avg_latency_ms.toFixed(2)}ms
+                  </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-slate-600">Total Latency</span>
-                  <span className="text-lg font-semibold">{queryRoute.total_latency_ms.toLocaleString()}ms</span>
+                  <span className="text-lg font-semibold">
+                    {queryRoute.total_latency_ms.toLocaleString()}ms
+                  </span>
                 </div>
               </CardContent>
             </Card>
@@ -232,7 +244,15 @@ export default function MetricsPage() {
                 {Object.entries(queryRoute.status_counts).map(([status, count]) => (
                   <div key={status} className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <Badge variant={status.startsWith('2') ? 'default' : status.startsWith('4') ? 'secondary' : 'destructive'}>
+                      <Badge
+                        variant={
+                          status.startsWith('2')
+                            ? 'default'
+                            : status.startsWith('4')
+                              ? 'secondary'
+                              : 'destructive'
+                        }
+                      >
                         {status}
                       </Badge>
                     </div>
@@ -260,7 +280,9 @@ export default function MetricsPage() {
                     <div key={bucket} className="space-y-2">
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-slate-600">{bucket}</span>
-                        <span className="font-medium">{count} ({percentage.toFixed(1)}%)</span>
+                        <span className="font-medium">
+                          {count} ({percentage.toFixed(1)}%)
+                        </span>
                       </div>
                       <div className="w-full bg-slate-200 rounded-full h-2">
                         <div
@@ -286,11 +308,15 @@ export default function MetricsPage() {
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-slate-600">Prompt Tokens</span>
-                <span className="text-lg font-semibold">{metrics.token_usage.embedding_prompt_tokens.toLocaleString()}</span>
+                <span className="text-lg font-semibold">
+                  {metrics.token_usage.embedding_prompt_tokens.toLocaleString()}
+                </span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-slate-600">Total Tokens</span>
-                <span className="text-lg font-semibold">{metrics.token_usage.embedding_total_tokens.toLocaleString()}</span>
+                <span className="text-lg font-semibold">
+                  {metrics.token_usage.embedding_total_tokens.toLocaleString()}
+                </span>
               </div>
               <div className="flex items-center justify-between pt-2 border-t">
                 <span className="text-sm text-slate-600">Estimated Cost</span>
@@ -309,20 +335,27 @@ export default function MetricsPage() {
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-slate-600">Prompt Tokens</span>
-                <span className="text-lg font-semibold">{metrics.token_usage.chat_prompt_tokens.toLocaleString()}</span>
+                <span className="text-lg font-semibold">
+                  {metrics.token_usage.chat_prompt_tokens.toLocaleString()}
+                </span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-slate-600">Completion Tokens</span>
-                <span className="text-lg font-semibold">{metrics.token_usage.chat_completion_tokens.toLocaleString()}</span>
+                <span className="text-lg font-semibold">
+                  {metrics.token_usage.chat_completion_tokens.toLocaleString()}
+                </span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-slate-600">Total Tokens</span>
-                <span className="text-lg font-semibold">{metrics.token_usage.chat_total_tokens.toLocaleString()}</span>
+                <span className="text-lg font-semibold">
+                  {metrics.token_usage.chat_total_tokens.toLocaleString()}
+                </span>
               </div>
               <div className="flex items-center justify-between pt-2 border-t">
                 <span className="text-sm text-slate-600">Estimated Cost</span>
                 <span className="text-lg font-semibold">
-                  ${(
+                  $
+                  {(
                     (metrics.token_usage.chat_prompt_tokens / 1000) * 0.01 +
                     (metrics.token_usage.chat_completion_tokens / 1000) * 0.03
                   ).toFixed(4)}
@@ -350,18 +383,23 @@ export default function MetricsPage() {
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                       <div>
                         <span className="text-slate-500">Avg Latency</span>
-                        <div className="font-medium">{routeMetrics.avg_latency_ms.toFixed(2)}ms</div>
+                        <div className="font-medium">
+                          {routeMetrics.avg_latency_ms.toFixed(2)}ms
+                        </div>
                       </div>
                       <div>
                         <span className="text-slate-500">Total Latency</span>
-                        <div className="font-medium">{routeMetrics.total_latency_ms.toLocaleString()}ms</div>
+                        <div className="font-medium">
+                          {routeMetrics.total_latency_ms.toLocaleString()}ms
+                        </div>
                       </div>
                       <div>
                         <span className="text-slate-500">Success Rate</span>
                         <div className="font-medium">
                           {routeMetrics.request_count > 0
                             ? (
-                                ((routeMetrics.status_counts['200'] || 0) / routeMetrics.request_count) *
+                                ((routeMetrics.status_counts['200'] || 0) /
+                                  routeMetrics.request_count) *
                                 100
                               ).toFixed(1)
                             : 0}
@@ -371,7 +409,7 @@ export default function MetricsPage() {
                       <div>
                         <span className="text-slate-500">Status Codes</span>
                         <div className="flex gap-1 mt-1">
-                          {Object.keys(routeMetrics.status_counts).map((status) => (
+                          {Object.keys(routeMetrics.status_counts).map(status => (
                             <Badge key={status} variant="outline" className="text-xs">
                               {status}: {routeMetrics.status_counts[status]}
                             </Badge>
@@ -394,4 +432,3 @@ export default function MetricsPage() {
     </div>
   )
 }
-

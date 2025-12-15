@@ -66,6 +66,18 @@ export function useChat() {
         chunk_index: cit.chunk_index || cit.chunkIndex || 0,
       }))
 
+      // Store debug data (including content snippets) in metadata for hover previews
+      const metadata: any = {
+        ...(resp.metadata ?? resp.telemetry ?? {}),
+      }
+
+      // Include debug retrieved chunks if available (for hover previews)
+      if (resp.debug?.retrieved) {
+        metadata.debug = {
+          retrieved: resp.debug.retrieved,
+        }
+      }
+
       const assistantMessage: ChatMessage = {
         id: uuid(),
         role: 'assistant',
@@ -73,7 +85,7 @@ export function useChat() {
         latencyMs: resp.latency_ms ?? resp.latencyMs,
         costUsd: calculateCost(resp.token_usage ?? resp.tokenUsage),
         citations: citations.length > 0 ? citations : undefined,
-        metadata: resp.metadata ?? resp.telemetry ?? {},
+        metadata,
       }
       setMessages(prev => [...prev, assistantMessage])
     } catch (err: any) {

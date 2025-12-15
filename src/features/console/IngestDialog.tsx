@@ -12,7 +12,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { useState, useRef, useEffect } from 'react'
 import { ingestDocument } from '@/lib/api/client'
-import { Upload, FileText, Loader2 } from 'lucide-react'
+import { Upload, Loader2 } from 'lucide-react'
 
 interface Props {
   open: boolean
@@ -196,7 +196,15 @@ export default function IngestDialog({ open, onOpenChange, onSuccess }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="w-[90vw] max-w-2xl max-h-[90vh] overflow-y-auto" style={{ paddingTop: '2.5rem', paddingBottom: '2.5rem', paddingLeft: '3rem', paddingRight: '3rem' }}>
+      <DialogContent
+        className="w-[90vw] max-w-2xl max-h-[90vh] overflow-y-auto"
+        style={{
+          paddingTop: '2.5rem',
+          paddingBottom: '2.5rem',
+          paddingLeft: '3rem',
+          paddingRight: '3rem',
+        }}
+      >
         <DialogHeader style={{ marginBottom: '2rem', textAlign: 'center' }}>
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
             <Upload className="h-12 w-12 text-slate-400" />
@@ -207,7 +215,10 @@ export default function IngestDialog({ open, onOpenChange, onSuccess }: Props) {
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+        <form
+          onSubmit={handleSubmit}
+          style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}
+        >
           {/* File upload area */}
           <div
             onDragOver={handleDragOver}
@@ -219,9 +230,7 @@ export default function IngestDialog({ open, onOpenChange, onSuccess }: Props) {
             }`}
             style={{ padding: '2.5rem' }}
           >
-            <p className="text-sm text-slate-600">
-              Drag and drop a file here, or click to browse
-            </p>
+            <p className="text-sm text-slate-600">Drag and drop a file here, or click to browse</p>
             <input
               ref={fileInputRef}
               type="file"
@@ -234,24 +243,26 @@ export default function IngestDialog({ open, onOpenChange, onSuccess }: Props) {
           </div>
 
           {/* Manual text input toggle */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'center' }}>
+          <div
+            style={{ display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'center' }}
+          >
             <Button
               type="button"
               size="sm"
               onClick={() => setShowManualInput(!showManualInput)}
-              style={{ 
-                backgroundColor: '#0f172a', 
-                color: 'white', 
+              style={{
+                backgroundColor: '#0f172a',
+                color: 'white',
                 borderRadius: '0.5rem',
                 border: 'none',
                 width: 'auto',
                 paddingLeft: '1.5rem',
-                paddingRight: '1.5rem'
+                paddingRight: '1.5rem',
               }}
-              onMouseEnter={(e) => {
+              onMouseEnter={e => {
                 e.currentTarget.style.backgroundColor = '#1e293b'
               }}
-              onMouseLeave={(e) => {
+              onMouseLeave={e => {
                 e.currentTarget.style.backgroundColor = '#0f172a'
               }}
             >
@@ -293,7 +304,11 @@ export default function IngestDialog({ open, onOpenChange, onSuccess }: Props) {
           </div>
 
           {/* Error message */}
-          {error && <p className="text-sm text-red-600" style={{ marginTop: '0.5rem' }}>{error}</p>}
+          {error && (
+            <p className="text-sm text-red-600" style={{ marginTop: '0.5rem' }}>
+              {error}
+            </p>
+          )}
 
           {/* Submit buttons */}
           <div className="flex justify-end gap-2" style={{ paddingTop: '1rem' }}>

@@ -8,7 +8,6 @@ import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { BarChart3, SunMedium, Zap, AlertTriangle, Send, Loader2 } from 'lucide-react'
 import { useChat } from '@/features/chat/useChat'
-import type { ChatMessage } from '@/features/chat/types'
 import ChatLayout from '@/features/chat/ChatLayout'
 import { useRagSettings } from '@/features/settings/useRagSettings'
 
@@ -58,25 +57,24 @@ export default function ChatPanel() {
     }
   }
 
-
   const badgeLabel =
     connection === 'ok' ? 'Connected' : connection === 'error' ? 'Disconnected' : 'Checking…'
 
   return (
-    <div 
-      className="flex flex-col bg-slate-50 overflow-hidden" 
+    <div
+      className="flex flex-col bg-slate-50 overflow-hidden"
       style={{ height: '100%', flex: '1 1 0%' }}
     >
       {/* Header */}
-      <header 
+      <header
         className="shrink-0 border-b border-slate-200 bg-white px-4 py-2 flex items-center justify-between"
         style={{ flexShrink: 0 }}
       >
         {/* Left side - Logo */}
-        <Image 
-          src="/RAGEvalLogo.png" 
-          alt="RAG Eval Logo" 
-          width={180} 
+        <Image
+          src="/RAGEvalLogo.png"
+          alt="RAG Eval Logo"
+          width={180}
           height={100}
           className="flex-shrink-0"
           style={{ height: 'auto' }}
@@ -91,7 +89,7 @@ export default function ChatPanel() {
           <Button variant="ghost" size="sm" type="button" onClick={() => resetChat()}>
             New chat
           </Button>
-          <Badge 
+          <Badge
             className="text-xs"
             variant="outline"
             style={{
@@ -106,36 +104,33 @@ export default function ChatPanel() {
       </header>
 
       {/* Chat region: home cards + messages + input */}
-      <div 
+      <div
         className="flex flex-col bg-slate-50 overflow-hidden"
         style={{ flex: '1 1 0%', minHeight: 0, height: '100%' }}
       >
         {/* Content area - scrollable */}
-        <div 
+        <div
           className="flex-1 min-h-0"
-          style={{ 
-            paddingTop: '2rem', 
+          style={{
+            paddingTop: '2rem',
             paddingBottom: '2rem',
             overflowY: 'auto',
-            overflowX: 'hidden'
+            overflowX: 'hidden',
           }}
         >
           {messages.length === 0 ? (
             /* Home screen when no messages */
-            <div 
+            <div
               className="mx-auto max-w-3xl"
-              style={{ 
-                paddingLeft: '2rem', 
-                paddingRight: '2rem', 
-                paddingTop: '8rem', 
-                paddingBottom: '4rem' 
+              style={{
+                paddingLeft: '2rem',
+                paddingRight: '2rem',
+                paddingTop: '8rem',
+                paddingBottom: '4rem',
               }}
             >
               {/* Title + subtitle */}
-              <div 
-                className="text-center"
-                style={{ marginBottom: '1rem' }}
-              >
+              <div className="text-center" style={{ marginBottom: '1rem' }}>
                 <h2 className="text-2xl font-semibold text-slate-900 mb-2">
                   What can I help with?
                 </h2>
@@ -145,13 +140,11 @@ export default function ChatPanel() {
               </div>
 
               {/* Centered pill buttons */}
-              <div 
-                className="flex flex-col items-center"
-                style={{ gap: '2rem' }}
-              >
+              <div className="flex flex-col items-center" style={{ gap: '2rem' }}>
                 {/* Info text */}
                 <p className="text-sm text-slate-600 text-center" style={{ marginBottom: '1rem' }}>
-                  We have added some documents about RAG, so you can see functionality by just clicking one of the example queries
+                  We have added some documents about RAG, so you can see functionality by just
+                  clicking one of the example queries
                 </p>
 
                 {/* Example Queries Section */}
@@ -196,7 +189,7 @@ export default function ChatPanel() {
                       </Button>
                     </div>
                     {/* Second row */}
-                    <div 
+                    <div
                       className="flex flex-wrap justify-center gap-2"
                       style={{ marginTop: '0.5rem' }}
                     >
@@ -324,7 +317,12 @@ export default function ChatPanel() {
             </div>
           ) : (
             /* Messages when they exist */
-            <ChatLayout messages={messages} isLoading={isLoading} onSend={handleSend} showInput={false} />
+            <ChatLayout
+              messages={messages}
+              isLoading={isLoading}
+              onSend={handleSend}
+              showInput={false}
+            />
           )}
           {error && messages.length === 0 && (
             <div className="mx-auto max-w-3xl px-4 pb-4">
@@ -336,11 +334,19 @@ export default function ChatPanel() {
         </div>
 
         {/* Input bar - always visible at bottom */}
-        <div 
+        <div
           className="shrink-0 border-t border-slate-200 bg-white/80 backdrop-blur"
           style={{ flexShrink: 0 }}
         >
-          <div className="mx-auto max-w-3xl" style={{ paddingLeft: '4rem', paddingRight: '4rem', paddingTop: '1.5rem', paddingBottom: '1.5rem' }}>
+          <div
+            className="mx-auto max-w-3xl"
+            style={{
+              paddingLeft: '4rem',
+              paddingRight: '4rem',
+              paddingTop: '1.5rem',
+              paddingBottom: '1.5rem',
+            }}
+          >
             <form onSubmit={handleSubmit} className="flex items-end gap-2">
               <Textarea
                 ref={textareaRef}

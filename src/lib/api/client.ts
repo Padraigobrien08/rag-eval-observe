@@ -81,3 +81,17 @@ export async function getMetrics() {
 
   return res.json()
 }
+
+export async function getDocumentChunks(documentId: string) {
+  const res = await fetch(`${API_BASE_URL}/api/v1/documents/${documentId}/chunks`, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
+  })
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => '')
+    throw new Error(text || `Get document chunks failed with status ${res.status}`)
+  }
+
+  return res.json()
+}
