@@ -7,11 +7,14 @@ A comprehensive platform for evaluating and observing Retrieval-Augmented Genera
 This application provides a complete solution for building, testing, and monitoring RAG systems. It includes:
 
 - **RAG Pipeline**: Complete implementation of chunking, embedding, retrieval, and answer generation
+- **Multiple RAG Models**: Vector Similarity Search, Hybrid Search (Vector + BM25), Reranking, and Multi-Query RAG
+- **Interactive Chat Interface**: ChatGPT-style UI with citations, document preview, and structured answers
+- **Document Management**: Upload, preview, and delete documents (supports text, PDF, DOCX)
 - **Evaluation Framework**: Offline evaluation harness for testing RAG performance
-- **Observability**: Logging and metrics collection for monitoring system behavior
+- **Observability**: Logging, metrics collection, and health checks for monitoring system behavior
 - **Database**: PostgreSQL with pgvector for vector similarity search
-- **Frontend**: Next.js 14+ App Router with TypeScript
-- **Backend API**: FastAPI backend with async endpoints
+- **Frontend**: Next.js 14+ App Router with TypeScript and shadcn/ui
+- **Backend API**: FastAPI backend with async endpoints, rate limiting, and distributed rate limiting (Redis)
 
 ## Architecture
 
@@ -38,24 +41,27 @@ This application provides a complete solution for building, testing, and monitor
 
 **Frontend:**
 
-- **`src/app/`**: Next.js App Router pages and API routes
-- **`src/lib/`**: Core RAG logic and utilities
-- **`rag/`**: RAG pipeline modules (chunk, embed, retrieve, answer)
-- **`observability/`**: Logging and metrics collection
-- **`tests/`**: Unit and integration tests
+- **`src/app/`**: Next.js App Router pages (home, metrics)
+- **`src/features/console/`**: Main console UI (sidebar, chat panel, document management)
+- **`src/features/chat/`**: Chat components (message bubbles, citations, layout)
+- **`src/features/settings/`**: User settings and RAG configuration
+- **`src/lib/api/`**: API client for backend communication
+- **`src/components/ui/`**: shadcn/ui components
 
 **Backend:**
 
 - **`backend/app/`**: FastAPI application
 - **`backend/app/api/`**: API routes and endpoints
+- **`backend/app/rag/`**: RAG pipeline (chunking, retrieval strategies, answer generation)
 - **`backend/app/db/`**: Database queries and session management
-- **`backend/app/core/`**: Configuration and logging
+- **`backend/app/core/`**: Configuration, logging, metrics, rate limiting
+- **`backend/app/llm/`**: OpenAI client integration
 - **`backend/tests/`**: Backend test suite
 
 **Shared:**
 
-- **`src/lib/db/`**: Database migrations and schema
-- **`eval/`**: Offline evaluation harness
+- **`docker/init/`**: Database schema initialization scripts
+- **`backend/eval/`**: Offline evaluation harness
 
 ## Local Setup
 
@@ -88,36 +94,28 @@ cd backend && uv sync && cd ..
 3. Set up environment variables:
 
 ```bash
-cp .env.example .env
-# Edit .env with your configuration
+# Copy example file (if it exists) or create .env manually
+# See Environment Variables section below for required variables
 ```
 
 4. Start the database:
 
 ```bash
 make db
+# or
+docker compose up -d postgres
 ```
 
-5. Run migrations:
+The database schema is automatically initialized via `docker/init/` scripts when PostgreSQL starts.
+
+5. Start the development servers:
 
 ```bash
-make migrate
-```
-
-6. Seed the database:
-
-```bash
-make seed
-```
-
-7. Start the development servers:
-
-```bash
-# Start Next.js frontend (in one terminal)
-make dev
-
-# Start FastAPI backend (in another terminal)
+# Start FastAPI backend (in one terminal)
 make api-dev
+
+# Start Next.js frontend (in another terminal)
+make dev
 ```
 
 The frontend will be available at `http://localhost:3000` and the API at `http://localhost:8000`.
@@ -126,58 +124,97 @@ The frontend will be available at `http://localhost:3000` and the API at `http:/
 
 Create a `.env` file in the root directory with the following variables:
 
+### Required Variables
+
 ```env
 # Database
-DATABASE_URL=postgresql://postgres:postgres@localhost:5432/rag_eval
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/ragdb
 
 # OpenAI API (required for embeddings and LLM)
 OPENAI_API_KEY=your-api-key-here
+OPENAI_EMBEDDING_MODEL=text-embedding-3-small
+OPENAI_CHAT_MODEL=gpt-4-turbo-preview
+EMBEDDING_DIMENSION=1536
+```
 
-# Model Configuration
-EMBEDDING_MODEL=text-embedding-3-small
-LLM_MODEL=gpt-4-turbo-preview
+### Optional Variables
+
+```env
+# Environment
+ENVIRONMENT=development
+
+# CORS (comma-separated list of allowed origins)
+CORS_ALLOW_ORIGINS=http://localhost:3000,http://localhost:3001
+# or legacy format
+CORS_ORIGINS=http://localhost:3000
+
+# Rate Limiting
+RATE_LIMIT_REQUESTS=100
+RATE_LIMIT_WINDOW=60
+
+# Redis (for distributed rate limiting in production)
+REDIS_URL=redis://localhost:6379/0
+REDIS_ENABLED=false
 
 # Chunking Configuration
 CHUNK_SIZE=1000
 CHUNK_OVERLAP=200
 
-# Embedding Configuration
-EMBEDDING_DIMENSION=1536
+# Request Limits
+MAX_INGEST_PAYLOAD_SIZE=10485760  # 10MB
+MAX_QUERY_LENGTH=5000
+MAX_CONTEXT_CHARS=50000
+MAX_CONTEXT_TOKENS=12000
 
-# Server
-PORT=3000
-NODE_ENV=development
+# OpenAI API Settings
+OPENAI_MAX_RETRIES=3
+OPENAI_TIMEOUT=60
 ```
 
-## API Endpoints
+### Frontend Environment Variables (for Vercel/deployment)
 
-### POST `/api/rag/query`
-
-Query the RAG system with a natural language question.
-
-**Request Body:**
-
-```json
-{
-  "query": "What is RAG?"
-}
+```env
+# Set in Vercel environment variables or .env.local
+NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
 ```
 
-**Response:**
+See `DEPLOYMENT.md` for production environment variable configuration.
 
-```json
-{
-  "query": "What is RAG?",
-  "response": "Retrieval-Augmented Generation (RAG) is a technique...",
-  "context": [
-    {
-      "id": "doc-1-0",
-      "text": "...",
-      "score": 0.95
-    }
-  ]
-}
-```
+## Features
+
+### RAG Models
+
+The system supports multiple RAG retrieval strategies:
+
+- **Vector Similarity Search**: Semantic search using cosine similarity on embeddings
+- **Hybrid Search**: Combines vector search with BM25 keyword matching for better recall
+- **Reranking**: Uses a reranking model to improve retrieval accuracy
+- **Multi-Query**: Generates multiple query variations for better coverage
+
+Select the RAG model in the Settings dialog.
+
+### Document Management
+
+- **Upload Documents**: Support for text, PDF, and DOCX files
+- **Document Preview**: Click any document to view its chunks
+- **Delete Documents**: Remove documents with confirmation dialog
+- **Document List**: View all ingested documents in the sidebar
+
+### Chat Interface
+
+- **ChatGPT-style UI**: Modern, responsive chat interface
+- **Structured Answers**: Summary and expandable full answer sections
+- **Citations**: Interactive citation dropdowns with document references
+- **Inline Citations**: Clickable citation markers in answer text
+- **Metadata Display**: Cost, latency, and RAG model information per response
+- **Example Queries**: Quick-start example questions
+
+### Observability
+
+- **Metrics Dashboard**: View system metrics at `/metrics`
+- **Health Checks**: `/api/v1/health` endpoint for monitoring
+- **Structured Logging**: Request IDs and detailed error logging
+- **Rate Limiting**: Configurable per-IP rate limits with Redis support for distributed deployments
 
 ## Evaluation Instructions
 
@@ -292,24 +329,12 @@ OPENAI_EMBEDDING_MODEL=text-embedding-3-small
 OPENAI_CHAT_MODEL=gpt-4-turbo-preview
 ```
 
-## API Endpoints Examples
+## API Endpoints
 
 ### Health Check
 
 ```bash
 curl http://localhost:8000/api/v1/health
-```
-
-### Ingest Document
-
-```bash
-curl -X POST http://localhost:8000/api/v1/ingest \
-  -H "Content-Type: application/json" \
-  -d '{
-    "source": "docs",
-    "title": "RAG Guide",
-    "text": "Retrieval-Augmented Generation is..."
-  }'
 ```
 
 ### Query RAG System
@@ -319,55 +344,92 @@ curl -X POST http://localhost:8000/api/v1/query \
   -H "Content-Type: application/json" \
   -d '{
     "query": "What is RAG?",
-    "top_k": 8
+    "top_k": 8,
+    "rag_model": "vector-similarity"
   }'
 ```
 
-### Search Chunks
+**Available RAG models**: `vector-similarity`, `hybrid-search`, `reranking`, `multi-query`
+
+### Ingest Document
 
 ```bash
-curl -X POST http://localhost:8000/api/v1/search \
+# Text ingestion
+curl -X POST http://localhost:8000/api/v1/ingest \
   -H "Content-Type: application/json" \
   -d '{
-    "query": "vector embeddings",
-    "top_k": 5
+    "source": "docs",
+    "title": "RAG Guide",
+    "text": "Retrieval-Augmented Generation is..."
   }'
+
+# File upload (multipart/form-data)
+curl -X POST http://localhost:8000/api/v1/ingest \
+  -F "file=@document.pdf" \
+  -F "source=docs" \
+  -F "title=Document Title"
+```
+
+### List Documents
+
+```bash
+curl http://localhost:8000/api/v1/documents
+```
+
+### Get Document Chunks
+
+```bash
+curl http://localhost:8000/api/v1/documents/{document_id}/chunks
+```
+
+### Delete Document
+
+```bash
+curl -X DELETE http://localhost:8000/api/v1/documents/{document_id}
+```
+
+### Get Metrics
+
+```bash
+curl http://localhost:8000/api/v1/metrics
 ```
 
 See `backend/README.md` for complete API documentation.
 
 ## Deployment
 
-### Container-Based Deployment
+### Quick Deploy
 
-The project includes Dockerfiles and docker compose configuration for containerized deployment.
+**Frontend (Vercel):**
+1. Connect your repository to Vercel
+2. Set `NEXT_PUBLIC_API_BASE_URL` environment variable
+3. Deploy automatically
 
-#### Building Images
-
+**Backend (Docker):**
 ```bash
-# Build API image
-docker build -f backend/Dockerfile -t rag-api:latest .
+# Production deployment
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 ```
 
-#### Running with Docker Compose
+### Production Features
 
-```bash
-# Development
-docker compose up -d
+- **Distributed Rate Limiting**: Optional Redis-based rate limiting for multi-instance deployments
+- **Health Checks**: Built-in health check endpoints for container orchestration
+- **Automatic Migrations**: Database schema initialized automatically via Docker init scripts
+- **Production Docker Compose**: Optimized configuration with workers and health checks
 
-# Production (with override)
-docker compose -f docker compose.yml -f docker compose.prod.yml up -d
-```
+### Production Considerations
 
-#### Production Considerations
-
-1. **Environment Variables**: Set production values in deployment environment
+1. **Environment Variables**: Set production values (see `DEPLOYMENT.md`)
 2. **Database**: Use managed PostgreSQL service or persistent volumes
-3. **Scaling**: Rate limiting is per-instance; use shared limiter for multiple instances
-4. **Metrics**: Metrics are in-memory; use external service for aggregation
-5. **Health Checks**: Use `/api/v1/health` for container health checks
+3. **Rate Limiting**: 
+   - Single instance: In-memory rate limiter (default)
+   - Multiple instances: Enable Redis (`REDIS_ENABLED=true`, `REDIS_URL=...`)
+4. **Metrics**: In-memory by default; integrate external service for aggregation
+5. **CORS**: Set `CORS_ALLOW_ORIGINS` to your production frontend URLs
+6. **HTTPS**: Use TLS/SSL for all production traffic
 
-See `backend/README.md` for detailed deployment notes.
+See `DEPLOYMENT.md` for comprehensive production deployment guide.
 
 ## Makefile Targets
 
@@ -402,25 +464,44 @@ See `backend/README.md` for detailed deployment notes.
 ```
 rag-eval-observability/
 ├── src/
-│   ├── app/              # Next.js App Router
-│   │   ├── api/          # API routes
-│   │   └── page.tsx      # Home page
-│   └── lib/              # Core utilities
-├── rag/                  # RAG pipeline
-│   ├── chunk.ts
-│   ├── embed.ts
-│   ├── retrieve.ts
-│   └── answer.ts
-├── observability/        # Logging & metrics
-│   ├── logging.ts
-│   └── metrics.ts
-├── db/                   # Database
-│   ├── migrations/
-│   └── seed.ts
-├── eval/                 # Evaluation harness
-├── tests/                # Test files
-├── docker/               # Docker configs
-└── config.ts             # Configuration
+│   ├── app/                      # Next.js App Router
+│   │   ├── page.tsx             # Home page
+│   │   ├── metrics/             # Metrics page
+│   │   └── globals.css           # Global styles
+│   ├── features/
+│   │   ├── console/             # Main console UI
+│   │   │   ├── ConsoleLayout.tsx
+│   │   │   ├── Sidebar.tsx       # Documents, chats, settings
+│   │   │   ├── ChatPanel.tsx     # Chat interface
+│   │   │   ├── IngestDialog.tsx  # Document upload
+│   │   │   └── DocumentPreviewDialog.tsx
+│   │   ├── chat/                # Chat components
+│   │   │   ├── ChatLayout.tsx
+│   │   │   ├── MessageBubble.tsx
+│   │   │   ├── CitationsDropdown.tsx
+│   │   │   └── CitationDetailDialog.tsx
+│   │   └── settings/             # Settings hooks
+│   ├── components/ui/            # shadcn/ui components
+│   └── lib/
+│       └── api/                 # API client
+├── backend/
+│   ├── app/
+│   │   ├── api/                 # API routes
+│   │   ├── rag/                 # RAG pipeline
+│   │   │   ├── retrieval_strategies.py
+│   │   │   ├── chunking.py
+│   │   │   ├── retrieve.py
+│   │   │   └── answer.py
+│   │   ├── core/                # Config, logging, rate limiting
+│   │   ├── db/                  # Database queries
+│   │   └── llm/                 # OpenAI client
+│   ├── eval/                    # Evaluation harness
+│   └── Dockerfile
+├── docker/
+│   └── init/                    # Database init scripts
+├── docker-compose.yml           # Development
+├── docker-compose.prod.yml      # Production override
+└── DEPLOYMENT.md                # Production guide
 ```
 
 ### Code Quality
@@ -428,7 +509,22 @@ rag-eval-observability/
 - **Linting**: ESLint with TypeScript and Prettier integration
 - **Formatting**: Prettier with consistent style
 - **Type Safety**: Strict TypeScript configuration
-- **Testing**: Jest for unit and integration tests
+- **Testing**: Jest for frontend, pytest for backend
+
+## Documentation
+
+- **`README.md`** (this file): Overview and quick start
+- **`DEPLOYMENT.md`**: Comprehensive production deployment guide
+- **`backend/README.md`**: Backend API documentation
+- **`QUICKSTART.md`**: Quick start guide
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Run tests and linting
+5. Submit a pull request
 
 ## License
 
