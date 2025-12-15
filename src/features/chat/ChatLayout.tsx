@@ -5,23 +5,16 @@ import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Send, Loader2 } from 'lucide-react'
 import MessageBubble from './MessageBubble'
-
-export type ChatMessage = {
-  id: string
-  role: 'user' | 'assistant' | 'system'
-  content: string
-  latencyMs?: number
-  costUsd?: number
-  citations?: { label: string; href?: string }[]
-}
+import type { ChatMessage } from './types'
 
 interface ChatLayoutProps {
   messages: ChatMessage[]
   isLoading: boolean
   onSend: (content: string) => void
+  showInput?: boolean
 }
 
-export default function ChatLayout({ messages, isLoading, onSend }: ChatLayoutProps) {
+export default function ChatLayout({ messages, isLoading, onSend, showInput = true }: ChatLayoutProps) {
   const [input, setInput] = useState('')
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -59,8 +52,8 @@ export default function ChatLayout({ messages, isLoading, onSend }: ChatLayoutPr
           overflowY: 'auto'
         }}
       >
-        <div className="mx-auto max-w-3xl w-full px-4 py-6">
-          <div className="space-y-4">
+        <div className="mx-auto max-w-3xl w-full px-4" style={{ paddingTop: '1.5rem', paddingBottom: '1.5rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
             {messages.map(message => (
               <MessageBubble key={message.id} message={message} />
             ))}
@@ -77,36 +70,38 @@ export default function ChatLayout({ messages, isLoading, onSend }: ChatLayoutPr
       </div>
 
       {/* Input bar - fixed at bottom with padding */}
-      <div 
-        className="shrink-0 border-t border-slate-200 bg-white/80 backdrop-blur"
-        style={{ flexShrink: 0 }}
-      >
-        <div className="mx-auto max-w-3xl px-4 py-4">
-          <form onSubmit={handleSubmit} className="flex items-end gap-2">
-            <Textarea
-              ref={textareaRef}
-              value={input}
-              onChange={e => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Message RAG Eval..."
-              rows={1}
-              className="flex-1 resize-none rounded-2xl border border-slate-200 bg-slate-50 px-4 py-2 text-sm focus-visible:ring-2 focus-visible:ring-slate-400/60 focus-visible:border-transparent"
-            />
-            <Button
-              type="submit"
-              variant="default"
-              size="icon"
-              disabled={isLoading || !input.trim()}
-            >
-              {isLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Send className="h-4 w-4" />
-              )}
-            </Button>
-          </form>
+      {showInput && (
+        <div 
+          className="shrink-0 border-t border-slate-200 bg-white/80 backdrop-blur"
+          style={{ flexShrink: 0 }}
+        >
+          <div className="mx-auto max-w-3xl" style={{ paddingLeft: '1rem', paddingRight: '1rem', paddingTop: '1rem', paddingBottom: '1rem' }}>
+            <form onSubmit={handleSubmit} className="flex items-end gap-2">
+              <Textarea
+                ref={textareaRef}
+                value={input}
+                onChange={e => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Message RAG Eval..."
+                rows={1}
+                className="flex-1 resize-none rounded-2xl border border-slate-200 bg-slate-50 px-4 py-2 text-sm focus-visible:ring-2 focus-visible:ring-slate-400/60 focus-visible:border-transparent"
+              />
+              <Button
+                type="submit"
+                variant="default"
+                size="icon"
+                disabled={isLoading || !input.trim()}
+              >
+                {isLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Send className="h-4 w-4" />
+                )}
+              </Button>
+            </form>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }

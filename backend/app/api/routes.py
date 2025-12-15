@@ -12,6 +12,7 @@ from app.db.queries import (
     get_chunks_by_document_id,
     list_documents,
     count_documents,
+    delete_document,
 )
 from app.schemas import (
     HealthResponse,
@@ -230,6 +231,59 @@ async def get_document_chunks_endpoint(
     except Exception as e:
         logger.error(
             "Get document chunks error",
+            request_id=request_id,
+            document_id=document_id,
+            error=str(e),
+            exc_info=True,
+        )
+        raise HTTPException(
+            status_code=500,
+            detail="Internal server error",
+        )
+
+
+@router.delete("/documents/{document_id}")
+async def delete_document_endpoint(
+    request: Request,
+    document_id: str,
+):
+    """Delete a document and all its chunks."""
+    request_id = getattr(request.state, "request_id", "unknown")
+
+    # Verify document exists
+    document = await get_document_by_id(document_id)
+    if not document:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Document {document_id} not found",
+        )
+
+    try:
+        deleted = await delete_document(document_id)
+        if not deleted:
+            raise HTTPException(
+                status_code=500,
+                detail="Failed to delete document",
+            )
+
+        logger.info(
+            "Document deleted",
+            request_id=request_id,
+            document_id=document_id,
+        )
+
+        return JSONResponse(
+            status_code=200,
+            content={
+                "message": "Document deleted successfully",
+                "document_id": document_id,
+            },
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(
+            "Delete document error",
             request_id=request_id,
             document_id=document_id,
             error=str(e),

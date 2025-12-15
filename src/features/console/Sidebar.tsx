@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog'
@@ -8,14 +8,59 @@ import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Slider } from '@/components/ui/slider'
 import { Switch } from '@/components/ui/switch'
-import { Plus, Settings } from 'lucide-react'
+import { Plus, Settings, FileText, Loader2, ChevronDown } from 'lucide-react'
 import IngestDialog from './IngestDialog'
-import { useRagSettings } from '@/features/settings/useRagSettings'
+import { useRagSettings, type RagModel } from '@/features/settings/useRagSettings'
+import { listDocuments } from '@/lib/api/client'
+
+interface Document {
+  id: string
+  source: string
+  title?: string
+  created_at: string
+}
 
 export default function Sidebar() {
   const [ingestOpen, setIngestOpen] = useState(false)
-  const { topK, debug, setTopK, setDebug } = useRagSettings()
+  const [documents, setDocuments] = useState<Document[]>([])
+  const [isLoadingDocs, setIsLoadingDocs] = useState(true)
+  const { topK, debug, ragModel, setTopK, setDebug, setRagModel } = useRagSettings()
   const currentTopK = topK ?? 8
+
+  const ragModelLabels: Record<RagModel, string> = {
+    'vector-similarity': 'Vector Similarity Search',
+    'hybrid-search': 'Hybrid Search (Vector + BM25)',
+    'reranking': 'Reranking',
+    'multi-query': 'Multi-Query',
+  }
+
+  const ragModelDescriptions: Record<RagModel, string> = {
+    'vector-similarity': 'Semantic search using cosine similarity on embeddings.',
+    'hybrid-search': 'Combines vector search with keyword matching for better recall.',
+    'reranking': 'Uses a reranking model to improve retrieval accuracy.',
+    'multi-query': 'Generates multiple query variations for better coverage.',
+  }
+
+  const loadDocuments = async () => {
+    try {
+      setIsLoadingDocs(true)
+      const response = await listDocuments()
+      setDocuments(response.documents || [])
+    } catch (error) {
+      console.error('Failed to load documents:', error)
+      setDocuments([])
+    } finally {
+      setIsLoadingDocs(false)
+    }
+  }
+
+  useEffect(() => {
+    void loadDocuments()
+  }, [])
+
+  const handleIngestSuccess = () => {
+    void loadDocuments()
+  }
 
   return (
     <>
@@ -24,7 +69,14 @@ export default function Sidebar() {
           {/* Documents */}
           <div>
             <div className="flex items-center justify-between px-4 py-2">
-              <div className="text-xs font-semibold tracking-wide text-slate-500">DOCUMENTS</div>
+              <div className="text-xs font-semibold tracking-wide text-slate-500">
+                DOCUMENTS
+                {!isLoadingDocs && documents.length > 0 && (
+                  <span className="ml-1.5 text-slate-400 font-normal">
+                    ({documents.length})
+                  </span>
+                )}
+              </div>
               <Button
                 variant="ghost"
                 size="icon"
@@ -35,7 +87,35 @@ export default function Sidebar() {
                 <Plus className="h-4 w-4" />
               </Button>
             </div>
-            <p className="px-4 text-xs text-slate-500">No documents yet.</p>
+            {isLoadingDocs ? (
+              <div className="flex items-center gap-2 px-4 py-3">
+                <Loader2 className="h-3 w-3 animate-spin text-slate-400" />
+                <p className="text-xs text-slate-500">Loading documents...</p>
+              </div>
+            ) : documents.length === 0 ? (
+              <div className="px-4 py-3">
+                <p className="text-xs text-slate-500">No documents yet.</p>
+                <p className="text-xs text-slate-400 mt-1">
+                  Click + to add your first document.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-0.5 px-2">
+                {documents.map(doc => (
+                  <button
+                    key={doc.id}
+                    type="button"
+                    className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-700 hover:bg-slate-50 rounded-md transition-colors group"
+                    title={doc.title || doc.source}
+                  >
+                    <FileText className="h-3.5 w-3.5 text-slate-400 group-hover:text-slate-600 flex-shrink-0" />
+                    <span className="flex-1 text-left truncate">
+                      {doc.title || doc.source}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Chats */}
@@ -67,19 +147,53 @@ export default function Sidebar() {
               </button>
             </DialogTrigger>
 
-            <DialogContent className="w-[92vw] max-w-lg rounded-2xl border border-slate-200 bg-white p-6 md:p-8">
-              <div className="space-y-7">
+            <DialogContent 
+              className="w-[92vw] max-w-lg rounded-2xl border border-slate-200 bg-white"
+              style={{ padding: '2rem' }}
+            >
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
                 {/* Header */}
-                <div className="space-y-1">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                   <h2 className="text-lg font-semibold text-slate-900">Query settings</h2>
                   <p className="text-sm text-slate-500">
                     Control how many chunks are retrieved and whether debug info is shown.
                   </p>
                 </div>
 
+                {/* RAG Model section */}
+                <section style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                    <Label htmlFor="rag-model" className="text-sm font-medium text-slate-900">
+                      RAG Model
+                    </Label>
+                    <p className="text-xs text-slate-500">
+                      Method used for retrieving relevant chunks.
+                    </p>
+                  </div>
+
+                  <div className="relative">
+                    <select
+                      id="rag-model"
+                      value={ragModel}
+                      onChange={e => setRagModel(e.target.value as RagModel)}
+                      className="w-full appearance-none rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-transparent pr-10"
+                      style={{ paddingRight: '2.5rem' }}
+                    >
+                      <option value="vector-similarity">Vector Similarity Search</option>
+                      <option value="hybrid-search" disabled>Hybrid Search (Vector + BM25) - Coming soon</option>
+                      <option value="reranking" disabled>Reranking - Coming soon</option>
+                      <option value="multi-query" disabled>Multi-Query - Coming soon</option>
+                    </select>
+                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 pointer-events-none" />
+                  </div>
+                  <p className="text-xs text-slate-500 italic">
+                    {ragModelDescriptions[ragModel]}
+                  </p>
+                </section>
+
                 {/* Top K section */}
-                <section className="space-y-3">
-                  <div className="space-y-1">
+                <section style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                     <Label htmlFor="top-k" className="text-sm font-medium text-slate-900">
                       Top K
                     </Label>
@@ -88,8 +202,8 @@ export default function Sidebar() {
                     </p>
                   </div>
 
-                  <div className="flex flex-col gap-4">
-                    <div className="flex items-center gap-3">
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                    <div className="flex items-center" style={{ gap: '1rem' }}>
                       <Input
                         id="top-k"
                         type="number"
@@ -109,20 +223,27 @@ export default function Sidebar() {
                       <span className="text-xs text-slate-500">chunks per query</span>
                     </div>
 
-                    <Slider
-                      min={1}
-                      max={50}
-                      step={1}
-                      value={[currentTopK]}
-                      onValueChange={([value]) => setTopK(value)}
-                      className="w-full"
-                    />
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                      <div className="flex items-center justify-between text-xs text-slate-500">
+                        <span>1</span>
+                        <span className="font-medium text-slate-700">Top K: {currentTopK}</span>
+                        <span>50</span>
+                      </div>
+                      <Slider
+                        min={1}
+                        max={50}
+                        step={1}
+                        value={[currentTopK]}
+                        onValueChange={([value]) => setTopK(value)}
+                        className="w-full"
+                      />
+                    </div>
                   </div>
                 </section>
 
                 {/* Debug mode section */}
-                <section className="flex items-center justify-between gap-6 rounded-xl bg-slate-50 px-4 py-3">
-                  <div className="space-y-1">
+                <section className="flex items-center justify-between rounded-xl bg-slate-50" style={{ padding: '1rem', gap: '2rem' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', flex: 1 }}>
                     <Label htmlFor="debug-mode" className="text-sm font-medium text-slate-900">
                       Debug mode
                     </Label>
@@ -130,9 +251,18 @@ export default function Sidebar() {
                       Show retrieved chunks and scores under answers.
                     </p>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-slate-500">{debug ? 'On' : 'Off'}</span>
-                    <Switch id="debug-mode" checked={debug} onCheckedChange={setDebug} />
+                  <div className="flex items-center" style={{ gap: '0.75rem', flexShrink: 0 }}>
+                    <span className={`text-xs font-medium ${debug ? 'text-green-700' : 'text-red-700'}`}>
+                      {debug ? 'On' : 'Off'}
+                    </span>
+                    <Switch 
+                      id="debug-mode" 
+                      checked={debug} 
+                      onCheckedChange={setDebug}
+                      style={{
+                        backgroundColor: debug ? 'rgb(22, 163, 74)' : 'rgb(239, 68, 68)'
+                      }}
+                    />
                   </div>
                 </section>
               </div>
@@ -144,9 +274,7 @@ export default function Sidebar() {
       <IngestDialog
         open={ingestOpen}
         onOpenChange={setIngestOpen}
-        onSuccess={() => {
-          // TODO: Refresh documents list when implemented
-        }}
+        onSuccess={handleIngestSuccess}
       />
     </>
   )

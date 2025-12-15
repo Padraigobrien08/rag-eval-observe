@@ -7,54 +7,24 @@ import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { BarChart3, SunMedium, Zap, AlertTriangle, Send, Loader2 } from 'lucide-react'
 import { useChat } from '@/features/chat/useChat'
-import type { ChatMessage as OldChatMessage } from '@/features/chat/types'
-import type { ChatMessage } from '@/features/chat/ChatLayout'
+import type { ChatMessage } from '@/features/chat/types'
 import ChatLayout from '@/features/chat/ChatLayout'
-import MessageBubble from '@/features/chat/MessageBubble'
 import { useRagSettings } from '@/features/settings/useRagSettings'
 
 type ConnectionState = 'unknown' | 'ok' | 'error'
 
 export default function ChatPanel() {
   const router = useRouter()
-  const { messages: oldMessages, isLoading, error, sendMessage, resetChat } = useChat()
+  const { messages, isLoading, error, sendMessage, resetChat } = useChat()
   const { topK, debug } = useRagSettings()
   const [connection, setConnection] = useState<ConnectionState>('unknown')
   const [input, setInput] = useState('')
-  const messagesEndRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
     // You can wire a real health endpoint later.
     setConnection('ok')
   }, [])
-
-  // Auto-scroll to bottom when new messages arrive
-  useEffect(() => {
-    if (messagesEndRef.current && oldMessages.length > 0) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' })
-    }
-  }, [oldMessages, isLoading])
-
-  // Map old messages to new ChatMessage format
-  const messages: ChatMessage[] = oldMessages.map((msg: OldChatMessage) => {
-    const meta = msg.metadata ?? {}
-    const citations = Array.isArray(meta.citations)
-      ? meta.citations.map((c: any) => ({
-          label: c.title ?? c.source ?? 'Source',
-          href: undefined, // Can be added later if we have document URLs
-        }))
-      : undefined
-
-    return {
-      id: msg.id,
-      role: msg.role as 'user' | 'assistant' | 'system',
-      content: msg.content,
-      latencyMs: meta.latencyMs ?? meta.latency_ms,
-      costUsd: meta.estimatedCostUsd,
-      citations,
-    }
-  })
 
   const handleSend = (content: string) => {
     void sendMessage(content, {
@@ -86,6 +56,7 @@ export default function ChatPanel() {
       handleSubmit(e as any)
     }
   }
+
 
   const badgeLabel =
     connection === 'ok' ? 'Connected' : connection === 'error' ? 'Disconnected' : 'Checking…'
@@ -339,27 +310,7 @@ export default function ChatPanel() {
             </div>
           ) : (
             /* Messages when they exist */
-            <div 
-              className="mx-auto max-w-3xl w-full py-6"
-              style={{ paddingLeft: '8rem', paddingRight: '8rem' }}
-            >
-              <div 
-                className="flex flex-col"
-                style={{ width: '100%', gap: '2rem' }}
-              >
-                {messages.map(message => (
-                  <MessageBubble key={message.id} message={message} />
-                ))}
-                {isLoading && (
-                  <div className="flex justify-start">
-                    <div className="rounded-2xl bg-slate-100 px-4 py-3 text-sm text-slate-500">
-                      Thinking…
-                    </div>
-                  </div>
-                )}
-                <div ref={messagesEndRef} />
-              </div>
-            </div>
+            <ChatLayout messages={messages} isLoading={isLoading} onSend={handleSend} showInput={false} />
           )}
           {error && messages.length === 0 && (
             <div className="mx-auto max-w-3xl px-4 pb-4">
@@ -375,10 +326,7 @@ export default function ChatPanel() {
           className="shrink-0 border-t border-slate-200 bg-white/80 backdrop-blur"
           style={{ flexShrink: 0 }}
         >
-          <div 
-            className="mx-auto max-w-3xl px-4"
-            style={{ paddingTop: '1rem', paddingBottom: '1rem' }}
-          >
+          <div className="mx-auto max-w-3xl" style={{ paddingLeft: '4rem', paddingRight: '4rem', paddingTop: '1.5rem', paddingBottom: '1.5rem' }}>
             <form onSubmit={handleSubmit} className="flex items-end gap-2">
               <Textarea
                 ref={textareaRef}

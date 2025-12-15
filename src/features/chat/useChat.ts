@@ -2,8 +2,34 @@
 
 import { useState } from 'react'
 import { v4 as uuid } from 'uuid'
-import type { ChatMessage } from './types'
+import type { ChatMessage, Citation } from './types'
 import { ragQuery } from '@/lib/api/client'
+
+/**
+ * Calculate cost in USD from token usage.
+ * Pricing for gpt-4-turbo-preview:
+ * - Input: $0.01 per 1K tokens
+ * - Output: $0.03 per 1K tokens
+ */
+function calculateCost(tokenUsage?: {
+  prompt_tokens?: number
+  completion_tokens?: number
+  total_tokens?: number
+}): number | undefined {
+  if (!tokenUsage) return undefined
+
+  const inputTokens = tokenUsage.prompt_tokens || 0
+  const outputTokens = tokenUsage.completion_tokens || 0
+
+  // Pricing per 1K tokens
+  const INPUT_COST_PER_1K = 0.01 // $0.01 per 1K input tokens
+  const OUTPUT_COST_PER_1K = 0.03 // $0.03 per 1K output tokens
+
+  const inputCost = (inputTokens / 1000) * INPUT_COST_PER_1K
+  const outputCost = (outputTokens / 1000) * OUTPUT_COST_PER_1K
+
+  return inputCost + outputCost
+}
 
 export function useChat() {
   const [messages, setMessages] = useState<ChatMessage[]>([])
@@ -31,10 +57,22 @@ export function useChat() {
         filters: options?.filters,
       })
 
+      // Extract citations from API response
+      const citations: Citation[] = (resp.citations || []).map((cit: any) => ({
+        chunk_id: cit.chunk_id || cit.chunkId || '',
+        document_id: cit.document_id || cit.documentId || '',
+        title: cit.title || null,
+        source: cit.source || '',
+        chunk_index: cit.chunk_index || cit.chunkIndex || 0,
+      }))
+
       const assistantMessage: ChatMessage = {
         id: uuid(),
         role: 'assistant',
         content: resp.answer ?? resp.output ?? 'No answer field returned.',
+        latencyMs: resp.latency_ms ?? resp.latencyMs,
+        costUsd: calculateCost(resp.token_usage ?? resp.tokenUsage),
+        citations: citations.length > 0 ? citations : undefined,
         metadata: resp.metadata ?? resp.telemetry ?? {},
       }
       setMessages(prev => [...prev, assistantMessage])

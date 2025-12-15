@@ -10,7 +10,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { ingestDocument } from '@/lib/api/client'
 import { Upload, FileText, Loader2 } from 'lucide-react'
 
@@ -24,6 +24,16 @@ export default function IngestDialog({ open, onOpenChange, onSuccess }: Props) {
   const [title, setTitle] = useState('')
   const [source, setSource] = useState('')
   const [text, setText] = useState('')
+
+  // Extract title from markdown when text changes (for manual paste)
+  useEffect(() => {
+    if (text && !title && text.trim().startsWith('#')) {
+      const extractedTitle = extractMarkdownTitle(text)
+      if (extractedTitle) {
+        setTitle(extractedTitle)
+      }
+    }
+  }, [text, title])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [showManualInput, setShowManualInput] = useState(false)
@@ -58,6 +68,31 @@ export default function IngestDialog({ open, onOpenChange, onSuccess }: Props) {
     })
   }
 
+  const extractMarkdownTitle = (text: string): string | null => {
+    // Extract title from first markdown header (# Title)
+    const lines = text.trim().split('\n')
+    for (const line of lines) {
+      const trimmed = line.trim()
+      if (trimmed.startsWith('# ')) {
+        return trimmed.substring(2).trim()
+      }
+      if (trimmed.startsWith('## ')) {
+        return trimmed.substring(3).trim()
+      }
+    }
+    return null
+  }
+
+  // Auto-extract title from markdown when text is pasted manually
+  useEffect(() => {
+    if (text && !title && text.trim().startsWith('#')) {
+      const extractedTitle = extractMarkdownTitle(text)
+      if (extractedTitle) {
+        setTitle(extractedTitle)
+      }
+    }
+  }, [text, title])
+
   const handleFileSelect = async (file: File) => {
     try {
       const fileText = await readFileAsText(file)
@@ -69,9 +104,20 @@ export default function IngestDialog({ open, onOpenChange, onSuccess }: Props) {
         setSource(nameWithoutExt)
       }
 
-      // Auto-fill title from filename if empty
+      // Auto-fill title from markdown header if it's a markdown file, otherwise use filename
       if (!title) {
-        setTitle(file.name)
+        const isMarkdown = isMarkdownFile(file.name)
+        if (isMarkdown) {
+          const extractedTitle = extractMarkdownTitle(fileText)
+          if (extractedTitle) {
+            setTitle(extractedTitle)
+          } else {
+            // Fallback to filename without extension
+            setTitle(file.name.replace(/\.[^/.]+$/, ''))
+          }
+        } else {
+          setTitle(file.name)
+        }
       }
     } catch (err) {
       setError('Failed to read file')

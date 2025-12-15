@@ -131,3 +131,16 @@ async def count_documents() -> int:
     async with pool.acquire() as conn:
         count = await conn.fetchval("SELECT COUNT(*) FROM documents")
         return count or 0
+
+
+async def delete_document(document_id: str) -> bool:
+    """Delete a document and all its chunks (chunks are deleted via CASCADE)."""
+    pool = await get_db_pool()
+    async with pool.acquire() as conn:
+        # Delete the document (chunks will be automatically deleted via CASCADE)
+        result = await conn.execute(
+            "DELETE FROM documents WHERE id = $1",
+            document_id,
+        )
+        # Check if any rows were deleted
+        return result == "DELETE 1"
