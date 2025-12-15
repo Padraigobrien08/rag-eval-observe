@@ -1,5 +1,5 @@
 from typing import List
-from fastapi import APIRouter, HTTPException, Query, Request
+from fastapi import APIRouter, HTTPException, Query, Request, UploadFile, File
 from fastapi.responses import JSONResponse
 import structlog
 
@@ -141,15 +141,33 @@ async def list_documents_endpoint(
     request: Request,
     limit: int = Query(100, ge=1, le=1000),
     offset: int = Query(0, ge=0),
+    include_total: bool = Query(False, description="Include total count (slower)"),
 ):
     """List documents with pagination."""
+    import time
+    endpoint_start = time.time()
     request_id = getattr(request.state, "request_id", "unknown")
 
     try:
+        # Fetch documents first (no ordering for faster query)
+        list_start = time.time()
         documents = await list_documents(limit=limit, offset=offset)
-        total = await count_documents()
+        list_time = (time.time() - list_start) * 1000
 
-        return DocumentListResponse(
+        # Only fetch total count if explicitly requested (frontend doesn't need it)
+        count_time = 0
+        if include_total:
+            count_start = time.time()
+            import asyncio
+            total = await count_documents()
+            count_time = (time.time() - count_start) * 1000
+        else:
+            # Use a lightweight approximation - if we got fewer than limit, that's the total
+            # Otherwise, we don't know the exact total without counting
+            total = len(documents) if len(documents) < limit else len(documents) + offset
+
+        response_start = time.time()
+        response = DocumentListResponse(
             documents=[
                 DocumentResponse(
                     id=doc["id"],
@@ -163,6 +181,21 @@ async def list_documents_endpoint(
             limit=limit,
             offset=offset,
         )
+        response_time = (time.time() - response_start) * 1000
+        total_time = (time.time() - endpoint_start) * 1000
+
+        logger.info(
+            "list_documents_endpoint timing",
+            request_id=request_id,
+            list_documents_ms=list_time,
+            count_ms=count_time,
+            response_build_ms=response_time,
+            total_ms=total_time,
+            document_count=len(documents),
+            include_total=include_total,
+        )
+
+        return response
     except Exception as e:
         logger.error(
             "List documents error",
@@ -388,6 +421,98 @@ async def ingest_document_endpoint(
         raise HTTPException(
             status_code=500,
             detail="Internal server error during ingestion",
+        )
+
+
+@router.post("/extract-text")
+async def extract_text_endpoint(
+    request: Request,
+    file: UploadFile = File(...),
+):
+    """Extract text from PDF or DOCX files."""
+    request_id = getattr(request.state, "request_id", "unknown")
+
+    # Validate file type
+    file_extension = file.filename.split(".")[-1].lower() if file.filename else ""
+    if file_extension not in ["pdf", "docx"]:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unsupported file type. Only PDF and DOCX files are supported.",
+        )
+
+    try:
+        # Read file content
+        file_content = await file.read()
+
+        # Extract text based on file type
+        from io import BytesIO
+
+        if file_extension == "pdf":
+            try:
+                import PyPDF2
+
+                pdf_file = BytesIO(file_content)
+                pdf_reader = PyPDF2.PdfReader(pdf_file)
+                text = ""
+                for page in pdf_reader.pages:
+                    text += page.extract_text() + "\n\n"
+                text = text.strip()
+            except ImportError:
+                # Fallback to pdfplumber if PyPDF2 is not available
+                try:
+                    import pdfplumber
+
+                    with pdfplumber.open(BytesIO(file_content)) as pdf:
+                        text = "\n\n".join([page.extract_text() or "" for page in pdf.pages])
+                    text = text.strip()
+                except ImportError:
+                    raise HTTPException(
+                        status_code=500,
+                        detail="PDF extraction library not installed. Please install PyPDF2 or pdfplumber.",
+                    )
+        elif file_extension == "docx":
+            try:
+                from docx import Document
+
+                docx_file = BytesIO(file_content)
+                doc = Document(docx_file)
+                text = "\n\n".join([paragraph.text for paragraph in doc.paragraphs])
+                text = text.strip()
+            except ImportError:
+                raise HTTPException(
+                    status_code=500,
+                    detail="DOCX extraction library not installed. Please install python-docx.",
+                )
+
+        if not text:
+            raise HTTPException(
+                status_code=400,
+                detail="No text could be extracted from the file.",
+            )
+
+        logger.info(
+            "Text extracted successfully",
+            request_id=request_id,
+            filename=file.filename,
+            file_type=file_extension,
+            text_length=len(text),
+        )
+
+        return JSONResponse(content={"text": text})
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(
+            "Text extraction error",
+            request_id=request_id,
+            filename=file.filename,
+            error=str(e),
+            exc_info=True,
+        )
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to extract text from file: {str(e)}",
         )
 
 

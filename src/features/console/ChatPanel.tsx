@@ -77,7 +77,7 @@ export default function ChatPanel() {
           width={180}
           height={100}
           className="flex-shrink-0"
-          style={{ height: 'auto' }}
+          style={{ width: 'auto', height: 'auto' }}
         />
 
         {/* Right side - Metrics, New chat, and Connected badge */}

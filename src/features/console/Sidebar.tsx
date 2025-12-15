@@ -3,7 +3,14 @@
 import { useState, useEffect } from 'react'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Slider } from '@/components/ui/slider'
@@ -40,12 +47,30 @@ export default function Sidebar() {
   }
 
   const loadDocuments = async () => {
+    const startTime = typeof performance !== 'undefined' ? performance.now() : Date.now()
     try {
       setIsLoadingDocs(true)
+      if (typeof console !== 'undefined' && console.log) {
+        console.log('[Sidebar] Starting to load documents...')
+      }
       const response = await listDocuments()
+      const loadTime =
+        (typeof performance !== 'undefined' ? performance.now() : Date.now()) - startTime
+      if (typeof console !== 'undefined' && console.log) {
+        console.log('[Sidebar] Documents loaded in', loadTime.toFixed(2), 'ms')
+      }
       setDocuments(response.documents || [])
     } catch (error) {
-      console.error('Failed to load documents:', error)
+      const errorTime =
+        (typeof performance !== 'undefined' ? performance.now() : Date.now()) - startTime
+      if (typeof console !== 'undefined' && console.error) {
+        console.error(
+          '[Sidebar] Failed to load documents after',
+          errorTime.toFixed(2),
+          'ms:',
+          error
+        )
+      }
       setDocuments([])
     } finally {
       setIsLoadingDocs(false)
@@ -143,15 +168,13 @@ export default function Sidebar() {
               className="w-[92vw] max-w-lg rounded-2xl border border-slate-200 bg-white"
               style={{ padding: '2rem' }}
             >
+              <DialogHeader>
+                <DialogTitle>Query settings</DialogTitle>
+                <DialogDescription>
+                  Control how many chunks are retrieved and whether debug info is shown.
+                </DialogDescription>
+              </DialogHeader>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-                {/* Header */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                  <h2 className="text-lg font-semibold text-slate-900">Query settings</h2>
-                  <p className="text-sm text-slate-500">
-                    Control how many chunks are retrieved and whether debug info is shown.
-                  </p>
-                </div>
-
                 {/* RAG Model section */}
                 <section style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>

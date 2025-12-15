@@ -110,14 +110,14 @@ export default function CitationDetailDialog({
                   >
                     {citation.title || citation.source || 'Untitled Document'}
                   </DialogTitle>
-                  {citation.source && citation.source !== citation.title && (
-                    <DialogDescription
-                      className="text-slate-600"
-                      style={{ fontSize: '0.875rem', marginBottom: '0.75rem' }}
-                    >
-                      {citation.source}
-                    </DialogDescription>
-                  )}
+                  <DialogDescription
+                    className="text-slate-600"
+                    style={{ fontSize: '0.875rem', marginBottom: '0.75rem' }}
+                  >
+                    {citation.source && citation.source !== citation.title
+                      ? citation.source
+                      : 'Citation details'}
+                  </DialogDescription>
                   <div
                     className="flex items-center gap-2"
                     style={{ fontSize: '0.75rem', color: '#64748b' }}

@@ -1,6 +1,5 @@
 'use client'
 
-import { Badge } from '@/components/ui/badge'
 import type { CitationMatch } from './citationParser'
 
 interface InlineCitationProps {
@@ -10,6 +9,7 @@ interface InlineCitationProps {
 
 /**
  * Renders an inline citation chip that can be clicked to navigate to the citation.
+ * Uses a <span> instead of <div> to avoid hydration errors when inside <p> tags.
  */
 export default function InlineCitation({ match, onClick }: InlineCitationProps) {
   const handleClick = (e: React.MouseEvent) => {
@@ -27,16 +27,16 @@ export default function InlineCitation({ match, onClick }: InlineCitationProps) 
   }
 
   return (
-    <Badge
-      variant="outline"
-      className="mx-0.5 cursor-pointer bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 hover:text-blue-800 transition-colors inline-flex items-center h-5 px-1.5 text-xs font-medium"
+    <span
+      className="inline-flex items-center justify-center h-5 px-2 rounded-full bg-blue-100 text-blue-700 text-xs font-medium cursor-pointer hover:bg-blue-200 transition-colors ml-1 mr-0.5 border border-blue-200"
+      style={{ verticalAlign: 'middle', whiteSpace: 'nowrap' }}
       onClick={handleClick}
       onKeyDown={handleKeyDown}
       role="button"
       tabIndex={0}
-      aria-label={`Citation ${match.citationNumbers.join(', ')}`}
+      aria-label={`View citation${match.citationNumbers.length > 1 ? 's' : ''} ${match.citationNumbers.join(', ')}`}
     >
       {match.text}
-    </Badge>
+    </span>
   )
 }

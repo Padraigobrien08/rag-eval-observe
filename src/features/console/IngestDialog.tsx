@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { useState, useRef, useEffect } from 'react'
-import { ingestDocument } from '@/lib/api/client'
+import { ingestDocument, extractTextFromFile } from '@/lib/api/client'
 import { Upload, Loader2 } from 'lucide-react'
 
 interface Props {
@@ -41,6 +41,15 @@ export default function IngestDialog({ open, onOpenChange, onSuccess }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
+  const readFileAsText = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = e => resolve(e.target?.result as string)
+      reader.onerror = reject
+      reader.readAsText(file)
+    })
+  }
+
   const resetForm = () => {
     setTitle('')
     setSource('')
@@ -59,13 +68,13 @@ export default function IngestDialog({ open, onOpenChange, onSuccess }: Props) {
     onOpenChange(open)
   }
 
-  const readFileAsText = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader()
-      reader.onload = e => resolve(e.target?.result as string)
-      reader.onerror = reject
-      reader.readAsText(file)
-    })
+  // Extract text from PDF/DOCX files using backend API
+  const extractTextFromPDF = async (file: File): Promise<string> => {
+    return extractTextFromFile(file)
+  }
+
+  const extractTextFromDOCX = async (file: File): Promise<string> => {
+    return extractTextFromFile(file)
   }
 
   const extractMarkdownTitle = (text: string): string | null => {
@@ -95,7 +104,20 @@ export default function IngestDialog({ open, onOpenChange, onSuccess }: Props) {
 
   const handleFileSelect = async (file: File) => {
     try {
-      const fileText = await readFileAsText(file)
+      setError(null)
+      let fileText = ''
+
+      // Determine file type and extract text accordingly
+      const fileName = file.name.toLowerCase()
+      if (fileName.endsWith('.pdf')) {
+        fileText = await extractTextFromPDF(file)
+      } else if (fileName.endsWith('.docx')) {
+        fileText = await extractTextFromDOCX(file)
+      } else {
+        // For text-based files (txt, md, json, etc.)
+        fileText = await readFileAsText(file)
+      }
+
       setText(fileText)
 
       // Auto-fill source from filename if empty
@@ -134,20 +156,43 @@ export default function IngestDialog({ open, onOpenChange, onSuccess }: Props) {
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault()
-    setIsDragging(true)
+    e.stopPropagation()
+    if (e.dataTransfer.types.includes('Files')) {
+      setIsDragging(true)
+    }
   }
 
   const handleDragLeave = (e: React.DragEvent) => {
     e.preventDefault()
-    setIsDragging(false)
+    e.stopPropagation()
+    // Only set dragging to false if we're actually leaving the drop zone
+    // (not just moving between child elements)
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+    const x = e.clientX
+    const y = e.clientY
+    if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
+      setIsDragging(false)
+    }
   }
 
   const handleDrop = async (e: React.DragEvent) => {
     e.preventDefault()
+    e.stopPropagation()
     setIsDragging(false)
 
-    const file = e.dataTransfer.files?.[0]
-    if (file) {
+    const files = e.dataTransfer.files
+    if (files && files.length > 0) {
+      const file = files[0]
+      // Validate file type
+      const allowedExtensions = ['.txt', '.md', '.markdown', '.json', '.pdf', '.docx']
+      const fileName = file.name.toLowerCase()
+      const isValidFile = allowedExtensions.some(ext => fileName.endsWith(ext))
+
+      if (!isValidFile) {
+        setError(`Invalid file type. Please upload: ${allowedExtensions.join(', ')}`)
+        return
+      }
+
       await handleFileSelect(file)
     }
   }
@@ -225,16 +270,37 @@ export default function IngestDialog({ open, onOpenChange, onSuccess }: Props) {
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
             onClick={() => fileInputRef.current?.click()}
-            className={`border-2 border-dashed rounded-lg text-center transition-colors cursor-pointer ${
-              isDragging ? 'border-blue-500 bg-blue-50' : 'border-slate-300 bg-slate-50'
+            className={`border-2 border-dashed rounded-lg text-center transition-all cursor-pointer ${
+              isDragging
+                ? 'border-blue-500 bg-blue-50 scale-[1.02]'
+                : 'border-slate-300 bg-slate-50 hover:border-slate-400 hover:bg-slate-100'
             }`}
-            style={{ padding: '2.5rem' }}
+            style={{
+              padding: '2.5rem',
+              minHeight: '120px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
           >
-            <p className="text-sm text-slate-600">Drag and drop a file here, or click to browse</p>
+            {isDragging ? (
+              <p className="text-sm font-medium text-blue-600">Drop file here</p>
+            ) : (
+              <>
+                <Upload className="h-8 w-8 text-slate-400 mb-2" />
+                <p className="text-sm text-slate-600">
+                  Drag and drop a file here, or click to browse
+                </p>
+                <p className="text-xs text-slate-500 mt-1">
+                  Supported: .txt, .md, .markdown, .json, .pdf, .docx
+                </p>
+              </>
+            )}
             <input
               ref={fileInputRef}
               type="file"
-              accept=".txt,.md,.markdown,.json"
+              accept=".txt,.md,.markdown,.json,.pdf,.docx"
               onChange={handleFileInputChange}
               className="hidden"
               style={{ display: 'none' }}

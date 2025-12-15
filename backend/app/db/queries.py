@@ -1,9 +1,12 @@
 from typing import List, Optional
 import asyncpg
 import json
+import structlog
 
 from app.core.config import settings
 from app.db.session import get_db_pool
+
+logger = structlog.get_logger()
 
 
 async def get_document_by_id(document_id: str) -> Optional[dict]:
@@ -102,27 +105,66 @@ async def get_chunks_by_document_id(document_id: str) -> List[dict]:
 
 async def list_documents(limit: int = 100, offset: int = 0) -> List[dict]:
     """List documents with pagination."""
-    pool = await get_db_pool()
-    async with pool.acquire() as conn:
-        rows = await conn.fetch(
-            """
-            SELECT id, source, title, created_at
-            FROM documents
-            ORDER BY created_at DESC
-            LIMIT $1 OFFSET $2
-            """,
-            limit,
-            offset,
-        )
-        return [
-            {
-                "id": row["id"],
-                "source": row["source"],
-                "title": row["title"],
-                "created_at": row["created_at"].isoformat() if row["created_at"] else None,
-            }
-            for row in rows
-        ]
+    import time
+    import asyncio
+    
+    start_time = time.time()
+    logger.info("list_documents called", limit=limit, offset=offset)
+    
+    try:
+        pool = await get_db_pool()
+        pool_acquire_time = time.time()
+        logger.info("Pool acquired", elapsed_ms=(pool_acquire_time - start_time) * 1000)
+        
+        # Use context manager for proper connection handling
+        async with pool.acquire() as conn:
+            conn_acquire_time = time.time()
+            logger.info("Connection acquired", elapsed_ms=(conn_acquire_time - pool_acquire_time) * 1000)
+            
+            # Add timeout for query execution (10 seconds)
+            rows = await asyncio.wait_for(
+                conn.fetch(
+                    """
+                    SELECT id, source, title, created_at
+                    FROM documents
+                    LIMIT $1 OFFSET $2
+                    """,
+                    limit,
+                    offset,
+                ),
+                timeout=10.0,
+            )
+            query_time = time.time()
+            logger.info("Query executed", elapsed_ms=(query_time - conn_acquire_time) * 1000, row_count=len(rows))
+            
+            result = [
+                {
+                    "id": row["id"],
+                    "source": row["source"],
+                    "title": row["title"],
+                    "created_at": row["created_at"].isoformat() if row["created_at"] else None,
+                }
+                for row in rows
+            ]
+            processing_time = time.time()
+            
+            logger.info(
+                "list_documents completed",
+                pool_acquire_ms=(pool_acquire_time - start_time) * 1000,
+                conn_acquire_ms=(conn_acquire_time - pool_acquire_time) * 1000,
+                query_ms=(query_time - conn_acquire_time) * 1000,
+                processing_ms=(processing_time - query_time) * 1000,
+                total_ms=(processing_time - start_time) * 1000,
+                document_count=len(result),
+            )
+            
+            return result
+    except asyncio.TimeoutError as e:
+        logger.error("Database operation timed out", error=str(e))
+        raise RuntimeError(f"Database query timed out: {str(e)}")
+    except Exception as e:
+        logger.error("list_documents error", error=str(e), exc_info=True)
+        raise
 
 
 async def count_documents() -> int:
