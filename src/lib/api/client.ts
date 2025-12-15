@@ -199,3 +199,22 @@ export async function extractTextFromFile(file: File): Promise<string> {
   const data = await res.json()
   return data.text
 }
+
+export async function checkHealth(): Promise<{ ok: boolean; db: boolean; version: string }> {
+  ensureBrowser()
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/v1/health`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+    })
+
+    if (!res.ok) {
+      throw new Error(`Health check failed with status ${res.status}`)
+    }
+
+    return await res.json()
+  } catch (error) {
+    // If the request fails (network error, CORS, etc.), return unhealthy status
+    throw error
+  }
+}

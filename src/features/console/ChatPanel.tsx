@@ -10,6 +10,7 @@ import { BarChart3, SunMedium, Zap, AlertTriangle, Send, Loader2 } from 'lucide-
 import { useChat } from '@/features/chat/useChat'
 import ChatLayout from '@/features/chat/ChatLayout'
 import { useRagSettings } from '@/features/settings/useRagSettings'
+import { checkHealth } from '@/lib/api/client'
 
 type ConnectionState = 'unknown' | 'ok' | 'error'
 
@@ -22,8 +23,25 @@ export default function ChatPanel() {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
-    // You can wire a real health endpoint later.
-    setConnection('ok')
+    // Check health on mount
+    const checkConnection = async () => {
+      try {
+        const health = await checkHealth()
+        setConnection(health.ok && health.db ? 'ok' : 'error')
+      } catch (error) {
+        console.error('[ChatPanel] Health check failed:', error)
+        setConnection('error')
+      }
+    }
+
+    void checkConnection()
+
+    // Poll health every 30 seconds
+    const interval = setInterval(() => {
+      void checkConnection()
+    }, 30000)
+
+    return () => clearInterval(interval)
   }, [])
 
   useEffect(() => {
