@@ -151,12 +151,22 @@ async def global_exception_handler(request: Request, exc: Exception):
         error=str(exc),
         exc_info=exc,
     )
+    
+    # Get origin from request headers for CORS
+    origin = request.headers.get("origin")
+    headers = {}
+    if origin and origin in settings.cors_origins_list:
+        headers["Access-Control-Allow-Origin"] = origin
+        headers["Access-Control-Allow-Credentials"] = "true"
+    
     return JSONResponse(
         status_code=500,
         content={
             "error": "Internal server error",
             "request_id": request_id,
+            "detail": str(exc) if settings.DEBUG else "Internal server error",
         },
+        headers=headers,
     )
 
 

@@ -38,7 +38,7 @@ export function useChat() {
 
   const sendMessage = async (
     text: string,
-    options?: { topK?: number; debug?: boolean; filters?: Record<string, unknown> }
+    options?: { topK?: number; debug?: boolean; filters?: Record<string, unknown>; rag_model?: string }
   ) => {
     setError(null)
     const userMessage: ChatMessage = {
@@ -50,12 +50,19 @@ export function useChat() {
 
     setIsLoading(true)
     try {
-      const resp = await ragQuery({
+      const requestBody = {
         query: text,
         topK: options?.topK,
         debug: options?.debug,
         filters: options?.filters,
+        rag_model: options?.rag_model,
+      }
+      console.log('[useChat] Sending request:', {
+        query: text.substring(0, 50),
+        rag_model: options?.rag_model,
+        requestBody,
       })
+      const resp = await ragQuery(requestBody)
 
       // Extract citations from API response
       const citations: Citation[] = (resp.citations || []).map((cit: any) => ({
@@ -85,6 +92,8 @@ export function useChat() {
         answerPreview: resp.answer?.substring(0, 100),
         hasOutput: !!resp.output,
         outputLength: resp.output?.length || 0,
+        rag_model: resp.rag_model,
+        ragModel: resp.ragModel,
         fullResponse: resp,
       })
 
@@ -94,6 +103,7 @@ export function useChat() {
         content: resp.answer ?? resp.output ?? 'No answer field returned.',
         latencyMs: resp.latency_ms ?? resp.latencyMs,
         costUsd: calculateCost(resp.token_usage ?? resp.tokenUsage),
+        ragModel: resp.rag_model ?? resp.ragModel,
         citations: citations.length > 0 ? citations : undefined,
         metadata,
       }
@@ -101,6 +111,7 @@ export function useChat() {
       console.log('[useChat] Assistant message created:', {
         contentLength: assistantMessage.content?.length || 0,
         contentPreview: assistantMessage.content?.substring(0, 100),
+        ragModel: assistantMessage.ragModel,
       })
       setMessages(prev => [...prev, assistantMessage])
     } catch (err: any) {

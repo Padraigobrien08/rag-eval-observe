@@ -27,6 +27,9 @@ from app.schemas import (
     QueryResponse,
     CitationResponse,
 )
+from app.llm.openai_client import OpenAIError, OpenAIRateLimitError
+from app.rag.types import RetrieveError
+from app.rag.answer import AnswerError
 
 logger = structlog.get_logger()
 router = APIRouter()
@@ -544,8 +547,8 @@ async def query_endpoint(
         )
 
     try:
-        from app.rag.retrieve import retrieve, RetrieveError
-        from app.rag.answer import generate_answer, AnswerError
+        from app.rag.retrieve import retrieve
+        from app.rag.answer import generate_answer
 
         # Detect meta-queries about documents/system
         query_lower = query_request.query.lower()
@@ -612,11 +615,19 @@ async def query_endpoint(
                 query=query_request.query,
             )
 
-        # Retrieve relevant chunks
+        # Retrieve relevant chunks using the specified RAG model
+        rag_model = query_request.rag_model or "vector-similarity"
+        logger.info(
+            "Retrieving chunks",
+            request_id=request_id,
+            rag_model=rag_model,
+            query_request_rag_model=query_request.rag_model,
+        )
         retrieved_chunks = await retrieve(
             query=query_request.query,
             top_k=query_request.top_k,
             filters=query_request.filters,
+            rag_model=rag_model,
         )
 
         # Generate answer from retrieved chunks (with document list context if meta-query)
@@ -642,6 +653,7 @@ async def query_endpoint(
             "used_chunk_ids": answer_response.used_chunk_ids,
             "latency_ms": answer_response.latency_ms,
             "token_usage": answer_response.token_usage,
+            "rag_model": rag_model,
         }
 
         # Log response data for debugging
@@ -684,8 +696,6 @@ async def query_endpoint(
 
     except RetrieveError as e:
         # Check if the underlying error is a rate limit error
-        from app.llm.openai_client import OpenAIRateLimitError
-        
         error_str = str(e)
         # Only treat as rate limit if it's explicitly an OpenAIRateLimitError
         # Don't check error string as it might contain "rate limit" in other contexts
@@ -722,8 +732,6 @@ async def query_endpoint(
 
     except AnswerError as e:
         # Check if the underlying error is a rate limit error
-        from app.llm.openai_client import OpenAIRateLimitError
-        
         is_rate_limit = isinstance(e.__cause__, OpenAIRateLimitError) if e.__cause__ else False
         
         if is_rate_limit:

@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Send, Loader2 } from 'lucide-react'
 import MessageBubble from './MessageBubble'
+import RetrievalStatus from './RetrievalStatus'
 import type { ChatMessage } from './types'
 
 interface ChatLayoutProps {
@@ -12,6 +13,7 @@ interface ChatLayoutProps {
   isLoading: boolean
   onSend: (content: string) => void
   showInput?: boolean
+  ragModel?: string
 }
 
 export default function ChatLayout({
@@ -19,6 +21,7 @@ export default function ChatLayout({
   isLoading,
   onSend,
   showInput = true,
+  ragModel = 'vector-similarity',
 }: ChatLayoutProps) {
   const [input, setInput] = useState('')
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -72,13 +75,7 @@ export default function ChatLayout({
                 />
               )
             })}
-            {isLoading && (
-              <div className="flex justify-start">
-                <div className="rounded-2xl bg-slate-100 px-4 py-3 text-sm text-slate-500">
-                  Thinking…
-                </div>
-              </div>
-            )}
+            {isLoading && <RetrievalStatus ragModel={ragModel} isLoading={isLoading} />}
             <div ref={messagesEndRef} />
           </div>
         </div>

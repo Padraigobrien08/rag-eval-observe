@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import List, Optional, Dict, Any
 from datetime import datetime
 
@@ -76,10 +76,13 @@ class IngestResponse(BaseModel):
 class QueryRequest(BaseModel):
     """Query request model."""
 
+    model_config = ConfigDict(populate_by_name=True)
+
     query: str = Field(..., description="Query text")
-    top_k: int = Field(8, ge=1, le=100, description="Number of chunks to retrieve")
+    top_k: int = Field(8, ge=1, le=100, description="Number of chunks to retrieve", alias="topK")
     filters: Optional[Dict[str, Any]] = Field(None, description="Optional filters (source, title)")
     debug: bool = Field(False, description="Include debug information in response")
+    rag_model: str = Field("vector-similarity", description="RAG model to use: vector-similarity, hybrid-search, reranking, multi-query")
 
 
 class CitationResponse(BaseModel):
@@ -101,3 +104,4 @@ class QueryResponse(BaseModel):
     latency_ms: int
     token_usage: Optional[Dict[str, int]] = None
     debug: Optional[Dict[str, Any]] = None
+    rag_model: Optional[str] = None

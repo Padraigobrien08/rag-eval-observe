@@ -14,6 +14,7 @@ export async function ragQuery(body: {
   topK?: number
   debug?: boolean
   filters?: Record<string, unknown>
+  rag_model?: string
 }) {
   ensureBrowser()
   const res = await fetch(`${API_BASE_URL}/api/v1/query`, {

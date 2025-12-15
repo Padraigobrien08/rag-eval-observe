@@ -14,6 +14,7 @@ export interface ChatMessage {
   content: string
   latencyMs?: number
   costUsd?: number
+  ragModel?: string
   citations?: Citation[]
   metadata?: any
 }

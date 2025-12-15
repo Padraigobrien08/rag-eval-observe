@@ -5,7 +5,7 @@ from dataclasses import dataclass
 import structlog
 
 from app.core.config import settings
-from app.rag.retrieve import RetrievedChunk
+from app.rag.types import RetrievedChunk
 from app.llm.openai_client import get_openai_client, OpenAIError, TokenUsage
 
 logger = structlog.get_logger()

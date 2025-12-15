@@ -16,7 +16,7 @@ type ConnectionState = 'unknown' | 'ok' | 'error'
 export default function ChatPanel() {
   const router = useRouter()
   const { messages, isLoading, error, sendMessage, resetChat } = useChat()
-  const { topK, debug } = useRagSettings()
+  const { topK, debug, ragModel } = useRagSettings()
   const [connection, setConnection] = useState<ConnectionState>('unknown')
   const [input, setInput] = useState('')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -26,19 +26,35 @@ export default function ChatPanel() {
     setConnection('ok')
   }, [])
 
+  useEffect(() => {
+    console.log('[ChatPanel] ragModel changed:', ragModel)
+  }, [ragModel])
+
   const handleSend = (content: string) => {
+    console.log('[ChatPanel] handleSend called', {
+      ragModel,
+      topK,
+      debug,
+    })
     void sendMessage(content, {
       topK,
       debug,
       filters: undefined,
+      rag_model: ragModel,
     })
   }
 
   const handleExampleClick = async (prompt: string) => {
+    console.log('[ChatPanel] handleExampleClick called', {
+      ragModel,
+      topK,
+      debug,
+    })
     // Always send immediately for examples
     await sendMessage(prompt, {
       topK,
       debug,
+      rag_model: ragModel,
     })
   }
 
@@ -323,6 +339,7 @@ export default function ChatPanel() {
               isLoading={isLoading}
               onSend={handleSend}
               showInput={false}
+              ragModel={ragModel}
             />
           )}
           {error && messages.length === 0 && (

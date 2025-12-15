@@ -190,19 +190,26 @@ export default function Sidebar() {
                     <select
                       id="rag-model"
                       value={ragModel}
-                      onChange={e => setRagModel(e.target.value as RagModel)}
+                      onChange={e => {
+                        const newModel = e.target.value as RagModel
+                        console.log('[Sidebar] RAG model changed:', {
+                          oldValue: ragModel,
+                          newValue: newModel,
+                        })
+                        setRagModel(newModel)
+                      }}
                       className="w-full appearance-none rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-transparent pr-10"
                       style={{ paddingRight: '2.5rem' }}
                     >
                       <option value="vector-similarity">Vector Similarity Search</option>
-                      <option value="hybrid-search" disabled>
-                        Hybrid Search (Vector + BM25) - Coming soon
+                      <option value="hybrid-search">
+                        Hybrid Search (Vector + BM25)
                       </option>
-                      <option value="reranking" disabled>
-                        Reranking - Coming soon
+                      <option value="reranking">
+                        Reranking
                       </option>
-                      <option value="multi-query" disabled>
-                        Multi-Query - Coming soon
+                      <option value="multi-query">
+                        Multi-Query
                       </option>
                     </select>
                     <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 pointer-events-none" />
