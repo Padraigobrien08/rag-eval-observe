@@ -67,3 +67,17 @@ export async function deleteDocument(documentId: string) {
 
   return res.json()
 }
+
+export async function getMetrics() {
+  const res = await fetch(`${API_BASE_URL}/api/v1/metrics`, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
+  })
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => '')
+    throw new Error(text || `Get metrics failed with status ${res.status}`)
+  }
+
+  return res.json()
+}

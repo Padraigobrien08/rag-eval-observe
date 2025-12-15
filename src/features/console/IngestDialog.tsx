@@ -196,26 +196,30 @@ export default function IngestDialog({ open, onOpenChange, onSuccess }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="w-[90vw] max-w-2xl max-h-[90vh] overflow-y-auto" style={{ paddingTop: '2.5rem', paddingBottom: '2.5rem', paddingLeft: '3rem', paddingRight: '3rem' }}>
+        <DialogHeader style={{ marginBottom: '2rem', textAlign: 'center' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
+            <Upload className="h-12 w-12 text-slate-400" />
+          </div>
           <DialogTitle>Ingest a document</DialogTitle>
           <DialogDescription>
             Upload a file or paste text to add it to the RAG index.
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
           {/* File upload area */}
           <div
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
-            className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+            onClick={() => fileInputRef.current?.click()}
+            className={`border-2 border-dashed rounded-lg text-center transition-colors cursor-pointer ${
               isDragging ? 'border-blue-500 bg-blue-50' : 'border-slate-300 bg-slate-50'
             }`}
+            style={{ padding: '2.5rem' }}
           >
-            <Upload className="h-8 w-8 mx-auto mb-2 text-slate-400" />
-            <p className="text-sm text-slate-600 mb-2">
+            <p className="text-sm text-slate-600">
               Drag and drop a file here, or click to browse
             </p>
             <input
@@ -224,28 +228,32 @@ export default function IngestDialog({ open, onOpenChange, onSuccess }: Props) {
               accept=".txt,.md,.markdown,.json"
               onChange={handleFileInputChange}
               className="hidden"
+              style={{ display: 'none' }}
               id="file-upload"
             />
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isLoading}
-            >
-              <FileText className="h-4 w-4 mr-2" />
-              Select file
-            </Button>
           </div>
 
           {/* Manual text input toggle */}
-          <div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'center' }}>
             <Button
               type="button"
-              variant="ghost"
               size="sm"
               onClick={() => setShowManualInput(!showManualInput)}
-              className="w-full justify-start"
+              style={{ 
+                backgroundColor: '#0f172a', 
+                color: 'white', 
+                borderRadius: '0.5rem',
+                border: 'none',
+                width: 'auto',
+                paddingLeft: '1.5rem',
+                paddingRight: '1.5rem'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#1e293b'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = '#0f172a'
+              }}
             >
               {showManualInput ? 'Hide' : 'Enter text manually'}
             </Button>
@@ -256,16 +264,15 @@ export default function IngestDialog({ open, onOpenChange, onSuccess }: Props) {
                 placeholder="Enter document text..."
                 value={text}
                 onChange={e => setText(e.target.value)}
-                className="mt-2"
                 disabled={isLoading}
               />
             )}
           </div>
 
           {/* Source and Title inputs */}
-          <div className="space-y-3">
-            <div>
-              <label className="text-sm font-medium mb-1 block">Source</label>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <label className="text-sm font-medium">Source</label>
               <Input
                 value={source}
                 onChange={e => setSource(e.target.value)}
@@ -274,8 +281,8 @@ export default function IngestDialog({ open, onOpenChange, onSuccess }: Props) {
                 required
               />
             </div>
-            <div>
-              <label className="text-sm font-medium mb-1 block">Title</label>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <label className="text-sm font-medium">Title</label>
               <Input
                 value={title}
                 onChange={e => setTitle(e.target.value)}
@@ -286,10 +293,10 @@ export default function IngestDialog({ open, onOpenChange, onSuccess }: Props) {
           </div>
 
           {/* Error message */}
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {error && <p className="text-sm text-red-600" style={{ marginTop: '0.5rem' }}>{error}</p>}
 
           {/* Submit buttons */}
-          <div className="flex justify-end gap-2 pt-2">
+          <div className="flex justify-end gap-2" style={{ paddingTop: '1rem' }}>
             <Button
               type="button"
               variant="ghost"

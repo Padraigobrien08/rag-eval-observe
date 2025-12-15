@@ -71,14 +71,24 @@ export default function ChatPanel() {
         className="shrink-0 border-b border-slate-200 bg-white px-4 py-2 flex items-center justify-between"
         style={{ flexShrink: 0 }}
       >
-        <div>
-          <h1 className="text-lg font-semibold text-slate-900">RAG Eval</h1>
-          <p className="text-xs text-slate-500">RAG evaluation console</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Badge variant={connection === 'ok' ? 'outline' : 'destructive'} className="text-xs">
+        <div className="flex items-center gap-3">
+          <div>
+            <h1 className="text-lg font-semibold text-slate-900">RAG Eval</h1>
+            <p className="text-xs text-slate-500">RAG evaluation console</p>
+          </div>
+          <Badge 
+            className="text-xs"
+            variant="outline"
+            style={{
+              backgroundColor: connection === 'ok' ? '#dcfce7' : '#fee2e2',
+              color: connection === 'ok' ? '#15803d' : '#991b1b',
+              borderColor: connection === 'ok' ? '#bbf7d0' : '#fecaca',
+            }}
+          >
             {badgeLabel}
           </Badge>
+        </div>
+        <div className="flex items-center gap-2">
         </div>
       </header>
 
@@ -140,6 +150,11 @@ export default function ChatPanel() {
                 className="flex flex-col items-center"
                 style={{ gap: '2rem' }}
               >
+                {/* Info text */}
+                <p className="text-sm text-slate-600 text-center" style={{ marginBottom: '1rem' }}>
+                  We have added some documents about RAG, so you can see functionality by just clicking one of the example queries
+                </p>
+
                 {/* Example Queries Section */}
                 <div className="flex flex-col items-center gap-6">
                   <div className="flex items-center gap-2 text-slate-900">
