@@ -5,6 +5,10 @@ import type { Metadata } from 'next'
 export const metadata: Metadata = {
   title: 'RAG Eval',
   description: 'RAG evaluation console',
+  icons: {
+    icon: '/RAGEvalIcon.png',
+    apple: '/RAGEvalIcon.png',
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

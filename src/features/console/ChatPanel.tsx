@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
@@ -71,11 +72,25 @@ export default function ChatPanel() {
         className="shrink-0 border-b border-slate-200 bg-white px-4 py-2 flex items-center justify-between"
         style={{ flexShrink: 0 }}
       >
+        {/* Left side - Logo */}
+        <Image 
+          src="/RAGEvalLogo.png" 
+          alt="RAG Eval Logo" 
+          width={180} 
+          height={100}
+          className="flex-shrink-0"
+          style={{ height: 'auto' }}
+        />
+
+        {/* Right side - Metrics, New chat, and Connected badge */}
         <div className="flex items-center gap-3">
-          <div>
-            <h1 className="text-lg font-semibold text-slate-900">RAG Eval</h1>
-            <p className="text-xs text-slate-500">RAG evaluation console</p>
-          </div>
+          <Button variant="outline" size="sm" type="button" onClick={() => router.push('/metrics')}>
+            <BarChart3 className="mr-1 h-4 w-4" />
+            Metrics
+          </Button>
+          <Button variant="ghost" size="sm" type="button" onClick={() => resetChat()}>
+            New chat
+          </Button>
           <Badge 
             className="text-xs"
             variant="outline"
@@ -88,23 +103,7 @@ export default function ChatPanel() {
             {badgeLabel}
           </Badge>
         </div>
-        <div className="flex items-center gap-2">
-        </div>
       </header>
-
-      {/* Right side buttons - fixed position */}
-      <div 
-        className="fixed top-2 right-4 flex items-center gap-2 z-10"
-        style={{ top: '0.5rem', right: '1rem' }}
-      >
-        <Button variant="outline" size="sm" type="button" onClick={() => router.push('/metrics')}>
-          <BarChart3 className="mr-1 h-4 w-4" />
-          Metrics
-        </Button>
-        <Button variant="ghost" size="sm" type="button" onClick={() => resetChat()}>
-          New chat
-        </Button>
-      </div>
 
       {/* Chat region: home cards + messages + input */}
       <div 
