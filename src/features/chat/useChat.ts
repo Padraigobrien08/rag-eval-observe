@@ -78,6 +78,16 @@ export function useChat() {
         }
       }
 
+      // Log response for debugging
+      console.log('[useChat] Response received:', {
+        hasAnswer: !!resp.answer,
+        answerLength: resp.answer?.length || 0,
+        answerPreview: resp.answer?.substring(0, 100),
+        hasOutput: !!resp.output,
+        outputLength: resp.output?.length || 0,
+        fullResponse: resp,
+      })
+
       const assistantMessage: ChatMessage = {
         id: uuid(),
         role: 'assistant',
@@ -87,10 +97,22 @@ export function useChat() {
         citations: citations.length > 0 ? citations : undefined,
         metadata,
       }
+
+      console.log('[useChat] Assistant message created:', {
+        contentLength: assistantMessage.content?.length || 0,
+        contentPreview: assistantMessage.content?.substring(0, 100),
+      })
       setMessages(prev => [...prev, assistantMessage])
     } catch (err: any) {
       console.error(err)
-      setError(err.message ?? 'Failed to query backend')
+      // Provide user-friendly error messages
+      if (err.status === 429) {
+        setError('Rate limit exceeded. Please wait a moment and try again.')
+      } else if (err.message) {
+        setError(err.message)
+      } else {
+        setError('Failed to query backend. Please try again.')
+      }
     } finally {
       setIsLoading(false)
     }

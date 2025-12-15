@@ -547,6 +547,71 @@ async def query_endpoint(
         from app.rag.retrieve import retrieve, RetrieveError
         from app.rag.answer import generate_answer, AnswerError
 
+        # Detect meta-queries about documents/system
+        query_lower = query_request.query.lower()
+        is_meta_query = any(
+            phrase in query_lower
+            for phrase in [
+                "what documents",
+                "which documents",
+                "list documents",
+                "show documents",
+                "documents have been",
+                "documents are",
+                "documents available",
+                "documents in",
+                "documents stored",
+                "documents ingested",
+            ]
+        )
+
+        # If it's a meta-query, include document list in context
+        document_list_context = None
+        if is_meta_query:
+            logger.info(
+                "Meta-query detected",
+                request_id=request_id,
+                query=query_request.query,
+            )
+            try:
+                documents = await list_documents(limit=100, offset=0)
+                if documents:
+                    doc_list = []
+                    for doc in documents:
+                        doc_info = f"- {doc.get('title') or doc.get('source', 'Untitled')}"
+                        if doc.get('source') and doc.get('title') != doc.get('source'):
+                            doc_info += f" (source: {doc['source']})"
+                        doc_list.append(doc_info)
+                    document_list_context = (
+                        f"Available documents in the system ({len(documents)} total):\n"
+                        + "\n".join(doc_list)
+                    )
+                    logger.info(
+                        "Document list context created",
+                        request_id=request_id,
+                        document_count=len(documents),
+                        context_length=len(document_list_context),
+                        context_preview=document_list_context[:200],
+                    )
+                else:
+                    logger.warning(
+                        "No documents found for meta-query",
+                        request_id=request_id,
+                    )
+            except Exception as e:
+                logger.warning(
+                    "Failed to fetch document list for meta-query",
+                    request_id=request_id,
+                    error=str(e),
+                    exc_info=True,
+                )
+        else:
+            logger.debug(
+                "Not a meta-query",
+                request_id=request_id,
+                query=query_request.query,
+            )
+
         # Retrieve relevant chunks
         retrieved_chunks = await retrieve(
             query=query_request.query,
@@ -554,10 +619,11 @@ async def query_endpoint(
             filters=query_request.filters,
         )
 
-        # Generate answer from retrieved chunks
+        # Generate answer from retrieved chunks (with document list context if meta-query)
         answer_response = await generate_answer(
             query=query_request.query,
             retrieved_chunks=retrieved_chunks,
+            document_list_context=document_list_context,
         )
 
         # Build response
@@ -577,6 +643,15 @@ async def query_endpoint(
             "latency_ms": answer_response.latency_ms,
             "token_usage": answer_response.token_usage,
         }
+
+        # Log response data for debugging
+        logger.info(
+            "Response data built",
+            request_id=request_id,
+            answer_length=len(answer_response.answer) if answer_response.answer else 0,
+            answer_preview=answer_response.answer[:100] if answer_response.answer else None,
+            answer_is_empty=not answer_response.answer or len(answer_response.answer.strip()) == 0,
+        )
 
         # Add debug information if requested
         if query_request.debug:
@@ -608,10 +683,36 @@ async def query_endpoint(
         return QueryResponse(**response_data)
 
     except RetrieveError as e:
+        # Check if the underlying error is a rate limit error
+        from app.llm.openai_client import OpenAIRateLimitError
+        
+        error_str = str(e)
+        # Only treat as rate limit if it's explicitly an OpenAIRateLimitError
+        # Don't check error string as it might contain "rate limit" in other contexts
+        is_rate_limit = isinstance(e.__cause__, OpenAIRateLimitError) if e.__cause__ else False
+        
+        if is_rate_limit:
+            logger.error(
+                "OpenAI rate limit error",
+                request_id=request_id,
+                query=query_request.query,
+                error=str(e),
+                error_type=type(e.__cause__).__name__ if e.__cause__ else None,
+            )
+            raise HTTPException(
+                status_code=429,
+                detail="OpenAI API rate limit exceeded. Please wait a moment and try again.",
+            )
+        
+        # Log the actual error for debugging
         logger.error(
             "Retrieval error",
             request_id=request_id,
+            query=query_request.query,
+            query_length=len(query_request.query),
             error=str(e),
+            error_type=type(e).__name__,
+            cause_type=type(e.__cause__).__name__ if e.__cause__ else None,
             exc_info=True,
         )
         raise HTTPException(
@@ -620,10 +721,32 @@ async def query_endpoint(
         )
 
     except AnswerError as e:
+        # Check if the underlying error is a rate limit error
+        from app.llm.openai_client import OpenAIRateLimitError
+        
+        is_rate_limit = isinstance(e.__cause__, OpenAIRateLimitError) if e.__cause__ else False
+        
+        if is_rate_limit:
+            logger.error(
+                "OpenAI rate limit error during answer generation",
+                request_id=request_id,
+                query=query_request.query,
+                error=str(e),
+                error_type=type(e.__cause__).__name__ if e.__cause__ else None,
+            )
+            raise HTTPException(
+                status_code=429,
+                detail="OpenAI API rate limit exceeded. Please wait a moment and try again.",
+            )
+        
         logger.error(
             "Answer generation error",
             request_id=request_id,
+            query=query_request.query,
+            query_length=len(query_request.query),
             error=str(e),
+            error_type=type(e).__name__,
+            cause_type=type(e.__cause__).__name__ if e.__cause__ else None,
             exc_info=True,
         )
         raise HTTPException(

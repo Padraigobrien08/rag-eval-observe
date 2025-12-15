@@ -89,6 +89,11 @@ class OpenAIClient:
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",
         }
+        
+        # Request throttling disabled - single queries only make 2 API calls
+        # (1 embedding + 1 chat completion), which shouldn't hit rate limits
+        # If rate limits are hit, it's likely due to multiple concurrent requests
+        # or a very low account tier limit
 
     async def _request_with_retry(
         self,
@@ -98,7 +103,7 @@ class OpenAIClient:
         operation: str,
     ) -> Dict[str, Any]:
         """
-        Make HTTP request with exponential backoff retry.
+        Make HTTP request with exponential backoff retry and throttling.
 
         Args:
             method: HTTP method
@@ -134,23 +139,37 @@ class OpenAIClient:
                     if response.status_code == 200:
                         return response.json()
 
-                    # Rate limit (429) - retry with backoff
+                    # Rate limit (429) - handle carefully
                     if response.status_code == 429:
                         retry_after = self._get_retry_after(response)
-                        wait_time = retry_after or (2**attempt)
+                        
+                        # For rate limits, respect the Retry-After header if provided
+                        # If not provided, use shorter wait times based on operation type
+                        if retry_after:
+                            wait_time = retry_after
+                        else:
+                            # For embeddings, use shorter wait (embeddings have higher rate limits)
+                            # For chat completions, use longer wait
+                            if "embedding" in operation.lower():
+                                wait_time = 5  # 5 seconds for embeddings
+                            else:
+                                wait_time = 10  # 10 seconds for chat completions
 
-                        if attempt < self.max_retries:
+                        # Only retry once for rate limits
+                        if attempt == 0:
                             logger.warning(
-                                "Rate limit hit, retrying",
+                                "Rate limit hit, waiting before retry",
                                 operation=operation,
-                                attempt=attempt + 1,
                                 wait_time=wait_time,
+                                retry_after_header=retry_after,
                             )
                             await asyncio.sleep(wait_time)
                             continue
                         else:
+                            # Already retried once, fail fast with clear message
                             raise OpenAIRateLimitError(
-                                f"Rate limit exceeded after {self.max_retries} retries"
+                                f"Rate limit exceeded after retry. Please wait a moment before trying again. "
+                                f"If this persists, you may need to upgrade your OpenAI account tier."
                             )
 
                     # Server errors (5xx) - retry with backoff

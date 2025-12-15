@@ -1,4 +1,13 @@
+'use client'
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000'
+
+// Helper to ensure we're in browser environment
+function ensureBrowser() {
+  if (typeof window === 'undefined') {
+    throw new Error('API functions can only be called in the browser')
+  }
+}
 
 export async function ragQuery(body: {
   query: string
@@ -6,6 +15,7 @@ export async function ragQuery(body: {
   debug?: boolean
   filters?: Record<string, unknown>
 }) {
+  ensureBrowser()
   const res = await fetch(`${API_BASE_URL}/api/v1/query`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -14,7 +24,19 @@ export async function ragQuery(body: {
 
   if (!res.ok) {
     const text = await res.text().catch(() => '')
-    throw new Error(text || `Query failed with status ${res.status}`)
+    // Try to parse error message from response
+    let errorMessage = text || `Query failed with status ${res.status}`
+    try {
+      const errorData = JSON.parse(text)
+      errorMessage = errorData.detail || errorData.message || errorMessage
+    } catch {
+      // If not JSON, use the text as-is
+    }
+
+    // Create error with status code for better handling
+    const error = new Error(errorMessage) as Error & { status?: number }
+    error.status = res.status
+    throw error
   }
 
   return res.json()
@@ -26,6 +48,7 @@ export async function ingestDocument(body: {
   text: string
   is_markdown?: boolean
 }) {
+  ensureBrowser()
   const res = await fetch(`${API_BASE_URL}/api/v1/ingest`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -41,6 +64,7 @@ export async function ingestDocument(body: {
 }
 
 export async function listDocuments(limit = 100, offset = 0) {
+  ensureBrowser()
   const startTime = typeof performance !== 'undefined' ? performance.now() : Date.now()
 
   try {
@@ -80,12 +104,13 @@ export async function listDocuments(limit = 100, offset = 0) {
     }
 
     return data
-  } catch (error: any) {
+  } catch (error: unknown) {
     const errorTime = typeof performance !== 'undefined' ? performance.now() : Date.now()
     const elapsed = errorTime - startTime
 
     if (typeof console !== 'undefined' && console.error) {
-      if (error.name === 'AbortError') {
+      const err = error as { name?: string; message?: string }
+      if (err.name === 'AbortError') {
         console.error('[listDocuments] Request timed out after', elapsed, 'ms')
       } else {
         console.error('[listDocuments] Error after', elapsed, 'ms:', error)
@@ -93,13 +118,14 @@ export async function listDocuments(limit = 100, offset = 0) {
     }
 
     // Provide more helpful error message
-    if (error.name === 'AbortError') {
+    const err = error as { name?: string; message?: string }
+    if (err.name === 'AbortError') {
       throw new Error(
         `Request timed out after ${elapsed}ms. Is the backend running at ${API_BASE_URL}?`
       )
     }
 
-    if (error.message?.includes('Failed to fetch') || error.message?.includes('NetworkError')) {
+    if (err.message?.includes('Failed to fetch') || err.message?.includes('NetworkError')) {
       throw new Error(
         `Cannot connect to backend at ${API_BASE_URL}. Is the backend server running?`
       )
@@ -110,6 +136,7 @@ export async function listDocuments(limit = 100, offset = 0) {
 }
 
 export async function deleteDocument(documentId: string) {
+  ensureBrowser()
   const res = await fetch(`${API_BASE_URL}/api/v1/documents/${documentId}`, {
     method: 'DELETE',
     headers: { 'Content-Type': 'application/json' },
@@ -124,6 +151,7 @@ export async function deleteDocument(documentId: string) {
 }
 
 export async function getMetrics() {
+  ensureBrowser()
   const res = await fetch(`${API_BASE_URL}/api/v1/metrics`, {
     method: 'GET',
     headers: { 'Content-Type': 'application/json' },
@@ -138,6 +166,7 @@ export async function getMetrics() {
 }
 
 export async function getDocumentChunks(documentId: string) {
+  ensureBrowser()
   const res = await fetch(`${API_BASE_URL}/api/v1/documents/${documentId}/chunks`, {
     method: 'GET',
     headers: { 'Content-Type': 'application/json' },
@@ -152,6 +181,7 @@ export async function getDocumentChunks(documentId: string) {
 }
 
 export async function extractTextFromFile(file: File): Promise<string> {
+  ensureBrowser()
   const formData = new FormData()
   formData.append('file', file)
 

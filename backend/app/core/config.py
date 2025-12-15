@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     EMBEDDING_DIMENSION: int = 1536
 
     # OpenAI API settings
-    OPENAI_MAX_RETRIES: int = 3
+    OPENAI_MAX_RETRIES: int = 3  # Reduced back to 3 - rate limits handled separately
     OPENAI_TIMEOUT: int = 60  # seconds
 
     # Request limits
