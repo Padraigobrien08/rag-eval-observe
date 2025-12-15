@@ -20,17 +20,26 @@ export default function MessageBubble({ message }: MessageBubbleProps) {
   }
 
   return (
-    <div className={`flex w-full ${isUser ? 'justify-end' : 'justify-start'}`}>
-      <div className="flex max-w-[80%] flex-col">
+    <div 
+      className={`flex w-full ${isUser ? 'justify-end' : 'justify-start'}`}
+      style={{ width: '100%' }}
+    >
+      <div className={`flex max-w-[80%] flex-col ${isUser ? 'items-end' : ''}`}>
         <div
-          className={`rounded-2xl px-4 py-3 text-sm shadow-sm ${
-            isUser ? 'bg-blue-600 text-white shadow' : 'bg-slate-100 text-slate-900'
+          className={`rounded-2xl px-4 py-3 shadow-sm ${
+            isUser 
+              ? 'bg-white text-slate-900 border border-slate-200 shadow' 
+              : 'bg-slate-100 text-slate-900'
           }`}
+          style={{ fontSize: '1rem' }}
         >
           {isUser ? (
             <span className="whitespace-pre-wrap break-words">{message.content}</span>
           ) : (
-            <div className="prose prose-sm max-w-none">
+            <div 
+              className="prose prose-sm max-w-none"
+              style={{ lineHeight: '1.8' }}
+            >
               <ReactMarkdown>{message.content}</ReactMarkdown>
             </div>
           )}

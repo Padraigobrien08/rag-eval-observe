@@ -49,9 +49,16 @@ export default function ChatLayout({ messages, isLoading, onSend }: ChatLayoutPr
   }
 
   return (
-    <div className="flex flex-1 flex-col min-h-0">
-      {/* Messages area - scrollable */}
-      <div className="flex-1 overflow-y-auto min-h-0">
+    <div className="flex flex-col h-full" style={{ height: '100%' }} data-testid="chat-layout">
+      {/* Messages area - scrollable, fills available space */}
+      <div 
+        className="flex-1 overflow-y-auto" 
+        style={{ 
+          minHeight: 0,
+          maxHeight: '100%',
+          overflowY: 'auto'
+        }}
+      >
         <div className="mx-auto max-w-3xl w-full px-4 py-6">
           <div className="space-y-4">
             {messages.map(message => (
@@ -69,9 +76,12 @@ export default function ChatLayout({ messages, isLoading, onSend }: ChatLayoutPr
         </div>
       </div>
 
-      {/* Input bar - fixed at bottom */}
-      <div className="shrink-0 border-t border-slate-200 bg-white/80 backdrop-blur">
-        <div className="mx-auto max-w-3xl px-4 py-3">
+      {/* Input bar - fixed at bottom with padding */}
+      <div 
+        className="shrink-0 border-t border-slate-200 bg-white/80 backdrop-blur"
+        style={{ flexShrink: 0 }}
+      >
+        <div className="mx-auto max-w-3xl px-4 py-4">
           <form onSubmit={handleSubmit} className="flex items-end gap-2">
             <Textarea
               ref={textareaRef}

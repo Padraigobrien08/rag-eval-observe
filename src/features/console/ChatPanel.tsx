@@ -1,14 +1,16 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
+import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
-import { BarChart3, SunMedium, Zap, AlertTriangle } from 'lucide-react'
+import { BarChart3, SunMedium, Zap, AlertTriangle, Send, Loader2 } from 'lucide-react'
 import { useChat } from '@/features/chat/useChat'
 import type { ChatMessage as OldChatMessage } from '@/features/chat/types'
 import type { ChatMessage } from '@/features/chat/ChatLayout'
 import ChatLayout from '@/features/chat/ChatLayout'
+import MessageBubble from '@/features/chat/MessageBubble'
 import { useRagSettings } from '@/features/settings/useRagSettings'
 
 type ConnectionState = 'unknown' | 'ok' | 'error'
@@ -18,11 +20,21 @@ export default function ChatPanel() {
   const { messages: oldMessages, isLoading, error, sendMessage, resetChat } = useChat()
   const { topK, debug } = useRagSettings()
   const [connection, setConnection] = useState<ConnectionState>('unknown')
+  const [input, setInput] = useState('')
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
     // You can wire a real health endpoint later.
     setConnection('ok')
   }, [])
+
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    if (messagesEndRef.current && oldMessages.length > 0) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' })
+    }
+  }, [oldMessages, isLoading])
 
   // Map old messages to new ChatMessage format
   const messages: ChatMessage[] = oldMessages.map((msg: OldChatMessage) => {
@@ -60,13 +72,34 @@ export default function ChatPanel() {
     })
   }
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    const text = input.trim()
+    if (!text || isLoading) return
+    setInput('')
+    handleSend(text)
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      handleSubmit(e as any)
+    }
+  }
+
   const badgeLabel =
     connection === 'ok' ? 'Connected' : connection === 'error' ? 'Disconnected' : 'Checking…'
 
   return (
-    <div className="flex-1 flex flex-col h-screen min-h-0 bg-slate-50">
+    <div 
+      className="flex flex-col bg-slate-50 overflow-hidden" 
+      style={{ height: '100%', flex: '1 1 0%' }}
+    >
       {/* Header */}
-      <header className="shrink-0 border-b border-slate-200 bg-white px-4 py-2 flex items-center justify-between">
+      <header 
+        className="shrink-0 border-b border-slate-200 bg-white px-4 py-2 flex items-center justify-between"
+        style={{ flexShrink: 0 }}
+      >
         <div>
           <h1 className="text-lg font-semibold text-slate-900">RAG Eval</h1>
           <p className="text-xs text-slate-500">RAG evaluation console</p>
@@ -75,24 +108,54 @@ export default function ChatPanel() {
           <Badge variant={connection === 'ok' ? 'outline' : 'destructive'} className="text-xs">
             {badgeLabel}
           </Badge>
-          <Button variant="outline" size="sm" type="button" onClick={() => router.push('/metrics')}>
-            <BarChart3 className="mr-1 h-4 w-4" />
-            Metrics
-          </Button>
-          <Button variant="ghost" size="sm" type="button" onClick={() => resetChat()}>
-            New chat
-          </Button>
         </div>
       </header>
 
+      {/* Right side buttons - fixed position */}
+      <div 
+        className="fixed top-2 right-4 flex items-center gap-2 z-10"
+        style={{ top: '0.5rem', right: '1rem' }}
+      >
+        <Button variant="outline" size="sm" type="button" onClick={() => router.push('/metrics')}>
+          <BarChart3 className="mr-1 h-4 w-4" />
+          Metrics
+        </Button>
+        <Button variant="ghost" size="sm" type="button" onClick={() => resetChat()}>
+          New chat
+        </Button>
+      </div>
+
       {/* Chat region: home cards + messages + input */}
-      <div className="flex-1 flex flex-col bg-slate-50">
-        {messages.length === 0 ? (
-          /* Home screen when no messages */
-          <div className="flex-1 overflow-y-auto">
-            <div className="mx-auto max-w-3xl px-6 pt-12">
+      <div 
+        className="flex flex-col bg-slate-50 overflow-hidden"
+        style={{ flex: '1 1 0%', minHeight: 0, height: '100%' }}
+      >
+        {/* Content area - scrollable */}
+        <div 
+          className="flex-1 min-h-0"
+          style={{ 
+            paddingTop: '2rem', 
+            paddingBottom: '2rem',
+            overflowY: 'auto',
+            overflowX: 'hidden'
+          }}
+        >
+          {messages.length === 0 ? (
+            /* Home screen when no messages */
+            <div 
+              className="mx-auto max-w-3xl"
+              style={{ 
+                paddingLeft: '2rem', 
+                paddingRight: '2rem', 
+                paddingTop: '8rem', 
+                paddingBottom: '4rem' 
+              }}
+            >
               {/* Title + subtitle */}
-              <div className="text-center mb-8">
+              <div 
+                className="text-center"
+                style={{ marginBottom: '1rem' }}
+              >
                 <h2 className="text-2xl font-semibold text-slate-900 mb-2">
                   What can I help with?
                 </h2>
@@ -101,108 +164,246 @@ export default function ChatPanel() {
                 </p>
               </div>
 
-              {/* THREE COLUMNS */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* Column 1 – Examples */}
-                <div className="flex flex-col gap-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-medium mb-1">
-                    <SunMedium className="h-4 w-4" />
-                    <span>Examples</span>
+              {/* Centered pill buttons */}
+              <div 
+                className="flex flex-col items-center"
+                style={{ gap: '2rem' }}
+              >
+                {/* Example Queries Section */}
+                <div className="flex flex-col items-center gap-6">
+                  <div className="flex items-center gap-2 text-slate-900">
+                    <SunMedium className="h-5 w-5" />
+                    <span className="text-lg font-semibold">Example Queries</span>
                   </div>
-
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full justify-start text-left h-auto py-3"
-                    onClick={() =>
-                      handleExampleClick('Explain vector similarity search in simple terms')
-                    }
-                    disabled={isLoading}
-                  >
-                    Explain vector similarity search in simple terms
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full justify-start text-left h-auto py-3"
-                    onClick={() =>
-                      handleExampleClick('Summarize the main topics in my knowledge base')
-                    }
-                    disabled={isLoading}
-                  >
-                    Summarize the main topics in my knowledge base
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full justify-start text-left h-auto py-3"
-                    onClick={() => handleExampleClick('What documents have been ingested?')}
-                    disabled={isLoading}
-                  >
-                    What documents have been ingested?
-                  </Button>
+                  <div className="flex flex-col items-center gap-3">
+                    {/* First row */}
+                    <div className="flex flex-wrap justify-center gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="rounded-full px-4 py-2 h-auto text-sm font-normal hover:bg-slate-50"
+                        onClick={() =>
+                          handleExampleClick('Explain vector similarity search in simple terms')
+                        }
+                        disabled={isLoading}
+                      >
+                        Explain vector similarity search in simple terms
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="rounded-full px-4 py-2 h-auto text-sm font-normal hover:bg-slate-50"
+                        onClick={() =>
+                          handleExampleClick('Summarize the main topics in my knowledge base')
+                        }
+                        disabled={isLoading}
+                      >
+                        Summarize the main topics in my knowledge base
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="rounded-full px-4 py-2 h-auto text-sm font-normal hover:bg-slate-50"
+                        onClick={() => handleExampleClick('What documents have been ingested?')}
+                        disabled={isLoading}
+                      >
+                        What documents have been ingested?
+                      </Button>
+                    </div>
+                    {/* Second row */}
+                    <div 
+                      className="flex flex-wrap justify-center gap-2"
+                      style={{ marginTop: '0.5rem' }}
+                    >
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="rounded-full px-4 py-2 h-auto text-sm font-normal hover:bg-slate-50"
+                        onClick={() =>
+                          handleExampleClick('How does RAG improve language model responses?')
+                        }
+                        disabled={isLoading}
+                      >
+                        How does RAG improve language model responses?
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="rounded-full px-4 py-2 h-auto text-sm font-normal hover:bg-slate-50"
+                        onClick={() =>
+                          handleExampleClick('What are the key components of a RAG system?')
+                        }
+                        disabled={isLoading}
+                      >
+                        What are the key components of a RAG system?
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="rounded-full px-4 py-2 h-auto text-sm font-normal hover:bg-slate-50"
+                        onClick={() =>
+                          handleExampleClick('Compare keyword search vs semantic search')
+                        }
+                        disabled={isLoading}
+                      >
+                        Compare keyword search vs semantic search
+                      </Button>
+                    </div>
+                  </div>
                 </div>
 
-                {/* Column 2 – Capabilities */}
-                <div className="flex flex-col gap-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-medium mb-1">
-                    <Zap className="h-4 w-4" />
-                    <span>Capabilities</span>
+                {/* Capabilities Section */}
+                <div className="flex flex-col items-center gap-6">
+                  <div className="flex items-center gap-2 text-slate-900">
+                    <Zap className="h-5 w-5" />
+                    <span className="text-lg font-semibold">Capabilities</span>
                   </div>
-
-                  <div className="rounded-lg bg-white px-4 py-3 border border-slate-200 text-sm text-slate-700">
-                    Query your ingested documents using natural language
-                  </div>
-                  <div className="rounded-lg bg-white px-4 py-3 border border-slate-200 text-sm text-slate-700">
-                    Retrieve relevant context using semantic search
-                  </div>
-                  <div className="rounded-lg bg-white px-4 py-3 border border-slate-200 text-sm text-slate-700">
-                    Generate answers augmented with retrieved knowledge
-                  </div>
-                  <div className="rounded-lg bg-white px-4 py-3 border border-slate-200 text-sm text-slate-700">
-                    View citations and metadata for transparency
+                  <div className="flex flex-wrap justify-center gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="rounded-full px-4 py-2 h-auto text-sm font-normal hover:bg-slate-50"
+                      disabled
+                    >
+                      Query your ingested documents using natural language
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="rounded-full px-4 py-2 h-auto text-sm font-normal hover:bg-slate-50"
+                      disabled
+                    >
+                      Retrieve relevant context using semantic search
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="rounded-full px-4 py-2 h-auto text-sm font-normal hover:bg-slate-50"
+                      disabled
+                    >
+                      Generate answers augmented with retrieved knowledge
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="rounded-full px-4 py-2 h-auto text-sm font-normal hover:bg-slate-50"
+                      disabled
+                    >
+                      View citations and metadata for transparency
+                    </Button>
                   </div>
                 </div>
 
-                {/* Column 3 – Limitations */}
-                <div className="flex flex-col gap-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-medium mb-1">
-                    <AlertTriangle className="h-4 w-4" />
-                    <span>Limitations</span>
+                {/* Limitations Section */}
+                <div className="flex flex-col items-center gap-6">
+                  <div className="flex items-center gap-2 text-slate-900">
+                    <AlertTriangle className="h-5 w-5" />
+                    <span className="text-lg font-semibold">Limitations</span>
                   </div>
-
-                  <div className="rounded-lg bg-white px-4 py-3 border border-slate-200 text-sm text-slate-700">
-                    May occasionally generate incorrect information
-                  </div>
-                  <div className="rounded-lg bg-white px-4 py-3 border border-slate-200 text-sm text-slate-700">
-                    Quality depends on ingested document accuracy
-                  </div>
-                  <div className="rounded-lg bg-white px-4 py-3 border border-slate-200 text-sm text-slate-700">
-                    Retrieval accuracy depends on embedding quality
-                  </div>
-                  <div className="rounded-lg bg-white px-4 py-3 border border-slate-200 text-sm text-slate-700">
-                    Costs may vary based on query complexity
+                  <div className="flex flex-wrap justify-center gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="rounded-full px-4 py-2 h-auto text-sm font-normal hover:bg-slate-50"
+                      disabled
+                    >
+                      May occasionally generate incorrect information
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="rounded-full px-4 py-2 h-auto text-sm font-normal hover:bg-slate-50"
+                      disabled
+                    >
+                      Quality depends on ingested document accuracy
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="rounded-full px-4 py-2 h-auto text-sm font-normal hover:bg-slate-50"
+                      disabled
+                    >
+                      Retrieval accuracy depends on embedding quality
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="rounded-full px-4 py-2 h-auto text-sm font-normal hover:bg-slate-50"
+                      disabled
+                    >
+                      Costs may vary based on query complexity
+                    </Button>
                   </div>
                 </div>
               </div>
             </div>
+          ) : (
+            /* Messages when they exist */
+            <div 
+              className="mx-auto max-w-3xl w-full py-6"
+              style={{ paddingLeft: '8rem', paddingRight: '8rem' }}
+            >
+              <div 
+                className="flex flex-col"
+                style={{ width: '100%', gap: '2rem' }}
+              >
+                {messages.map(message => (
+                  <MessageBubble key={message.id} message={message} />
+                ))}
+                {isLoading && (
+                  <div className="flex justify-start">
+                    <div className="rounded-2xl bg-slate-100 px-4 py-3 text-sm text-slate-500">
+                      Thinking…
+                    </div>
+                  </div>
+                )}
+                <div ref={messagesEndRef} />
+              </div>
+            </div>
+          )}
+          {error && messages.length === 0 && (
+            <div className="mx-auto max-w-3xl px-4 pb-4">
+              <p className="text-sm text-red-600">
+                {typeof error === 'string' ? error : 'Something went wrong'}
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Input bar - always visible at bottom */}
+        <div 
+          className="shrink-0 border-t border-slate-200 bg-white/80 backdrop-blur"
+          style={{ flexShrink: 0 }}
+        >
+          <div 
+            className="mx-auto max-w-3xl px-4"
+            style={{ paddingTop: '1rem', paddingBottom: '1rem' }}
+          >
+            <form onSubmit={handleSubmit} className="flex items-end gap-2">
+              <Textarea
+                ref={textareaRef}
+                value={input}
+                onChange={e => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Message RAG Eval..."
+                rows={1}
+                className="flex-1 resize-none rounded-2xl border border-slate-200 bg-slate-50 px-4 py-2 text-sm focus-visible:ring-2 focus-visible:ring-slate-400/60 focus-visible:border-transparent"
+              />
+              <Button
+                type="submit"
+                variant="default"
+                size="icon"
+                disabled={isLoading || !input.trim()}
+              >
+                {isLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Send className="h-4 w-4" />
+                )}
+              </Button>
+            </form>
           </div>
-        ) : (
-          /* Chat layout when messages exist */
-          <ChatLayout
-            key="chat-layout"
-            messages={messages}
-            isLoading={isLoading}
-            onSend={handleSend}
-          />
-        )}
-        {error && messages.length === 0 && (
-          <div className="mx-auto max-w-3xl px-4 pb-4">
-            <p className="text-sm text-red-600">
-              {typeof error === 'string' ? error : 'Something went wrong'}
-            </p>
-          </div>
-        )}
+        </div>
       </div>
     </div>
   )
