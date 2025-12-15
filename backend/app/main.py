@@ -11,6 +11,7 @@ from app.core.config import settings
 from app.core.logging import setup_logging, log_request
 from app.core.metrics import get_metrics
 from app.core.rate_limit import get_rate_limiter
+from app.core.rate_limit_redis import get_redis_rate_limiter
 from app.db.session import close_db_pool, init_db_pool
 
 logger = structlog.get_logger()
@@ -22,7 +23,18 @@ async def lifespan(app: FastAPI):
     setup_logging()
     logger.info("Starting application", environment=settings.ENVIRONMENT)
     await init_db_pool()
+    
+    # Initialize Redis rate limiter if enabled
+    redis_limiter = get_redis_rate_limiter()
+    if redis_limiter:
+        logger.info("Redis rate limiting enabled")
+    
     yield
+    
+    # Cleanup Redis connection
+    if redis_limiter:
+        await redis_limiter.close()
+    
     logger.info("Shutting down application")
     await close_db_pool()
 
@@ -61,9 +73,19 @@ async def rate_limit_middleware(request: Request, call_next):
     if forwarded_for:
         client_ip = forwarded_for.split(",")[0].strip()
 
-    # Check rate limit
-    rate_limiter = get_rate_limiter()
-    is_allowed, remaining = rate_limiter.is_allowed(client_ip)
+    # Check rate limit (use Redis if available, otherwise in-memory)
+    redis_limiter = get_redis_rate_limiter()
+    if redis_limiter:
+        # Use Redis-based distributed rate limiting
+        is_allowed, remaining = await redis_limiter.is_allowed(client_ip)
+        max_requests = redis_limiter.max_requests
+        window_seconds = redis_limiter.window_seconds
+    else:
+        # Fall back to in-memory rate limiting
+        rate_limiter = get_rate_limiter()
+        is_allowed, remaining = rate_limiter.is_allowed(client_ip)
+        max_requests = rate_limiter.max_requests
+        window_seconds = rate_limiter.window_seconds
 
     if not is_allowed:
         logger.warning(
@@ -75,9 +97,9 @@ async def rate_limit_middleware(request: Request, call_next):
             status_code=429,
             content={
                 "error": "Rate limit exceeded",
-                "message": f"Too many requests. Limit: {rate_limiter.max_requests} per {rate_limiter.window_seconds}s",
+                "message": f"Too many requests. Limit: {max_requests} per {window_seconds}s",
             },
-            headers={"Retry-After": str(rate_limiter.window_seconds)},
+            headers={"Retry-After": str(window_seconds)},
         )
 
     # Process request
@@ -85,7 +107,7 @@ async def rate_limit_middleware(request: Request, call_next):
 
     # Add rate limit headers
     response.headers["X-RateLimit-Remaining"] = str(remaining)
-    response.headers["X-RateLimit-Limit"] = str(rate_limiter.max_requests)
+    response.headers["X-RateLimit-Limit"] = str(max_requests)
     return response
 
 

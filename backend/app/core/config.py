@@ -39,6 +39,10 @@ class Settings(BaseSettings):
     RATE_LIMIT_REQUESTS: int = 100  # requests per window
     RATE_LIMIT_WINDOW: int = 60  # seconds
 
+    # Redis (optional, for distributed rate limiting)
+    REDIS_URL: str = ""
+    REDIS_ENABLED: bool = False
+
     # Legacy support (for backward compatibility)
     @property
     def embedding_model(self) -> str:

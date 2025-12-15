@@ -26,6 +26,9 @@ dev = [
     "black>=24.1.0",
     "ruff>=0.1.0",
 ]
+redis = [
+    "redis[hiredis]>=5.0.0",
+]
 
 [build-system]
 requires = ["hatchling"]
