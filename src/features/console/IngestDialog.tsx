@@ -231,9 +231,9 @@ export default function IngestDialog({ open, onOpenChange, onSuccess }: Props) {
       resetForm()
       onOpenChange(false)
       onSuccess?.()
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err)
-      setError(err.message ?? 'Failed to ingest document')
+      setError(err instanceof Error ? err.message : 'Failed to ingest document')
     } finally {
       setIsLoading(false)
     }

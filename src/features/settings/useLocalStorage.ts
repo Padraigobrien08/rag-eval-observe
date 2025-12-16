@@ -46,12 +46,15 @@ export function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T)
     }
 
     window.addEventListener('storage', handleStorageChange)
-    window.addEventListener('localStorageChange' as any, handleCustomStorageChange as EventListener)
+    window.addEventListener(
+      'localStorageChange' as unknown as string,
+      handleCustomStorageChange as EventListener
+    )
 
     return () => {
       window.removeEventListener('storage', handleStorageChange)
       window.removeEventListener(
-        'localStorageChange' as any,
+        'localStorageChange' as unknown as string,
         handleCustomStorageChange as EventListener
       )
     }

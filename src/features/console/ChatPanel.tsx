@@ -87,7 +87,8 @@ export default function ChatPanel() {
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
-      handleSubmit(e as any)
+      const formEvent = e as unknown as React.FormEvent<HTMLFormElement>
+      handleSubmit(formEvent)
     }
   }
 

@@ -9,7 +9,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import { Loader2 } from 'lucide-react'
 import { getDocumentChunks } from '@/lib/api/client'
 
@@ -24,7 +23,7 @@ interface Chunk {
   document_id: string
   chunk_index: number
   content: string
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
   created_at?: string
 }
 
@@ -52,9 +51,9 @@ export default function DocumentPreviewDialog({
       try {
         const data = await getDocumentChunks(document.id)
         setChunks(data || [])
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Failed to fetch document chunks:', err)
-        setError(err.message || 'Failed to load document chunks')
+        setError(err instanceof Error ? err.message : 'Failed to load document chunks')
       } finally {
         setIsLoading(false)
       }
@@ -110,7 +109,7 @@ export default function DocumentPreviewDialog({
             </div>
           ) : (
             <div className="space-y-4 pb-4">
-              {chunks.map((chunk, index) => (
+              {chunks.map((chunk) => (
                 <div
                   key={chunk.id}
                   className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm"
