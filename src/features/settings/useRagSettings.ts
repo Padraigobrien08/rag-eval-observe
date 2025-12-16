@@ -7,7 +7,10 @@ export type RagModel = 'vector-similarity' | 'hybrid-search' | 'reranking' | 'mu
 export function useRagSettings() {
   const [topK, setTopK] = useLocalStorage<number | undefined>('rag-eval-top-k', undefined)
   const [debug, setDebug] = useLocalStorage<boolean>('rag-eval-debug', false)
-  const [ragModel, setRagModel] = useLocalStorage<RagModel>('rag-eval-rag-model', 'vector-similarity')
+  const [ragModel, setRagModel] = useLocalStorage<RagModel>(
+    'rag-eval-rag-model',
+    'vector-similarity'
+  )
 
   const updateSettings = (updates: { topK?: number; debug?: boolean; ragModel?: RagModel }) => {
     if (updates.topK !== undefined) {

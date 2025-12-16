@@ -80,8 +80,8 @@ export default function MetricsPage() {
       const data = await getMetrics()
       setMetrics(data)
       setLastUpdated(new Date())
-    } catch (err: any) {
-      setError(err.message || 'Failed to fetch metrics')
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch metrics')
     } finally {
       setIsLoading(false)
     }

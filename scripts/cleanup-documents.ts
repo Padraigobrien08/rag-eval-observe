@@ -38,7 +38,9 @@ async function deleteDocument(documentId: string): Promise<void> {
 
   // If DELETE endpoint doesn't exist, we'll need to use SQL directly
   if (res.status === 404 || res.status === 405) {
-    console.log(`⚠ Delete endpoint not available. Document ${documentId} needs to be deleted via SQL.`)
+    console.log(
+      `⚠ Delete endpoint not available. Document ${documentId} needs to be deleted via SQL.`
+    )
     console.log(`   Run: DELETE FROM documents WHERE id = '${documentId}';`)
     return
   }
@@ -78,7 +80,7 @@ async function main() {
           const dateB = b.created_at ? new Date(b.created_at).getTime() : 0
           return dateB - dateA
         })
-        
+
         // Keep the first (most recent), mark others for deletion
         for (let i = 1; i < docs.length; i++) {
           toDelete.add(docs[i].id)
@@ -91,26 +93,26 @@ async function main() {
     documents.forEach(doc => {
       const title = (doc.title || '').toLowerCase()
       const source = (doc.source || '').toLowerCase()
-      
+
       // Delete documents with "test" in title or source
       if (title.includes('test') || source.includes('test')) {
         toDelete.add(doc.id)
       }
-      
+
       // Delete documents with typos like "Explination"
       if (title.includes('explination')) {
         toDelete.add(doc.id)
       }
-      
+
       // Delete documents with generic names
       if (title === 'rag documentation' || title === 'rag explination') {
         toDelete.add(doc.id)
       }
     })
 
-    const toDeleteArray = Array.from(toDelete).map(id => 
-      documents.find(d => d.id === id)!
-    ).filter(Boolean)
+    const toDeleteArray = Array.from(toDelete)
+      .map(id => documents.find(d => d.id === id)!)
+      .filter(Boolean)
 
     if (toDeleteArray.length === 0) {
       console.log('✅ No documents found matching cleanup criteria.')
@@ -148,4 +150,3 @@ async function main() {
 }
 
 main()
-

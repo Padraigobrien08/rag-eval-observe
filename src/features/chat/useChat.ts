@@ -38,7 +38,12 @@ export function useChat() {
 
   const sendMessage = async (
     text: string,
-    options?: { topK?: number; debug?: boolean; filters?: Record<string, unknown>; rag_model?: string }
+    options?: {
+      topK?: number
+      debug?: boolean
+      filters?: Record<string, unknown>
+      rag_model?: string
+    }
   ) => {
     setError(null)
     const userMessage: ChatMessage = {

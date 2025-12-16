@@ -3,6 +3,7 @@
 ## Prerequisites
 
 1. Azure CLI installed and logged in:
+
    ```bash
    az login
    ```
@@ -44,6 +45,7 @@ az acr build -r $ACR -t rag-eval:1.0 -f backend/Dockerfile .
 ```
 
 Your image will be:
+
 ```bash
 IMAGE="$ACR.azurecr.io/rag-eval:1.0"
 echo $IMAGE
@@ -110,11 +112,13 @@ az containerapp create \
 ## Configuration Details
 
 ### Port Configuration
+
 - **Container Port**: `8000` (as specified in Dockerfile)
 - **Target Port**: `8000` (for Azure Container Apps)
 - **Host Binding**: `0.0.0.0` ✅ (already correct in Dockerfile)
 
 ### Dockerfile Verification
+
 ✅ **EXPOSE 8000** - Correct  
 ✅ **CMD binds to 0.0.0.0:8000** - Correct  
 ✅ **Build context from root** - Works with `-f backend/Dockerfile .`
@@ -166,16 +170,19 @@ az containerapp update \
 ## Troubleshooting
 
 ### Check logs
+
 ```bash
 az containerapp logs show -n $APP -g $RG --follow
 ```
 
 ### Check status
+
 ```bash
 az containerapp show -n $APP -g $RG --query properties.runningStatus
 ```
 
 ### Update image
+
 ```bash
 az acr build -r $ACR -t rag-eval:1.1 -f backend/Dockerfile .
 az containerapp update -n $APP -g $RG --image "$ACR.azurecr.io/rag-eval:1.1"
@@ -188,4 +195,3 @@ To remove all resources:
 ```bash
 az group delete -n $RG --yes
 ```
-

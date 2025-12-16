@@ -21,7 +21,7 @@ interface ChunkContent {
   document_id: string
   chunk_index: number
   content: string
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 }
 
 export default function CitationsDrawer({
@@ -77,9 +77,9 @@ export default function CitationsDrawer({
             ...prev,
             ...chunksMap,
           }))
-        } catch (err: any) {
+        } catch (err: unknown) {
           console.error(`Failed to fetch chunks for document ${documentId}:`, err)
-          setError(err.message || 'Failed to load chunk content')
+          setError(err instanceof Error ? err.message : 'Failed to load chunk content')
         } finally {
           // Remove from loading set
           setLoadingChunks(prev => {

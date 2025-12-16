@@ -13,7 +13,7 @@ const nextConfig = {
         pg: false,
         'pg-native': false,
       }
-      
+
       // Exclude server-only packages from client bundle
       config.externals = config.externals || []
       config.externals.push('pg', 'pg-native')
@@ -41,7 +41,7 @@ const nextConfig = {
           },
         },
       }
-      
+
       // Ensure webpack runtime is properly configured
       if (!config.output) {
         config.output = {}

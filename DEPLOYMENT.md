@@ -5,6 +5,7 @@ This guide covers deploying the RAG Eval Observability system to production.
 ## Overview
 
 The system consists of:
+
 - **Frontend**: Next.js app (deploy to Vercel)
 - **Backend**: FastAPI API (deploy via Docker)
 - **Database**: PostgreSQL with pgvector (managed service or Docker)
@@ -72,6 +73,7 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 ```
 
 This will:
+
 - Start PostgreSQL with pgvector
 - Run database migrations automatically (via `docker/init/`)
 - Start the FastAPI backend
@@ -131,6 +133,7 @@ Or use the migration script if available.
 ### In-Memory (Default)
 
 The default rate limiter works per-instance. Each application instance maintains its own rate limit state. This is fine for:
+
 - Single instance deployments
 - Low-traffic applications
 - Development/testing
@@ -161,7 +164,7 @@ services:
   redis:
     image: redis:7-alpine
     ports:
-      - "6379:6379"
+      - '6379:6379'
     restart: unless-stopped
 
   api:
@@ -180,6 +183,7 @@ The API provides health check endpoints:
 - `GET /` - Root endpoint
 
 Use these for:
+
 - Container health checks
 - Load balancer probes
 - Monitoring systems
@@ -189,12 +193,14 @@ Use these for:
 ### Metrics Endpoint
 
 `GET /api/v1/metrics` provides:
+
 - Request counts and status codes
 - Latency buckets
 - Token usage (OpenAI)
 - Uptime
 
 **Note**: Metrics are in-memory and reset on restart. For production, consider:
+
 - Prometheus exporter
 - Datadog/New Relic integration
 - Custom metrics aggregation
@@ -202,6 +208,7 @@ Use these for:
 ### Logging
 
 Structured logging is enabled via `structlog`. Logs include:
+
 - Request IDs
 - Timestamps
 - Error details
@@ -232,6 +239,7 @@ When running multiple API instances:
 ### Database Connection Pooling
 
 Connection pooling is configured in `backend/app/db/session.py`:
+
 - Min connections: 5
 - Max connections: 20
 - Adjust based on your load
@@ -289,7 +297,7 @@ Adjust based on your server resources.
 ## Support
 
 For issues or questions, check:
+
 - `README.md` - General documentation
 - `backend/README.md` - Backend-specific docs
 - GitHub Issues - Known issues and bug reports
-

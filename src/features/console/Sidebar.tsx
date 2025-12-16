@@ -116,7 +116,9 @@ export default function Sidebar() {
     } catch (error) {
       console.error('Failed to delete document:', error)
       // You could add a toast notification here
-      alert(`Failed to delete document: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      alert(
+        `Failed to delete document: ${error instanceof Error ? error.message : 'Unknown error'}`
+      )
     } finally {
       setIsDeleting(false)
     }
@@ -253,15 +255,9 @@ export default function Sidebar() {
                       style={{ paddingRight: '2.5rem' }}
                     >
                       <option value="vector-similarity">Vector Similarity Search</option>
-                      <option value="hybrid-search">
-                        Hybrid Search (Vector + BM25)
-                      </option>
-                      <option value="reranking">
-                        Reranking
-                      </option>
-                      <option value="multi-query">
-                        Multi-Query
-                      </option>
+                      <option value="hybrid-search">Hybrid Search (Vector + BM25)</option>
+                      <option value="reranking">Reranking</option>
+                      <option value="multi-query">Multi-Query</option>
                     </select>
                     <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 pointer-events-none" />
                   </div>
@@ -392,57 +388,53 @@ export default function Sidebar() {
         </div>
       </aside>
 
-          <IngestDialog
-            open={ingestOpen}
-            onOpenChange={setIngestOpen}
-            onSuccess={handleIngestSuccess}
-          />
+      <IngestDialog
+        open={ingestOpen}
+        onOpenChange={setIngestOpen}
+        onSuccess={handleIngestSuccess}
+      />
 
-          {/* Document Preview Dialog */}
-          <DocumentPreviewDialog
-            open={previewDialogOpen}
-            onOpenChange={setPreviewDialogOpen}
-            document={documentToPreview}
-          />
+      {/* Document Preview Dialog */}
+      <DocumentPreviewDialog
+        open={previewDialogOpen}
+        onOpenChange={setPreviewDialogOpen}
+        document={documentToPreview}
+      />
 
-          {/* Delete Confirmation Dialog */}
-          <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-            <DialogContent className="max-w-md">
-              <DialogHeader>
-                <DialogTitle>Delete Document</DialogTitle>
-                <DialogDescription>
-                  Are you sure you want to delete "{documentToDelete?.title || documentToDelete?.source}"?
-                  This action cannot be undone and will remove all associated chunks.
-                </DialogDescription>
-              </DialogHeader>
-              <DialogFooter>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setDeleteDialogOpen(false)
-                    setDocumentToDelete(null)
-                  }}
-                  disabled={isDeleting}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  variant="destructive"
-                  onClick={handleDeleteConfirm}
-                  disabled={isDeleting}
-                >
-                  {isDeleting ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Deleting...
-                    </>
-                  ) : (
-                    'Delete'
-                  )}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        </>
-      )
-    }
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Delete Document</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete "{documentToDelete?.title || documentToDelete?.source}
+              "? This action cannot be undone and will remove all associated chunks.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setDeleteDialogOpen(false)
+                setDocumentToDelete(null)
+              }}
+              disabled={isDeleting}
+            >
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteConfirm} disabled={isDeleting}>
+              {isDeleting ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                'Delete'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  )
+}

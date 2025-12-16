@@ -358,7 +358,16 @@ export default function MessageBubble({ message, previousMessage }: MessageBubbl
             <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-slate-500">
               {message.ragModel != null && (
                 <span className="whitespace-nowrap">
-                  RAG Model: {message.ragModel === 'vector-similarity' ? 'Vector Similarity' : message.ragModel === 'hybrid-search' ? 'Hybrid Search' : message.ragModel === 'reranking' ? 'Reranking' : message.ragModel === 'multi-query' ? 'Multi-Query' : message.ragModel}
+                  RAG Model:{' '}
+                  {message.ragModel === 'vector-similarity'
+                    ? 'Vector Similarity'
+                    : message.ragModel === 'hybrid-search'
+                      ? 'Hybrid Search'
+                      : message.ragModel === 'reranking'
+                        ? 'Reranking'
+                        : message.ragModel === 'multi-query'
+                          ? 'Multi-Query'
+                          : message.ragModel}
                 </span>
               )}
               {message.ragModel != null && message.latencyMs != null && (
@@ -369,17 +378,16 @@ export default function MessageBubble({ message, previousMessage }: MessageBubbl
                   Latency: {message.latencyMs.toLocaleString()}ms
                 </span>
               )}
-              {(message.ragModel != null || message.latencyMs != null) && message.costUsd != null && (
-                <span className="text-slate-300">·</span>
-              )}
+              {(message.ragModel != null || message.latencyMs != null) &&
+                message.costUsd != null && <span className="text-slate-300">·</span>}
               {message.costUsd != null && (
                 <span className="whitespace-nowrap">Cost: ${message.costUsd.toFixed(4)}</span>
               )}
               {message.citations && message.citations.length > 0 && (
                 <>
-                  {(message.ragModel != null || message.latencyMs != null || message.costUsd != null) && (
-                    <span className="text-slate-300">·</span>
-                  )}
+                  {(message.ragModel != null ||
+                    message.latencyMs != null ||
+                    message.costUsd != null) && <span className="text-slate-300">·</span>}
                   <CitationsDropdown citations={message.citations} />
                 </>
               )}

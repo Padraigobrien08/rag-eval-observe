@@ -73,4 +73,3 @@ export default function RetrievalStatus({ ragModel, isLoading }: RetrievalStatus
     </div>
   )
 }
-

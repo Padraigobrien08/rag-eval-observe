@@ -26,7 +26,7 @@ interface ChunkContent {
   document_id: string
   chunk_index: number
   content: string
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 }
 
 export default function CitationDetailDialog({
@@ -65,9 +65,9 @@ export default function CitationDetailDialog({
         } else {
           setError('Chunk not found')
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error(`Failed to fetch chunk content:`, err)
-        setError(err.message || 'Failed to load chunk content')
+        setError(err instanceof Error ? err.message : 'Failed to load chunk content')
       } finally {
         setIsLoading(false)
       }

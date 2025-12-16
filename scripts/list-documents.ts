@@ -37,12 +37,13 @@ async function main() {
     })
 
     // Identify problematic documents
-    const testDocs = documents.filter((d: any) => 
-      d.title?.toLowerCase().includes('test') || 
-      d.source?.toLowerCase().includes('test')
+    const testDocs = documents.filter(
+      (d: any) =>
+        d.title?.toLowerCase().includes('test') || d.source?.toLowerCase().includes('test')
     )
-    const duplicateTitles = documents.filter((d: any, idx: number) => 
-      documents.findIndex((doc: any) => doc.title === d.title) !== idx && d.title
+    const duplicateTitles = documents.filter(
+      (d: any, idx: number) =>
+        documents.findIndex((doc: any) => doc.title === d.title) !== idx && d.title
     )
 
     if (testDocs.length > 0) {
@@ -60,9 +61,9 @@ async function main() {
     }
 
     console.log('\nTo delete documents, you can use SQL directly on the database:')
-    console.log('DELETE FROM documents WHERE id = \'<document_id>\';')
+    console.log("DELETE FROM documents WHERE id = '<document_id>';")
     console.log('\nOr delete by title:')
-    console.log('DELETE FROM documents WHERE title = \'Test\';')
+    console.log("DELETE FROM documents WHERE title = 'Test';")
   } catch (error: any) {
     console.error('Error:', error.message)
     process.exit(1)
@@ -70,4 +71,3 @@ async function main() {
 }
 
 main()
-

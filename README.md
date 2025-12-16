@@ -401,11 +401,13 @@ See `backend/README.md` for complete API documentation.
 ### Quick Deploy
 
 **Frontend (Vercel):**
+
 1. Connect your repository to Vercel
 2. Set `NEXT_PUBLIC_API_BASE_URL` environment variable
 3. Deploy automatically
 
 **Backend (Docker):**
+
 ```bash
 # Production deployment
 docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
@@ -422,7 +424,7 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 
 1. **Environment Variables**: Set production values (see `DEPLOYMENT.md`)
 2. **Database**: Use managed PostgreSQL service or persistent volumes
-3. **Rate Limiting**: 
+3. **Rate Limiting**:
    - Single instance: In-memory rate limiter (default)
    - Multiple instances: Enable Redis (`REDIS_ENABLED=true`, `REDIS_URL=...`)
 4. **Metrics**: In-memory by default; integrate external service for aggregation
