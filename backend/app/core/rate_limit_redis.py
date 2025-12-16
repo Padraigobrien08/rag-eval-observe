@@ -13,11 +13,7 @@ import time
 from typing import Tuple, Optional
 import structlog
 
-try:
-    import redis.asyncio as redis
-    REDIS_AVAILABLE = True
-except ImportError:
-    REDIS_AVAILABLE = False
+import redis.asyncio as redis
 
 from app.core.config import settings
 
@@ -49,9 +45,9 @@ class RedisRateLimiter:
         self.max_requests = max_requests or settings.RATE_LIMIT_REQUESTS
         self.window_seconds = window_seconds or settings.RATE_LIMIT_WINDOW
         self.redis_url = redis_url
-        self._redis_client: Optional[redis.Redis] = None
+        self._redis_client: Optional['redis.Redis'] = None
 
-    async def _get_redis(self) -> redis.Redis:
+    async def _get_redis(self) -> 'redis.Redis':
         """Get or create Redis client."""
         if self._redis_client is None:
             self._redis_client = redis.from_url(
@@ -154,10 +150,6 @@ _redis_rate_limiter: Optional[RedisRateLimiter] = None
 def get_redis_rate_limiter() -> Optional[RedisRateLimiter]:
     """Get or create global Redis rate limiter if enabled."""
     global _redis_rate_limiter
-    
-    if not REDIS_AVAILABLE:
-        logger.warning("Redis not available (redis package not installed)")
-        return None
     
     redis_enabled = getattr(settings, 'REDIS_ENABLED', False)
     redis_url = getattr(settings, 'REDIS_URL', None)
