@@ -10,7 +10,13 @@ const nextConfig = {
         path: false,
         crypto: false,
         canvas: false,
+        pg: false,
+        'pg-native': false,
       }
+      
+      // Exclude server-only packages from client bundle
+      config.externals = config.externals || []
+      config.externals.push('pg', 'pg-native')
 
       // Prevent pdfjs-dist from being processed as ES module
       config.module.rules.push({
