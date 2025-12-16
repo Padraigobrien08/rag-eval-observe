@@ -56,9 +56,6 @@ importers:
       pdfjs-dist:
         specifier: ^5.4.449
         version: 5.4.449
-      pg:
-        specifier: ^8.11.3
-        version: 8.16.3
       react:
         specifier: ^18.3.0
         version: 18.3.1
@@ -123,6 +120,9 @@ importers:
       jest:
         specifier: ^29.7.0
         version: 29.7.0(@types/node@20.19.26)
+      pg:
+        specifier: ^8.11.3
+        version: 8.16.3
       postcss:
         specifier: ^8.5.6
         version: 8.5.6
