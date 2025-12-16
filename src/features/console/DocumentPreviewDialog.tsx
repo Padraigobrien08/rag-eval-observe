@@ -109,7 +109,7 @@ export default function DocumentPreviewDialog({
             </div>
           ) : (
             <div className="space-y-4 pb-4">
-              {chunks.map((chunk) => (
+              {chunks.map(chunk => (
                 <div
                   key={chunk.id}
                   className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm"

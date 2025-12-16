@@ -16,5 +16,5 @@ export interface ChatMessage {
   costUsd?: number
   ragModel?: string
   citations?: Citation[]
-  metadata?: any
+  metadata?: Record<string, unknown>
 }

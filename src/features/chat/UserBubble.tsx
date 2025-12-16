@@ -3,7 +3,8 @@
 import type { ChatMessage } from './types'
 
 export default function UserBubble({ message }: { message: ChatMessage }) {
-  const timestamp = new Date((message as any).createdAt ?? message.id).toLocaleTimeString()
+  const messageWithCreatedAt = message as ChatMessage & { createdAt?: string | number }
+  const timestamp = new Date(messageWithCreatedAt.createdAt ?? message.id).toLocaleTimeString()
 
   return (
     <div className="flex justify-end">

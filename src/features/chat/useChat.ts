@@ -70,17 +70,20 @@ export function useChat() {
       const resp = await ragQuery(requestBody)
 
       // Extract citations from API response
-      const citations: Citation[] = (resp.citations || []).map((cit: any) => ({
-        chunk_id: cit.chunk_id || cit.chunkId || '',
-        document_id: cit.document_id || cit.documentId || '',
-        title: cit.title || null,
-        source: cit.source || '',
-        chunk_index: cit.chunk_index || cit.chunkIndex || 0,
-      }))
+      const citations: Citation[] = ((resp.citations as unknown[]) || []).map((cit: unknown) => {
+        const citation = cit as Record<string, unknown>
+        return {
+          chunk_id: (citation.chunk_id || citation.chunkId || '') as string,
+          document_id: (citation.document_id || citation.documentId || '') as string,
+          title: (citation.title || null) as string | null,
+          source: (citation.source || '') as string,
+          chunk_index: (citation.chunk_index || citation.chunkIndex || 0) as number,
+        }
+      })
 
       // Store debug data (including content snippets) in metadata for hover previews
-      const metadata: any = {
-        ...(resp.metadata ?? resp.telemetry ?? {}),
+      const metadata: Record<string, unknown> = {
+        ...((resp.metadata ?? resp.telemetry ?? {}) as Record<string, unknown>),
       }
 
       // Include debug retrieved chunks if available (for hover previews)
@@ -119,13 +122,14 @@ export function useChat() {
         ragModel: assistantMessage.ragModel,
       })
       setMessages(prev => [...prev, assistantMessage])
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err)
       // Provide user-friendly error messages
-      if (err.status === 429) {
+      const error = err as Error & { status?: number }
+      if (error.status === 429) {
         setError('Rate limit exceeded. Please wait a moment and try again.')
-      } else if (err.message) {
-        setError(err.message)
+      } else if (error.message) {
+        setError(error.message)
       } else {
         setError('Failed to query backend. Please try again.')
       }

@@ -407,7 +407,8 @@ export default function Sidebar() {
           <DialogHeader>
             <DialogTitle>Delete Document</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete &quot;{documentToDelete?.title || documentToDelete?.source}
+              Are you sure you want to delete &quot;
+              {documentToDelete?.title || documentToDelete?.source}
               &quot;? This action cannot be undone and will remove all associated chunks.
             </DialogDescription>
           </DialogHeader>
