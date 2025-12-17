@@ -425,13 +425,6 @@ export default function ChatPanel({ sidebarOpen, setSidebarOpen }: ChatPanelProp
               ragModel={ragModel}
             />
           )}
-          {error && messages.length === 0 && (
-            <div className="mx-auto max-w-3xl px-4 pb-4">
-              <p className="text-sm text-red-600">
-                {typeof error === 'string' ? error : 'Something went wrong'}
-              </p>
-            </div>
-          )}
         </div>
 
         {/* Input bar - always visible at bottom */}
@@ -440,15 +433,19 @@ export default function ChatPanel({ sidebarOpen, setSidebarOpen }: ChatPanelProp
           style={{ flexShrink: 0 }}
         >
           <div
-            className="mx-auto max-w-3xl"
+            className="mx-auto w-full"
             style={{
-              paddingLeft: '4rem',
-              paddingRight: '4rem',
-              paddingTop: '1.5rem',
-              paddingBottom: '1.5rem',
+              maxWidth: '1100px',
+              paddingLeft: 'clamp(12px, 3vw, 32px)',
+              paddingRight: 'clamp(12px, 3vw, 32px)',
+              paddingTop: 'clamp(0.75rem, 2vw, 1rem)',
+              paddingBottom: 'clamp(0.75rem, 2vw, 1rem)',
             }}
           >
-            <form onSubmit={handleSubmit} className="flex items-end gap-2">
+            <form
+              onSubmit={handleSubmit}
+              className="flex items-end gap-2 rounded-2xl border border-slate-300 bg-white px-3 py-2 shadow-sm focus-within:ring-2 focus-within:ring-blue-500"
+            >
               <Textarea
                 ref={textareaRef}
                 value={input}
@@ -456,21 +453,27 @@ export default function ChatPanel({ sidebarOpen, setSidebarOpen }: ChatPanelProp
                 onKeyDown={handleKeyDown}
                 placeholder="Message RAG Eval..."
                 rows={1}
-                className="flex-1 resize-none rounded-2xl border border-slate-200 bg-slate-50 px-4 py-2 text-sm focus-visible:ring-2 focus-visible:ring-slate-400/60 focus-visible:border-transparent"
+                className="flex-1 bg-transparent resize-none border-none outline-none text-sm text-slate-900 placeholder:text-slate-400 max-h-40"
+                disabled={isLoading}
               />
               <Button
                 type="submit"
-                variant="default"
                 size="icon"
+                className="inline-flex items-center justify-center rounded-full bg-blue-600 text-white w-9 h-9 hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition"
                 disabled={isLoading || !input.trim()}
               >
                 {isLoading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <Loader2 className="h-5 w-5 animate-spin" />
                 ) : (
-                  <Send className="h-4 w-4" />
+                  <Send className="h-5 w-5" />
                 )}
               </Button>
             </form>
+            {error && messages.length === 0 && (
+              <p className="text-sm text-red-600 mt-2">
+                {typeof error === 'string' ? error : 'Something went wrong'}
+              </p>
+            )}
           </div>
         </div>
       </div>
