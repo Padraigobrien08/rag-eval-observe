@@ -151,7 +151,7 @@ export default function Sidebar({ collapsed = false, onToggleCollapse }: Sidebar
             <Button
               variant="ghost"
               size="icon"
-              onClick={(e) => {
+              onClick={e => {
                 e.preventDefault()
                 e.stopPropagation()
                 onToggleCollapse()

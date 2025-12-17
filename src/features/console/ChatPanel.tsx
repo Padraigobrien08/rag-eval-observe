@@ -19,7 +19,7 @@ interface ChatPanelProps {
   setSidebarOpen?: (open: boolean) => void
 }
 
-export default function ChatPanel({ sidebarOpen, setSidebarOpen }: ChatPanelProps = {}) {
+export default function ChatPanel(_props: ChatPanelProps = {}) {
   const router = useRouter()
   const { messages, isLoading, error, sendMessage, resetChat } = useChat()
   const { topK, debug, ragModel } = useRagSettings()
