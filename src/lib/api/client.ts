@@ -1,6 +1,7 @@
 'use client'
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000'
+// Use AZURE_API_BASE_URL (must be NEXT_PUBLIC_ for client-side access)
+const API_BASE_URL = process.env.NEXT_PUBLIC_AZURE_API_BASE_URL ?? process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000'
 
 // Helper to ensure we're in browser environment
 function ensureBrowser() {
