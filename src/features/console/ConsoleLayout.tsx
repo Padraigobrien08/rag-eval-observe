@@ -5,12 +5,12 @@ import ChatPanel from './ChatPanel'
 
 export default function ConsoleLayout() {
   return (
-    <div className="flex overflow-hidden bg-slate-50" style={{ height: '100vh', width: '100vw' }}>
+    <div className="flex h-screen w-full overflow-hidden bg-slate-50">
       {/* Left: sidebar */}
       <Sidebar />
 
       {/* Right: main panel - must fill remaining space */}
-      <div className="flex min-w-0" style={{ flex: '1 1 0%', minHeight: 0, height: '100%' }}>
+      <div className="flex min-w-0 flex-1" style={{ minHeight: 0 }}>
         <ChatPanel />
       </div>
     </div>

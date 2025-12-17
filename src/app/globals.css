@@ -2,6 +2,18 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Ensure proper viewport and prevent horizontal scroll */
+html,
+body {
+  width: 100%;
+  overflow-x: hidden;
+}
+
+#__next,
+[data-nextjs-scroll-focus-boundary] {
+  width: 100%;
+}
+
 /* Citation highlight animation */
 @keyframes citation-pulse {
   0%, 100% {
