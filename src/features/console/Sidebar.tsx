@@ -141,27 +141,25 @@ export default function Sidebar({ collapsed = false, onToggleCollapse }: Sidebar
   return (
     <>
       <aside
-        className={`flex h-full flex-col border-r border-slate-200 bg-white transition-all duration-200 ${
+        className={`relative flex h-full flex-col border-r border-slate-200 bg-white transition-all duration-200 ${
           collapsed ? 'w-16 min-w-[64px] max-w-[64px]' : 'w-full min-w-[240px] max-w-[280px]'
         }`}
       >
-        {/* Collapse/Expand Toggle Button */}
+        {/* Collapse/Expand Toggle Button - positioned on the right edge */}
         {onToggleCollapse && (
-          <div className="flex items-center justify-end border-b border-slate-200 p-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onToggleCollapse}
-              className="h-8 w-8"
-              aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-            >
-              {collapsed ? (
-                <ChevronRight className="h-4 w-4" />
-              ) : (
-                <ChevronLeft className="h-4 w-4" />
-              )}
-            </Button>
-          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onToggleCollapse}
+            className="absolute -right-3 top-4 z-10 h-6 w-6 rounded-full border border-slate-300 bg-white shadow-sm hover:bg-slate-50"
+            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          >
+            {collapsed ? (
+              <ChevronRight className="h-3.5 w-3.5" />
+            ) : (
+              <ChevronLeft className="h-3.5 w-3.5" />
+            )}
+          </Button>
         )}
         <ScrollArea className="flex-1 min-h-0 space-y-6">
           {/* Documents */}
