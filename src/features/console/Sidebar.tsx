@@ -126,7 +126,7 @@ export default function Sidebar() {
 
   return (
     <>
-      <aside className="flex h-screen w-full min-w-[240px] max-w-[280px] flex-col border-r border-slate-200 bg-white">
+      <aside className="flex h-full w-full min-w-[240px] max-w-[280px] flex-col border-r border-slate-200 bg-white">
         <ScrollArea className="flex-1 min-h-0 space-y-6">
           {/* Documents */}
           <div>

@@ -6,7 +6,7 @@ import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
-import { BarChart3, SunMedium, Zap, AlertTriangle, Send, Loader2 } from 'lucide-react'
+import { BarChart3, SunMedium, Zap, AlertTriangle, Send, Loader2, Menu } from 'lucide-react'
 import { useChat } from '@/features/chat/useChat'
 import ChatLayout from '@/features/chat/ChatLayout'
 import { useRagSettings } from '@/features/settings/useRagSettings'
@@ -14,7 +14,12 @@ import { checkHealth } from '@/lib/api/client'
 
 type ConnectionState = 'unknown' | 'ok' | 'error'
 
-export default function ChatPanel() {
+interface ChatPanelProps {
+  sidebarOpen?: boolean
+  setSidebarOpen?: (open: boolean) => void
+}
+
+export default function ChatPanel({ sidebarOpen, setSidebarOpen }: ChatPanelProps = {}) {
   const router = useRouter()
   const { messages, isLoading, error, sendMessage, resetChat } = useChat()
   const { topK, debug, ragModel } = useRagSettings()
@@ -105,16 +110,30 @@ export default function ChatPanel() {
         className="shrink-0 border-b border-slate-200 bg-white px-4 py-2 flex items-center justify-between"
         style={{ flexShrink: 0 }}
       >
-        {/* Left side - Logo */}
-        <Image
-          src="/RAGEvalLogo.png"
-          alt="RAG Eval Logo"
-          width={180}
-          height={100}
-          className="flex-shrink-0"
-          style={{ width: 'auto', height: 'auto' }}
-          priority
-        />
+        {/* Left side - Menu button (mobile) + Logo */}
+        <div className="flex items-center gap-3">
+          {/* Hamburger menu button - only visible on mobile */}
+          {setSidebarOpen && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="lg:hidden"
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              aria-label="Toggle sidebar"
+            >
+              <Menu className="h-5 w-5" />
+            </Button>
+          )}
+          <Image
+            src="/RAGEvalLogo.png"
+            alt="RAG Eval Logo"
+            width={180}
+            height={100}
+            className="flex-shrink-0"
+            style={{ width: 'auto', height: 'auto' }}
+            priority
+          />
+        </div>
 
         {/* Right side - Metrics, New chat, and Connected badge */}
         <div className="flex items-center gap-3">
