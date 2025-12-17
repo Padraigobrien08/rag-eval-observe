@@ -184,8 +184,18 @@ export default function ChatPanel({ sidebarOpen, setSidebarOpen }: ChatPanelProp
               }}
             >
               {/* Title + subtitle */}
-              <div className="mb-4 text-center">
-                <h2 className="mb-2 text-2xl font-semibold text-slate-900">
+              <div
+                className="text-center"
+                style={{ marginBottom: 'clamp(1rem, 3vw, 1.5rem)' }}
+              >
+                <h2
+                  className="font-semibold text-slate-900"
+                  style={{
+                    fontSize: 'clamp(20px, 2.2vw, 32px)',
+                    lineHeight: '1.2',
+                    marginBottom: 'clamp(0.5rem, 1.5vw, 0.75rem)',
+                  }}
+                >
                   What can I help with?
                 </h2>
                 <p className="text-sm text-slate-600">
@@ -194,18 +204,35 @@ export default function ChatPanel({ sidebarOpen, setSidebarOpen }: ChatPanelProp
               </div>
 
               {/* Centered pill buttons */}
-              <div className="flex flex-col items-center gap-8">
+              <div
+                className="flex flex-col items-center"
+                style={{ gap: 'clamp(1.5rem, 3vw, 2.5rem)' }}
+              >
                 {/* Info text */}
-                <p className="mb-4 text-center text-sm text-slate-600">
+                <p
+                  className="text-center text-sm text-slate-600"
+                  style={{ marginBottom: 'clamp(1rem, 2vw, 1.5rem)' }}
+                >
                   We have added some documents about RAG, so you can see functionality by just
                   clicking one of the example queries
                 </p>
 
                 {/* Example Queries Section */}
-                <div className="flex flex-col items-center gap-6">
+                <div
+                  className="flex flex-col items-center"
+                  style={{ gap: 'clamp(1rem, 2.5vw, 1.5rem)' }}
+                >
                   <div className="flex items-center gap-2 text-slate-900">
                     <SunMedium className="h-5 w-5" />
-                    <span className="text-lg font-semibold">Example Queries</span>
+                    <span
+                      className="font-semibold"
+                      style={{
+                        fontSize: 'clamp(16px, 1.8vw, 20px)',
+                        lineHeight: '1.3',
+                      }}
+                    >
+                      Example Queries
+                    </span>
                   </div>
                   <div
                     className="flex flex-wrap justify-center gap-3"
@@ -279,10 +306,21 @@ export default function ChatPanel({ sidebarOpen, setSidebarOpen }: ChatPanelProp
                 </div>
 
                 {/* Capabilities Section */}
-                <div className="flex flex-col items-center gap-6">
+                <div
+                  className="flex flex-col items-center"
+                  style={{ gap: 'clamp(1rem, 2.5vw, 1.5rem)' }}
+                >
                   <div className="flex items-center gap-2 text-slate-900">
                     <Zap className="h-5 w-5" />
-                    <span className="text-lg font-semibold">Capabilities</span>
+                    <span
+                      className="font-semibold"
+                      style={{
+                        fontSize: 'clamp(16px, 1.8vw, 20px)',
+                        lineHeight: '1.3',
+                      }}
+                    >
+                      Capabilities
+                    </span>
                   </div>
                   <div
                     className="flex flex-wrap justify-center gap-3"
@@ -324,10 +362,21 @@ export default function ChatPanel({ sidebarOpen, setSidebarOpen }: ChatPanelProp
                 </div>
 
                 {/* Limitations Section */}
-                <div className="flex flex-col items-center gap-6">
+                <div
+                  className="flex flex-col items-center"
+                  style={{ gap: 'clamp(1rem, 2.5vw, 1.5rem)' }}
+                >
                   <div className="flex items-center gap-2 text-slate-900">
                     <AlertTriangle className="h-5 w-5" />
-                    <span className="text-lg font-semibold">Limitations</span>
+                    <span
+                      className="font-semibold"
+                      style={{
+                        fontSize: 'clamp(16px, 1.8vw, 20px)',
+                        lineHeight: '1.3',
+                      }}
+                    >
+                      Limitations
+                    </span>
                   </div>
                   <div
                     className="flex flex-wrap justify-center gap-3"

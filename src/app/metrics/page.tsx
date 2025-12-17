@@ -142,7 +142,15 @@ export default function MetricsPage() {
               Back
             </Button>
             <div>
-              <h1 className="text-3xl font-bold text-slate-900">System Metrics</h1>
+              <h1
+                className="font-bold text-slate-900"
+                style={{
+                  fontSize: 'clamp(24px, 2.8vw, 40px)',
+                  lineHeight: '1.1',
+                }}
+              >
+                System Metrics
+              </h1>
               <p className="text-sm text-slate-500 mt-1">
                 Last updated: {lastUpdated.toLocaleTimeString()}
               </p>
@@ -162,7 +170,15 @@ export default function MetricsPage() {
               <Clock className="h-4 w-4 text-slate-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{formatUptime(metrics.uptime_seconds)}</div>
+              <div
+                className="font-bold"
+                style={{
+                  fontSize: 'clamp(20px, 2.2vw, 32px)',
+                  lineHeight: '1.2',
+                }}
+              >
+                {formatUptime(metrics.uptime_seconds)}
+              </div>
               <p className="text-xs text-slate-500 mt-1">System uptime</p>
             </CardContent>
           </Card>
@@ -173,7 +189,15 @@ export default function MetricsPage() {
               <Activity className="h-4 w-4 text-slate-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{totalRequests.toLocaleString()}</div>
+              <div
+                className="font-bold"
+                style={{
+                  fontSize: 'clamp(20px, 2.2vw, 32px)',
+                  lineHeight: '1.2',
+                }}
+              >
+                {totalRequests.toLocaleString()}
+              </div>
               <p className="text-xs text-slate-500 mt-1">Across all routes</p>
             </CardContent>
           </Card>
@@ -184,7 +208,15 @@ export default function MetricsPage() {
               <DollarSign className="h-4 w-4 text-slate-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">${totalCost.toFixed(4)}</div>
+              <div
+                className="font-bold"
+                style={{
+                  fontSize: 'clamp(20px, 2.2vw, 32px)',
+                  lineHeight: '1.2',
+                }}
+              >
+                ${totalCost.toFixed(4)}
+              </div>
               <p className="text-xs text-slate-500 mt-1">Estimated API costs</p>
             </CardContent>
           </Card>
