@@ -207,77 +207,74 @@ export default function ChatPanel({ sidebarOpen, setSidebarOpen }: ChatPanelProp
                     <SunMedium className="h-5 w-5" />
                     <span className="text-lg font-semibold">Example Queries</span>
                   </div>
-                  <div className="flex flex-col items-center gap-3">
-                    {/* First row */}
-                    <div className="flex flex-wrap justify-center gap-2">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="rounded-full px-4 py-2 h-auto text-sm font-normal hover:bg-slate-50"
-                        onClick={() =>
-                          handleExampleClick('Explain vector similarity search in simple terms')
-                        }
-                        disabled={isLoading}
-                      >
-                        Explain vector similarity search in simple terms
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="rounded-full px-4 py-2 h-auto text-sm font-normal hover:bg-slate-50"
-                        onClick={() =>
-                          handleExampleClick('Summarize the main topics in my knowledge base')
-                        }
-                        disabled={isLoading}
-                      >
-                        Summarize the main topics in my knowledge base
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="rounded-full px-4 py-2 h-auto text-sm font-normal hover:bg-slate-50"
-                        onClick={() => handleExampleClick('What documents have been ingested?')}
-                        disabled={isLoading}
-                      >
-                        What documents have been ingested?
-                      </Button>
-                    </div>
-                    {/* Second row */}
-                    <div className="mt-2 flex flex-wrap justify-center gap-2">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="rounded-full px-4 py-2 h-auto text-sm font-normal hover:bg-slate-50"
-                        onClick={() =>
-                          handleExampleClick('How does RAG improve language model responses?')
-                        }
-                        disabled={isLoading}
-                      >
-                        How does RAG improve language model responses?
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="rounded-full px-4 py-2 h-auto text-sm font-normal hover:bg-slate-50"
-                        onClick={() =>
-                          handleExampleClick('What are the key components of a RAG system?')
-                        }
-                        disabled={isLoading}
-                      >
-                        What are the key components of a RAG system?
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="rounded-full px-4 py-2 h-auto text-sm font-normal hover:bg-slate-50"
-                        onClick={() =>
-                          handleExampleClick('Compare keyword search vs semantic search')
-                        }
-                        disabled={isLoading}
-                      >
-                        Compare keyword search vs semantic search
-                      </Button>
-                    </div>
+                  <div
+                    className="flex flex-wrap justify-center gap-3"
+                    style={{ maxWidth: '900px', margin: '0 auto' }}
+                  >
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="rounded-full px-4 py-2 h-auto text-sm font-normal hover:bg-slate-50 whitespace-normal max-w-full"
+                      onClick={() =>
+                        handleExampleClick('Explain vector similarity search in simple terms')
+                      }
+                      disabled={isLoading}
+                    >
+                      Explain vector similarity search in simple terms
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="rounded-full px-4 py-2 h-auto text-sm font-normal hover:bg-slate-50 whitespace-normal max-w-full"
+                      onClick={() =>
+                        handleExampleClick('Summarize the main topics in my knowledge base')
+                      }
+                      disabled={isLoading}
+                    >
+                      Summarize the main topics in my knowledge base
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="rounded-full px-4 py-2 h-auto text-sm font-normal hover:bg-slate-50 whitespace-normal max-w-full"
+                      onClick={() => handleExampleClick('What documents have been ingested?')}
+                      disabled={isLoading}
+                    >
+                      What documents have been ingested?
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="rounded-full px-4 py-2 h-auto text-sm font-normal hover:bg-slate-50 whitespace-normal max-w-full"
+                      onClick={() =>
+                        handleExampleClick('How does RAG improve language model responses?')
+                      }
+                      disabled={isLoading}
+                    >
+                      How does RAG improve language model responses?
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="rounded-full px-4 py-2 h-auto text-sm font-normal hover:bg-slate-50 whitespace-normal max-w-full"
+                      onClick={() =>
+                        handleExampleClick('What are the key components of a RAG system?')
+                      }
+                      disabled={isLoading}
+                    >
+                      What are the key components of a RAG system?
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="rounded-full px-4 py-2 h-auto text-sm font-normal hover:bg-slate-50 whitespace-normal max-w-full"
+                      onClick={() =>
+                        handleExampleClick('Compare keyword search vs semantic search')
+                      }
+                      disabled={isLoading}
+                    >
+                      Compare keyword search vs semantic search
+                    </Button>
                   </div>
                 </div>
 
@@ -287,11 +284,14 @@ export default function ChatPanel({ sidebarOpen, setSidebarOpen }: ChatPanelProp
                     <Zap className="h-5 w-5" />
                     <span className="text-lg font-semibold">Capabilities</span>
                   </div>
-                  <div className="flex flex-wrap justify-center gap-2">
+                  <div
+                    className="flex flex-wrap justify-center gap-3"
+                    style={{ maxWidth: '900px', margin: '0 auto' }}
+                  >
                     <Button
                       type="button"
                       variant="outline"
-                      className="rounded-full px-4 py-2 h-auto text-sm font-normal hover:bg-slate-50"
+                      className="rounded-full px-4 py-2 h-auto text-sm font-normal hover:bg-slate-50 whitespace-normal max-w-full"
                       disabled
                     >
                       Query your ingested documents using natural language
@@ -299,7 +299,7 @@ export default function ChatPanel({ sidebarOpen, setSidebarOpen }: ChatPanelProp
                     <Button
                       type="button"
                       variant="outline"
-                      className="rounded-full px-4 py-2 h-auto text-sm font-normal hover:bg-slate-50"
+                      className="rounded-full px-4 py-2 h-auto text-sm font-normal hover:bg-slate-50 whitespace-normal max-w-full"
                       disabled
                     >
                       Retrieve relevant context using semantic search
@@ -307,7 +307,7 @@ export default function ChatPanel({ sidebarOpen, setSidebarOpen }: ChatPanelProp
                     <Button
                       type="button"
                       variant="outline"
-                      className="rounded-full px-4 py-2 h-auto text-sm font-normal hover:bg-slate-50"
+                      className="rounded-full px-4 py-2 h-auto text-sm font-normal hover:bg-slate-50 whitespace-normal max-w-full"
                       disabled
                     >
                       Generate answers augmented with retrieved knowledge
@@ -315,7 +315,7 @@ export default function ChatPanel({ sidebarOpen, setSidebarOpen }: ChatPanelProp
                     <Button
                       type="button"
                       variant="outline"
-                      className="rounded-full px-4 py-2 h-auto text-sm font-normal hover:bg-slate-50"
+                      className="rounded-full px-4 py-2 h-auto text-sm font-normal hover:bg-slate-50 whitespace-normal max-w-full"
                       disabled
                     >
                       View citations and metadata for transparency
@@ -329,11 +329,14 @@ export default function ChatPanel({ sidebarOpen, setSidebarOpen }: ChatPanelProp
                     <AlertTriangle className="h-5 w-5" />
                     <span className="text-lg font-semibold">Limitations</span>
                   </div>
-                  <div className="flex flex-wrap justify-center gap-2">
+                  <div
+                    className="flex flex-wrap justify-center gap-3"
+                    style={{ maxWidth: '900px', margin: '0 auto' }}
+                  >
                     <Button
                       type="button"
                       variant="outline"
-                      className="rounded-full px-4 py-2 h-auto text-sm font-normal hover:bg-slate-50"
+                      className="rounded-full px-4 py-2 h-auto text-sm font-normal hover:bg-slate-50 whitespace-normal max-w-full"
                       disabled
                     >
                       May occasionally generate incorrect information
@@ -341,7 +344,7 @@ export default function ChatPanel({ sidebarOpen, setSidebarOpen }: ChatPanelProp
                     <Button
                       type="button"
                       variant="outline"
-                      className="rounded-full px-4 py-2 h-auto text-sm font-normal hover:bg-slate-50"
+                      className="rounded-full px-4 py-2 h-auto text-sm font-normal hover:bg-slate-50 whitespace-normal max-w-full"
                       disabled
                     >
                       Quality depends on ingested document accuracy
@@ -349,7 +352,7 @@ export default function ChatPanel({ sidebarOpen, setSidebarOpen }: ChatPanelProp
                     <Button
                       type="button"
                       variant="outline"
-                      className="rounded-full px-4 py-2 h-auto text-sm font-normal hover:bg-slate-50"
+                      className="rounded-full px-4 py-2 h-auto text-sm font-normal hover:bg-slate-50 whitespace-normal max-w-full"
                       disabled
                     >
                       Retrieval accuracy depends on embedding quality
@@ -357,7 +360,7 @@ export default function ChatPanel({ sidebarOpen, setSidebarOpen }: ChatPanelProp
                     <Button
                       type="button"
                       variant="outline"
-                      className="rounded-full px-4 py-2 h-auto text-sm font-normal hover:bg-slate-50"
+                      className="rounded-full px-4 py-2 h-auto text-sm font-normal hover:bg-slate-50 whitespace-normal max-w-full"
                       disabled
                     >
                       Costs may vary based on query complexity
