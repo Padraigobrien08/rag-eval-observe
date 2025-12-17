@@ -13,6 +13,7 @@ from app.db.queries import (
     list_documents,
     count_documents,
     delete_document,
+    log_query,
 )
 from app.schemas import (
     HealthResponse,
@@ -691,6 +692,37 @@ async def query_endpoint(
             citations_count=len(answer_response.citations),
             latency_ms=answer_response.latency_ms,
         )
+
+        # Log query to database (non-blocking - errors are logged but don't affect response)
+        try:
+            # Get client IP and user agent
+            client_ip = request.client.host if request.client else None
+            user_agent = request.headers.get("user-agent")
+            
+            # Log query asynchronously (fire and forget)
+            # We don't await this to avoid blocking the response
+            import asyncio
+            asyncio.create_task(
+                log_query(
+                    query_text=query_request.query,
+                    rag_model=rag_model,
+                    top_k=query_request.top_k,
+                    request_id=request_id,
+                    client_ip=client_ip,
+                    user_agent=user_agent,
+                    latency_ms=answer_response.latency_ms,
+                    token_usage=answer_response.token_usage,
+                    citations_count=len(answer_response.citations),
+                    answer_length=len(answer_response.answer) if answer_response.answer else None,
+                )
+            )
+        except Exception as e:
+            # Log error but don't fail the query response
+            logger.warning(
+                "Failed to schedule query logging",
+                request_id=request_id,
+                error=str(e),
+            )
 
         return QueryResponse(**response_data)
 

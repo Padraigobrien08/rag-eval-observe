@@ -433,6 +433,17 @@ We welcome contributions! Please see [CONTRIBUTING.md](./CONTRIBUTING.md) for gu
 6. Push to the branch (`git push origin feature/amazing-feature`)
 7. Open a Pull Request
 
+## Security
+
+**Important**: This project does not include authentication or authorization by default. The API endpoints are publicly accessible. For production deployments:
+
+- Deploy behind a reverse proxy with authentication (e.g., nginx with basic auth, API gateway)
+- Or implement authentication middleware (see [SECURITY.md](./SECURITY.md) for examples)
+- Configure CORS to restrict origins
+- Use HTTPS in production
+
+See [SECURITY.md](./SECURITY.md) for comprehensive security considerations and recommendations.
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](./LICENSE) file for details.

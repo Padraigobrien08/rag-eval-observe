@@ -186,3 +186,194 @@ async def delete_document(document_id: str) -> bool:
         )
         # Check if any rows were deleted
         return result == "DELETE 1"
+
+
+async def log_query(
+    query_text: str,
+    rag_model: str,
+    top_k: Optional[int] = None,
+    request_id: Optional[str] = None,
+    client_ip: Optional[str] = None,
+    user_agent: Optional[str] = None,
+    latency_ms: Optional[int] = None,
+    token_usage: Optional[dict] = None,
+    citations_count: int = 0,
+    answer_length: Optional[int] = None,
+) -> None:
+    """
+    Log a query to the database for monitoring and analytics.
+    
+    This is designed to be non-blocking - errors are logged but don't affect the query response.
+    """
+    import uuid
+    from decimal import Decimal
+    
+    try:
+        # Calculate cost from token usage
+        cost_usd = None
+        if token_usage:
+            # Pricing for gpt-4-turbo-preview:
+            # - Input: $0.01 per 1K tokens
+            # - Output: $0.03 per 1K tokens
+            # - Embeddings: $0.00002 per 1K tokens (text-embedding-3-small)
+            input_tokens = token_usage.get("prompt_tokens", 0) or 0
+            output_tokens = token_usage.get("completion_tokens", 0) or 0
+            embedding_tokens = token_usage.get("embedding_total_tokens", 0) or 0
+            
+            input_cost = (input_tokens / 1000) * 0.01
+            output_cost = (output_tokens / 1000) * 0.03
+            embedding_cost = (embedding_tokens / 1000) * 0.00002
+            
+            cost_usd = Decimal(str(input_cost + output_cost + embedding_cost)).quantize(
+                Decimal("0.000001")
+            )
+        
+        pool = await get_db_pool()
+        async with pool.acquire() as conn:
+            await conn.execute(
+                """
+                INSERT INTO queries (
+                    id, query_text, rag_model, top_k, request_id, client_ip, user_agent,
+                    latency_ms, token_usage, cost_usd, citations_count, answer_length
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+                """,
+                str(uuid.uuid4()),
+                query_text,
+                rag_model,
+                top_k,
+                request_id,
+                client_ip,
+                user_agent,
+                latency_ms,
+                json.dumps(token_usage) if token_usage else None,
+                float(cost_usd) if cost_usd else None,
+                citations_count,
+                answer_length,
+            )
+    except Exception as e:
+        # Log error but don't fail the query
+        logger.warning(
+            "Failed to log query to database",
+            error=str(e),
+            query_preview=query_text[:100] if query_text else None,
+            exc_info=True,
+        )
+
+
+async def get_query_logs(
+    limit: int = 100,
+    offset: int = 0,
+    rag_model: Optional[str] = None,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+) -> List[dict]:
+    """
+    Get query logs with optional filtering.
+    
+    Args:
+        limit: Maximum number of logs to return
+        offset: Number of logs to skip
+        rag_model: Filter by RAG model
+        start_date: Filter by start date (ISO format)
+        end_date: Filter by end date (ISO format)
+    
+    Returns:
+        List of query log dictionaries
+    """
+    pool = await get_db_pool()
+    async with pool.acquire() as conn:
+        query = """
+            SELECT 
+                id, query_text, rag_model, top_k, request_id, client_ip, user_agent,
+                latency_ms, token_usage, cost_usd, citations_count, answer_length, created_at
+            FROM queries
+            WHERE 1=1
+        """
+        params = []
+        param_count = 0
+        
+        if rag_model:
+            param_count += 1
+            query += f" AND rag_model = ${param_count}"
+            params.append(rag_model)
+        
+        if start_date:
+            param_count += 1
+            query += f" AND created_at >= ${param_count}::timestamp"
+            params.append(start_date)
+        
+        if end_date:
+            param_count += 1
+            query += f" AND created_at <= ${param_count}::timestamp"
+            params.append(end_date)
+        
+        query += " ORDER BY created_at DESC LIMIT $" + str(param_count + 1) + " OFFSET $" + str(param_count + 2)
+        params.extend([limit, offset])
+        
+        rows = await conn.fetch(query, *params)
+        return [
+            {
+                "id": row["id"],
+                "query_text": row["query_text"],
+                "rag_model": row["rag_model"],
+                "top_k": row["top_k"],
+                "request_id": row["request_id"],
+                "client_ip": row["client_ip"],
+                "user_agent": row["user_agent"],
+                "latency_ms": row["latency_ms"],
+                "token_usage": json.loads(row["token_usage"]) if row["token_usage"] else None,
+                "cost_usd": float(row["cost_usd"]) if row["cost_usd"] else None,
+                "citations_count": row["citations_count"],
+                "answer_length": row["answer_length"],
+                "created_at": row["created_at"].isoformat() if row["created_at"] else None,
+            }
+            for row in rows
+        ]
+
+
+async def get_query_stats(
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+) -> dict:
+    """
+    Get aggregated query statistics.
+    
+    Returns:
+        Dictionary with stats including total queries, total cost, average latency, etc.
+    """
+    pool = await get_db_pool()
+    async with pool.acquire() as conn:
+        query = """
+            SELECT 
+                COUNT(*) as total_queries,
+                SUM(cost_usd) as total_cost,
+                AVG(latency_ms) as avg_latency_ms,
+                AVG(citations_count) as avg_citations,
+                COUNT(DISTINCT client_ip) as unique_ips,
+                COUNT(DISTINCT rag_model) as rag_models_used
+            FROM queries
+            WHERE 1=1
+        """
+        params = []
+        param_count = 0
+        
+        if start_date:
+            param_count += 1
+            query += f" AND created_at >= ${param_count}::timestamp"
+            params.append(start_date)
+        
+        if end_date:
+            param_count += 1
+            query += f" AND created_at <= ${param_count}::timestamp"
+            params.append(end_date)
+        
+        row = await conn.fetchrow(query, *params)
+        
+        return {
+            "total_queries": row["total_queries"] or 0,
+            "total_cost_usd": float(row["total_cost"]) if row["total_cost"] else 0.0,
+            "avg_latency_ms": float(row["avg_latency_ms"]) if row["avg_latency_ms"] else None,
+            "avg_citations": float(row["avg_citations"]) if row["avg_citations"] else 0.0,
+            "unique_ips": row["unique_ips"] or 0,
+            "rag_models_used": row["rag_models_used"] or 0,
+        }
