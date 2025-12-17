@@ -6,7 +6,7 @@ import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
-import { BarChart3, SunMedium, Zap, AlertTriangle, Send, Loader2, Menu } from 'lucide-react'
+import { BarChart3, SunMedium, Zap, AlertTriangle, Send, Loader2 } from 'lucide-react'
 import { useChat } from '@/features/chat/useChat'
 import ChatLayout from '@/features/chat/ChatLayout'
 import { useRagSettings } from '@/features/settings/useRagSettings'
@@ -110,20 +110,8 @@ export default function ChatPanel({ sidebarOpen, setSidebarOpen }: ChatPanelProp
         className="shrink-0 border-b border-slate-200 bg-white px-4 py-2 flex items-center justify-between"
         style={{ flexShrink: 0 }}
       >
-        {/* Left side - Menu button (mobile) + Logo */}
+        {/* Left side - Logo */}
         <div className="flex items-center gap-3">
-          {/* Hamburger menu button - only visible on mobile */}
-          {setSidebarOpen && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="lg:hidden"
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              aria-label="Toggle sidebar"
-            >
-              <Menu className="h-5 w-5" />
-            </Button>
-          )}
           <Image
             src="/RAGEvalLogo.png"
             alt="RAG Eval Logo"
@@ -179,8 +167,8 @@ export default function ChatPanel({ sidebarOpen, setSidebarOpen }: ChatPanelProp
                 maxWidth: '1100px',
                 paddingLeft: 'clamp(12px, 3vw, 32px)',
                 paddingRight: 'clamp(12px, 3vw, 32px)',
-                paddingTop: 'clamp(2rem, 8vw, 4rem)',
-                paddingBottom: 'clamp(1rem, 4vw, 2rem)',
+                paddingTop: 'clamp(1rem, 3vw, 2rem)',
+                paddingBottom: 'clamp(0.5rem, 2vw, 1rem)',
               }}
             >
               {/* Title + subtitle */}
@@ -203,12 +191,12 @@ export default function ChatPanel({ sidebarOpen, setSidebarOpen }: ChatPanelProp
               {/* Centered pill buttons */}
               <div
                 className="flex flex-col items-center"
-                style={{ gap: 'clamp(1.5rem, 3vw, 2.5rem)' }}
+                style={{ gap: 'clamp(1rem, 2vw, 1.5rem)' }}
               >
                 {/* Info text */}
                 <p
                   className="text-center text-sm text-slate-600"
-                  style={{ marginBottom: 'clamp(1rem, 2vw, 1.5rem)' }}
+                  style={{ marginBottom: 'clamp(0.75rem, 1.5vw, 1rem)' }}
                 >
                   We have added some documents about RAG, so you can see functionality by just
                   clicking one of the example queries
@@ -217,7 +205,7 @@ export default function ChatPanel({ sidebarOpen, setSidebarOpen }: ChatPanelProp
                 {/* Example Queries Section */}
                 <div
                   className="flex flex-col items-center"
-                  style={{ gap: 'clamp(1rem, 2.5vw, 1.5rem)' }}
+                  style={{ gap: 'clamp(0.75rem, 1.5vw, 1rem)' }}
                 >
                   <div className="flex items-center gap-2 text-slate-900">
                     <SunMedium className="h-5 w-5" />
@@ -305,7 +293,7 @@ export default function ChatPanel({ sidebarOpen, setSidebarOpen }: ChatPanelProp
                 {/* Capabilities Section */}
                 <div
                   className="flex flex-col items-center"
-                  style={{ gap: 'clamp(1rem, 2.5vw, 1.5rem)' }}
+                  style={{ gap: 'clamp(0.75rem, 1.5vw, 1rem)' }}
                 >
                   <div className="flex items-center gap-2 text-slate-900">
                     <Zap className="h-5 w-5" />
@@ -361,7 +349,7 @@ export default function ChatPanel({ sidebarOpen, setSidebarOpen }: ChatPanelProp
                 {/* Limitations Section */}
                 <div
                   className="flex flex-col items-center"
-                  style={{ gap: 'clamp(1rem, 2.5vw, 1.5rem)' }}
+                  style={{ gap: 'clamp(0.75rem, 1.5vw, 1rem)' }}
                 >
                   <div className="flex items-center gap-2 text-slate-900">
                     <AlertTriangle className="h-5 w-5" />

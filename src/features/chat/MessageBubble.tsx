@@ -106,12 +106,13 @@ export default function MessageBubble({ message, previousMessage }: MessageBubbl
   const isUser = message.role === 'user'
   const isSystem = message.role === 'system'
   const [defaultExpanded] = useLocalStorage<boolean>('rag-eval-default-expanded-answers', false)
-  const [isExpanded, setIsExpanded] = useState(defaultExpanded)
+  // Always start with false to avoid hydration mismatch, then update in useEffect
+  const [isExpanded, setIsExpanded] = useState(false)
   const [selectedCitation, setSelectedCitation] = useState<Citation | null>(null)
   const [selectedCitationNumber, setSelectedCitationNumber] = useState<number>(1)
   const [citationDialogOpen, setCitationDialogOpen] = useState(false)
 
-  // Reset expansion state when message changes
+  // Reset expansion state when message changes or after hydration
   useEffect(() => {
     setIsExpanded(defaultExpanded)
   }, [message.id, defaultExpanded])
@@ -161,31 +162,30 @@ export default function MessageBubble({ message, previousMessage }: MessageBubbl
 
   return (
     <div
-      className={`flex w-full ${isUser ? 'justify-start' : 'justify-start'}`}
-      style={{ width: '100%', paddingLeft: '2rem', paddingRight: '4rem' }}
+      className={`flex w-full ${isUser ? 'justify-end' : 'justify-start'}`}
+      style={{ width: '100%', paddingLeft: '2rem', paddingRight: '2rem' }}
     >
-      <div className={`flex max-w-[80%] flex-col w-full`}>
-        {isUser ? (
-          // Question Header - First-class styling with accent bar
-          <div
-            className="rounded-lg shadow-sm bg-slate-50 border-l-4 border-blue-600"
-            style={{
-              fontSize: '1.125rem',
-              fontWeight: 600,
-              paddingTop: '1rem',
-              paddingBottom: '1rem',
-              paddingLeft: '1.25rem',
-              paddingRight: '1.25rem',
-              width: '100%',
-              marginBottom: '0.75rem',
-            }}
-          >
-            <span className="text-slate-900 whitespace-pre-wrap break-words">
-              {message.content}
-            </span>
-          </div>
-        ) : (
-          // Answer Content with divider separation
+      {isUser ? (
+        // User message - white pill-shaped bubble
+        <div
+          className="rounded-full shadow-sm bg-white border border-slate-200 inline-block"
+          style={{
+            fontSize: '0.875rem',
+            fontWeight: 600,
+            paddingTop: '0.75rem',
+            paddingBottom: '0.75rem',
+            paddingLeft: '1rem',
+            paddingRight: '1rem',
+            maxWidth: '80%',
+          }}
+        >
+          <span className="text-slate-900 whitespace-pre-wrap break-words font-semibold">
+            {message.content}
+          </span>
+        </div>
+      ) : (
+        <div className="flex max-w-[80%] flex-col w-full">
+          {/* Answer Content with divider separation */}
           <div className="w-full">
             {/* Divider between question and answer - only show if previous message was a question */}
             {previousMessage?.role === 'user' && (
@@ -347,11 +347,9 @@ export default function MessageBubble({ message, previousMessage }: MessageBubbl
               </div>
             </div>
           </div>
-        )}
 
-        {/* Metadata row for assistant messages only */}
-        {!isUser &&
-          (message.latencyMs != null ||
+          {/* Metadata row for assistant messages only */}
+          {(message.latencyMs != null ||
             message.costUsd != null ||
             message.ragModel != null ||
             (message.citations && message.citations.length > 0)) && (
@@ -393,7 +391,8 @@ export default function MessageBubble({ message, previousMessage }: MessageBubbl
               )}
             </div>
           )}
-      </div>
+        </div>
+      )}
 
       {/* Citation Detail Dialog - opened from inline citations */}
       {!isUser && (

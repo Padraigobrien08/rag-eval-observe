@@ -44,7 +44,7 @@ interface SidebarProps {
   onToggleCollapse?: () => void
 }
 
-export default function Sidebar({ collapsed = false, onToggleCollapse }: SidebarProps = {}) {
+export default function Sidebar({ collapsed = false, onToggleCollapse }: SidebarProps) {
   const [ingestOpen, setIngestOpen] = useState(false)
   const [documents, setDocuments] = useState<Document[]>([])
   const [isLoadingDocs, setIsLoadingDocs] = useState(true)
@@ -141,27 +141,34 @@ export default function Sidebar({ collapsed = false, onToggleCollapse }: Sidebar
   return (
     <>
       <aside
-        className={`relative flex h-full flex-col border-r border-slate-200 bg-white transition-all duration-200 overflow-visible ${
+        className={`relative flex h-full flex-col border-r border-slate-200 bg-white transition-all duration-200 ${
           collapsed ? 'w-16 min-w-[64px] max-w-[64px]' : 'w-full min-w-[240px] max-w-[280px]'
         }`}
       >
-        {/* Collapse/Expand Toggle Button - positioned on the right edge */}
-        {onToggleCollapse && (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onToggleCollapse}
-            className="absolute -right-3 top-4 z-50 h-7 w-7 rounded-full border border-slate-300 bg-white shadow-md hover:bg-slate-50 hover:shadow-lg transition-all"
-            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-            style={{ pointerEvents: 'auto' }}
-          >
-            {collapsed ? (
-              <ChevronRight className="h-4 w-4" />
-            ) : (
-              <ChevronLeft className="h-4 w-4" />
-            )}
-          </Button>
-        )}
+        {/* Collapse/Expand Toggle Button - at the top */}
+        <div className="flex items-center justify-end border-b border-slate-200 p-2">
+          {onToggleCollapse ? (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                onToggleCollapse()
+              }}
+              className="h-8 w-8"
+              aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            >
+              {collapsed ? (
+                <ChevronRight className="h-4 w-4" />
+              ) : (
+                <ChevronLeft className="h-4 w-4" />
+              )}
+            </Button>
+          ) : (
+            <div className="h-8 w-8" />
+          )}
+        </div>
         <ScrollArea className="flex-1 min-h-0 space-y-6">
           {/* Documents */}
           <div>
@@ -259,7 +266,7 @@ export default function Sidebar({ collapsed = false, onToggleCollapse }: Sidebar
           )}
         </ScrollArea>
 
-        <div className="border-t border-slate-200 px-4 py-2">
+        <div className={`border-t border-slate-200 ${collapsed ? 'px-2' : 'px-4'} py-2`}>
           <Dialog>
             <DialogTrigger asChild>
               <button
