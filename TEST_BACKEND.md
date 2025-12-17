@@ -22,16 +22,19 @@ curl https://YOUR_AZURE_URL/api/v1/health
 ## Common Issues
 
 ### Issue 1: Mixed Content Error (HTTPS → HTTP)
+
 **Error:** `Mixed Content: The page at 'https://...' was loaded over HTTPS, but requested an insecure resource 'http://...'`
 
 **Solution:** Your Azure URL must use `https://` not `http://`
 
 ### Issue 2: Wrong URL
+
 **Error:** Using IP address instead of Azure Container Apps domain
 
 **Solution:** Use the Azure Container Apps HTTPS URL, not an IP address
 
 ### Issue 3: CORS Error
+
 **Error:** `CORS policy: No 'Access-Control-Allow-Origin' header`
 
 **Solution:** Make sure `CORS_ALLOW_ORIGINS` in Azure includes your Vercel URL
@@ -60,10 +63,11 @@ curl -H "Origin: https://your-vercel-url.vercel.app" \
 
 1. Go to Vercel Dashboard → Your Project → Settings → Environment Variables
 2. Check that `NEXT_PUBLIC_AZURE_API_BASE_URL` is set to:
+
    ```
    https://your-azure-container-apps-url
    ```
+
    (NOT `http://` and NOT an IP address)
 
 3. After updating, **redeploy** your Vercel app
-

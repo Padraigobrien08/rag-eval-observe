@@ -2,13 +2,14 @@
 
 ## Frontend (Vercel)
 
-### Required (Server-Side Only - No NEXT_PUBLIC_ prefix)
+### Required (Server-Side Only - No NEXT*PUBLIC* prefix)
 
 ```env
 AZURE_API_BASE_URL=https://your-azure-container-apps-url
 ```
 
 **Example:**
+
 ```env
 AZURE_API_BASE_URL=https://rag-eval-aci-dns-4.bme0cjc9bkevdbd4.westeurope.azurecontainer.io
 ```
@@ -97,10 +98,12 @@ CORS_ALLOW_ORIGINS=https://rag-eval-observability.vercel.app,https://rag-eval-ob
 ## Which Variables to Mark as "Secure" in Azure?
 
 **Mark as Secure (encrypted, hidden in logs):**
+
 - ✅ `DATABASE_URL` - Contains database credentials
 - ✅ `OPENAI_API_KEY` - Sensitive API key
 
 **Do NOT mark as Secure (can be visible):**
+
 - `ENVIRONMENT` - Just "production"
 - `CORS_ALLOW_ORIGINS` - Public URLs
 - All optional variables with defaults
@@ -110,10 +113,12 @@ CORS_ALLOW_ORIGINS=https://rag-eval-observability.vercel.app,https://rag-eval-ob
 ## Quick Setup Checklist
 
 ### Vercel:
+
 - [ ] Add `NEXT_PUBLIC_API_BASE_URL` pointing to Azure URL
 - [ ] Redeploy after adding environment variable
 
 ### Azure Container Apps:
+
 - [ ] Add `DATABASE_URL` (from Neon DB) - **Mark as Secure**
 - [ ] Add `OPENAI_API_KEY` - **Mark as Secure**
 - [ ] Add `ENVIRONMENT=production`
@@ -137,4 +142,3 @@ CORS_ALLOW_ORIGINS=https://rag-eval-observability.vercel.app,https://rag-eval-ob
    - Checking browser console for errors
    - Trying to send a query
    - Checking Azure logs if issues occur
-

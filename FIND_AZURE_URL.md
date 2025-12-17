@@ -29,6 +29,7 @@ az containerapp show \
 ```
 
 This will output just the URL, like:
+
 ```
 rag-eval-app.xyz123.eastus.azurecontainerapps.io
 ```
@@ -67,4 +68,3 @@ curl https://your-azure-url/api/v1/health
 ```
 
 Should return: `{"ok":true,"db":true,"version":"0.1.0"}`
-

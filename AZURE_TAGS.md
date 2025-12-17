@@ -16,13 +16,13 @@ Tags help organize resources and track costs. Here are suggested tags for your R
 
 ## Tag Values
 
-| Tag Name | Value | Description |
-|----------|-------|-------------|
-| `Project` | `rag-eval-observability` | Project identifier |
-| `Environment` | `production` | Deployment environment |
-| `Component` | `backend-api` | Component type (backend-api, frontend, database) |
-| `ManagedBy` | `manual` | How it's managed (manual, terraform, etc.) |
-| `CostCenter` | `portfolio` | For cost tracking/billing |
+| Tag Name      | Value                    | Description                                      |
+| ------------- | ------------------------ | ------------------------------------------------ |
+| `Project`     | `rag-eval-observability` | Project identifier                               |
+| `Environment` | `production`             | Deployment environment                           |
+| `Component`   | `backend-api`            | Component type (backend-api, frontend, database) |
+| `ManagedBy`   | `manual`                 | How it's managed (manual, terraform, etc.)       |
+| `CostCenter`  | `portfolio`              | For cost tracking/billing                        |
 
 ## How to Add Tags
 
@@ -101,4 +101,3 @@ az resource list --tag Project=rag-eval-observability
 # View costs by tag
 az consumption usage list --query "[?tags.Project=='rag-eval-observability']"
 ```
-

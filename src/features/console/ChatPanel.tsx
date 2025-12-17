@@ -157,12 +157,10 @@ export default function ChatPanel() {
           {messages.length === 0 ? (
             /* Home screen when no messages */
             <div
-              className="mx-auto max-w-3xl"
+              className="mx-auto w-full max-w-3xl px-4 sm:px-8"
               style={{
-                paddingLeft: '2rem',
-                paddingRight: '2rem',
-                paddingTop: '8rem',
-                paddingBottom: '4rem',
+                paddingTop: '4rem',
+                paddingBottom: '2rem',
               }}
             >
               {/* Title + subtitle */}
