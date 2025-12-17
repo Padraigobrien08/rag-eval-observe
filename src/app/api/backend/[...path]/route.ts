@@ -26,14 +26,25 @@ async function proxyRequest(request: NextRequest, pathSegments: string[]) {
     const fullUrl = searchParams ? `${url}?${searchParams}` : url
 
     // Get request body for POST/DELETE
-    let body: string | undefined
+    let body: BodyInit | undefined
     const method = request.method
+    const contentType = request.headers.get('content-type') || ''
+    
     if (method !== 'GET' && method !== 'HEAD') {
-      try {
-        const requestBody = await request.json()
-        body = JSON.stringify(requestBody)
-      } catch {
-        // Try text if JSON parsing fails
+      // Handle FormData (file uploads)
+      if (contentType.includes('multipart/form-data')) {
+        body = await request.formData()
+      } else if (contentType.includes('application/json')) {
+        // Handle JSON
+        try {
+          const requestBody = await request.json()
+          body = JSON.stringify(requestBody)
+        } catch {
+          // Fallback to text if JSON parsing fails
+          body = await request.text()
+        }
+      } else {
+        // Handle other content types (text, etc.)
         try {
           body = await request.text()
         } catch {
@@ -43,11 +54,16 @@ async function proxyRequest(request: NextRequest, pathSegments: string[]) {
     }
 
     // Forward specific headers (matching Pages Router pattern)
+    // Don't set content-type for FormData - fetch will set it automatically with boundary
     const headers: HeadersInit = {
       ...(request.headers.get('authorization')
         ? { authorization: request.headers.get('authorization')! }
         : {}),
-      'content-type': request.headers.get('content-type') || 'application/json',
+    }
+    
+    // Only set content-type if it's not FormData
+    if (!contentType.includes('multipart/form-data')) {
+      headers['content-type'] = contentType || 'application/json'
     }
 
     // Make request to backend
