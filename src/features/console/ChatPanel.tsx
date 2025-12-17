@@ -146,26 +146,27 @@ export default function ChatPanel() {
       >
         {/* Content area - scrollable */}
         <div
-          className="flex-1 min-h-0"
+          className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden"
           style={{
-            paddingTop: '2rem',
-            paddingBottom: '2rem',
-            overflowY: 'auto',
-            overflowX: 'hidden',
+            paddingTop: 'clamp(1rem, 2vw, 2rem)',
+            paddingBottom: 'clamp(1rem, 2vw, 2rem)',
           }}
         >
           {messages.length === 0 ? (
             /* Home screen when no messages */
             <div
-              className="mx-auto w-full max-w-3xl px-4 sm:px-8"
+              className="mx-auto w-full"
               style={{
-                paddingTop: '4rem',
-                paddingBottom: '2rem',
+                maxWidth: '1100px',
+                paddingLeft: 'clamp(12px, 3vw, 32px)',
+                paddingRight: 'clamp(12px, 3vw, 32px)',
+                paddingTop: 'clamp(2rem, 8vw, 4rem)',
+                paddingBottom: 'clamp(1rem, 4vw, 2rem)',
               }}
             >
               {/* Title + subtitle */}
-              <div className="text-center" style={{ marginBottom: '1rem' }}>
-                <h2 className="text-2xl font-semibold text-slate-900 mb-2">
+              <div className="mb-4 text-center">
+                <h2 className="mb-2 text-2xl font-semibold text-slate-900">
                   What can I help with?
                 </h2>
                 <p className="text-sm text-slate-600">
@@ -174,9 +175,9 @@ export default function ChatPanel() {
               </div>
 
               {/* Centered pill buttons */}
-              <div className="flex flex-col items-center" style={{ gap: '2rem' }}>
+              <div className="flex flex-col items-center gap-8">
                 {/* Info text */}
-                <p className="text-sm text-slate-600 text-center" style={{ marginBottom: '1rem' }}>
+                <p className="mb-4 text-center text-sm text-slate-600">
                   We have added some documents about RAG, so you can see functionality by just
                   clicking one of the example queries
                 </p>
@@ -223,10 +224,7 @@ export default function ChatPanel() {
                       </Button>
                     </div>
                     {/* Second row */}
-                    <div
-                      className="flex flex-wrap justify-center gap-2"
-                      style={{ marginTop: '0.5rem' }}
-                    >
+                    <div className="mt-2 flex flex-wrap justify-center gap-2">
                       <Button
                         type="button"
                         variant="outline"

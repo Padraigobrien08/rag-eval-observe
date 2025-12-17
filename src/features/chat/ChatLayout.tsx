@@ -62,10 +62,16 @@ export default function ChatLayout({
         }}
       >
         <div
-          className="mx-auto max-w-3xl w-full px-4"
-          style={{ paddingTop: '1.5rem', paddingBottom: '1.5rem' }}
+          className="mx-auto w-full"
+          style={{
+            maxWidth: '1100px',
+            paddingLeft: 'clamp(12px, 3vw, 32px)',
+            paddingRight: 'clamp(12px, 3vw, 32px)',
+            paddingTop: 'clamp(1rem, 2vw, 1.5rem)',
+            paddingBottom: 'clamp(1rem, 2vw, 1.5rem)',
+          }}
         >
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+          <div className="flex flex-col" style={{ gap: 'clamp(1rem, 3vw, 2rem)' }}>
             {messages.map((message, index) => {
               const previousMessage = index > 0 ? messages[index - 1] : null
               return (
@@ -89,12 +95,13 @@ export default function ChatLayout({
           style={{ flexShrink: 0 }}
         >
           <div
-            className="mx-auto max-w-3xl"
+            className="mx-auto w-full"
             style={{
-              paddingLeft: '1rem',
-              paddingRight: '1rem',
-              paddingTop: '1rem',
-              paddingBottom: '1rem',
+              maxWidth: '1100px',
+              paddingLeft: 'clamp(12px, 3vw, 32px)',
+              paddingRight: 'clamp(12px, 3vw, 32px)',
+              paddingTop: 'clamp(0.75rem, 2vw, 1rem)',
+              paddingBottom: 'clamp(0.75rem, 2vw, 1rem)',
             }}
           >
             <form onSubmit={handleSubmit} className="flex items-end gap-2">
