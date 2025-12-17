@@ -29,7 +29,7 @@ async function proxyRequest(request: NextRequest, pathSegments: string[]) {
     let body: BodyInit | undefined
     const method = request.method
     const contentType = request.headers.get('content-type') || ''
-    
+
     if (method !== 'GET' && method !== 'HEAD') {
       // Handle FormData (file uploads)
       if (contentType.includes('multipart/form-data')) {
@@ -60,7 +60,7 @@ async function proxyRequest(request: NextRequest, pathSegments: string[]) {
         ? { authorization: request.headers.get('authorization')! }
         : {}),
     }
-    
+
     // Only set content-type if it's not FormData
     if (!contentType.includes('multipart/form-data')) {
       headers['content-type'] = contentType || 'application/json'
