@@ -6,6 +6,12 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3+-blue.svg)](https://www.typescriptlang.org/)
 [![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://www.python.org/)
 
+## 🚀 Live Demo
+
+**Try it out:** [https://pob-rag-chat.xyz/](https://pob-rag-chat.xyz/)
+
+The live deployment includes sample documents about RAG, so you can test the functionality immediately by clicking one of the example queries.
+
 ## Overview
 
 RAG Eval Observability is a full-stack platform designed to help developers and researchers build, test, and deploy production-ready RAG systems. It combines a modern web interface with a robust backend API, providing everything needed to ingest documents, query knowledge bases, and monitor system performance.
