@@ -219,7 +219,7 @@ export default function Sidebar() {
 
             <DialogContent
               className="w-[92vw] max-w-lg rounded-2xl border border-slate-200 bg-white"
-              style={{ padding: '2rem' }}
+              style={{ padding: 'clamp(1rem, 4vw, 2rem)' }}
             >
               <DialogHeader>
                 <DialogTitle>Query settings</DialogTitle>
