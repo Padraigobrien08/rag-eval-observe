@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 // Backend URL - server-side only (no NEXT_PUBLIC_ prefix needed)
-const BACKEND_URL =
-  process.env.AZURE_API_BASE_URL ||
-  process.env.API_BASE_URL ||
-  'http://localhost:8000'
+const base = process.env.AZURE_API_BASE_URL || 'http://localhost:8000'
 
 export async function GET(
   request: NextRequest,
@@ -29,69 +26,64 @@ export async function DELETE(
 
 async function proxyRequest(
   request: NextRequest,
-  pathSegments: string[],
-  method: string
+  pathSegments: string[]
 ) {
   try {
-    // Reconstruct the backend path - forward everything after /api/backend/
-    const backendPath = `/${pathSegments.join('/')}`
-    
+    // Reconstruct the backend path
+    const path = pathSegments.join('/')
+    const url = `${base}/${path}`
+
     // Get query string if present
     const searchParams = request.nextUrl.searchParams.toString()
-    const url = `${BACKEND_URL}${backendPath}${searchParams ? `?${searchParams}` : ''}`
+    const fullUrl = searchParams ? `${url}?${searchParams}` : url
 
-    // Get request body for POST/PUT/PATCH
+    // Get request body for POST/DELETE
     let body: string | undefined
-    if (method === 'POST' || method === 'PUT' || method === 'PATCH') {
+    const method = request.method
+    if (method !== 'GET' && method !== 'HEAD') {
       try {
-        body = await request.text()
+        const requestBody = await request.json()
+        body = JSON.stringify(requestBody)
       } catch {
-        // No body
+        // Try text if JSON parsing fails
+        try {
+          body = await request.text()
+        } catch {
+          // No body
+        }
       }
     }
 
-    // Forward headers (excluding host and connection headers)
-    const headers: HeadersInit = {}
-    request.headers.forEach((value, key) => {
-      const lowerKey = key.toLowerCase()
-      if (
-        lowerKey !== 'host' &&
-        lowerKey !== 'connection' &&
-        lowerKey !== 'content-length'
-      ) {
-        headers[key] = value
-      }
-    })
+    // Forward specific headers (matching Pages Router pattern)
+    const headers: HeadersInit = {
+      ...(request.headers.get('authorization')
+        ? { authorization: request.headers.get('authorization')! }
+        : {}),
+      'content-type': request.headers.get('content-type') || 'application/json',
+    }
 
     // Make request to backend
-    const response = await fetch(url, {
+    const upstream = await fetch(fullUrl, {
       method,
       headers,
-      body,
+      body: method === 'GET' || method === 'HEAD' ? undefined : body,
     })
 
-    // Get response body
-    const responseBody = await response.text()
+    // Get response text
+    const text = await upstream.text()
 
-    // Create response with same status and headers
-    const proxiedResponse = new NextResponse(responseBody, {
-      status: response.status,
-      statusText: response.statusText,
+    // Create response with same status
+    const response = new NextResponse(text, {
+      status: upstream.status,
     })
 
-    // Copy relevant headers from backend response
-    response.headers.forEach((value, key) => {
-      const lowerKey = key.toLowerCase()
-      if (
-        lowerKey !== 'content-encoding' &&
-        lowerKey !== 'transfer-encoding' &&
-        lowerKey !== 'connection'
-      ) {
-        proxiedResponse.headers.set(key, value)
-      }
-    })
+    // Copy content-type header if present
+    const contentType = upstream.headers.get('content-type')
+    if (contentType) {
+      response.headers.set('content-type', contentType)
+    }
 
-    return proxiedResponse
+    return response
   } catch (error) {
     console.error('[API Proxy] Error proxying request:', error)
     return NextResponse.json(
