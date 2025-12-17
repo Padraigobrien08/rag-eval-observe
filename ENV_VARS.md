@@ -2,18 +2,20 @@
 
 ## Frontend (Vercel)
 
-### Required
+### Required (Server-Side Only - No NEXT_PUBLIC_ prefix)
 
 ```env
-NEXT_PUBLIC_API_BASE_URL=https://your-azure-container-apps-url
+AZURE_API_BASE_URL=https://your-azure-container-apps-url
 ```
 
 **Example:**
 ```env
-NEXT_PUBLIC_API_BASE_URL=https://rag-eval-app.xyz123.eastus.azurecontainerapps.io
+AZURE_API_BASE_URL=https://rag-eval-aci-dns-4.bme0cjc9bkevdbd4.westeurope.azurecontainer.io
 ```
 
 **Where to set:** Vercel Dashboard → Project → Settings → Environment Variables
+
+**Note:** The frontend now proxies requests through Vercel API routes (`/api/backend/*`), so the backend URL is server-side only and doesn't need the `NEXT_PUBLIC_` prefix. This avoids mixed content and CORS issues.
 
 ---
 
