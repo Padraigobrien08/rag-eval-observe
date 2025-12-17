@@ -19,7 +19,9 @@ export default function ConsoleLayout() {
       <div
         className="hidden lg:grid h-screen w-full overflow-hidden bg-slate-50"
         style={{
-          gridTemplateColumns: sidebarCollapsed ? '64px 1fr' : 'minmax(240px, 280px) 1fr',
+          gridTemplateColumns: sidebarCollapsed
+            ? '64px 1fr'
+            : 'minmax(240px, 280px) 1fr',
           minHeight: '100vh',
           transition: 'grid-template-columns 0.2s ease-in-out',
         }}
