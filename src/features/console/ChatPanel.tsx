@@ -206,7 +206,12 @@ export default function ChatPanel(_props: ChatPanelProps = {}) {
                   </div>
                   <div
                     className="flex flex-col"
-                    style={{ maxWidth: '900px', margin: '0 auto', width: '100%', gap: 'clamp(0.75rem, 1.5vw, 1rem)' }}
+                    style={{
+                      maxWidth: '900px',
+                      margin: '0 auto',
+                      width: '100%',
+                      gap: 'clamp(0.75rem, 1.5vw, 1rem)',
+                    }}
                   >
                     {/* Top row - 3 pills */}
                     <div className="flex justify-center gap-3 flex-wrap">
