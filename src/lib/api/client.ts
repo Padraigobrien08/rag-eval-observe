@@ -68,7 +68,6 @@ export async function ingestDocument(body: {
 
 export async function listDocuments(limit = 100, offset = 0) {
   ensureBrowser()
-  const startTime = typeof performance !== 'undefined' ? performance.now() : Date.now()
 
   try {
     // Add timeout to prevent hanging
@@ -82,7 +81,6 @@ export async function listDocuments(limit = 100, offset = 0) {
     })
 
     clearTimeout(timeoutId)
-    const fetchTime = typeof performance !== 'undefined' ? performance.now() : Date.now()
 
     if (!res.ok) {
       const text = await res.text().catch(() => '')
@@ -95,9 +93,7 @@ export async function listDocuments(limit = 100, offset = 0) {
     // Provide more helpful error message
     const err = error as { name?: string; message?: string }
     if (err.name === 'AbortError') {
-      throw new Error(
-        `Request timed out after ${elapsed}ms. Is the backend running at ${API_BASE_URL}?`
-      )
+      throw new Error(`Request timed out. Is the backend running at ${API_BASE_URL}?`)
     }
 
     if (err.message?.includes('Failed to fetch') || err.message?.includes('NetworkError')) {

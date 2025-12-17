@@ -68,7 +68,6 @@ export default function Sidebar({ collapsed = false, onToggleCollapse }: Sidebar
   }
 
   const loadDocuments = async () => {
-    const startTime = typeof performance !== 'undefined' ? performance.now() : Date.now()
     try {
       setIsLoadingDocs(true)
       const response = await listDocuments()
@@ -109,8 +108,8 @@ export default function Sidebar({ collapsed = false, onToggleCollapse }: Sidebar
       setDocumentToDelete(null)
       // Reload documents list
       await loadDocuments()
-        } catch (error) {
-          // You could add a toast notification here
+    } catch (error) {
+      // You could add a toast notification here
       alert(
         `Failed to delete document: ${error instanceof Error ? error.message : 'Unknown error'}`
       )
