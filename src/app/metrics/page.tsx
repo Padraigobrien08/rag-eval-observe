@@ -227,7 +227,13 @@ export default function MetricsPage() {
               <Database className="h-4 w-4 text-slate-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
+              <div
+                className="font-bold"
+                style={{
+                  fontSize: 'clamp(20px, 2.2vw, 32px)',
+                  lineHeight: '1.2',
+                }}
+              >
                 {(
                   metrics.token_usage.embedding_total_tokens + metrics.token_usage.chat_total_tokens
                 ).toLocaleString()}
