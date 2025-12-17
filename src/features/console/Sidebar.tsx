@@ -16,7 +16,16 @@ import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Slider } from '@/components/ui/slider'
 import { Switch } from '@/components/ui/switch'
-import { Plus, Settings, FileText, Loader2, ChevronDown, Trash2 } from 'lucide-react'
+import {
+  Plus,
+  Settings,
+  FileText,
+  Loader2,
+  ChevronDown,
+  Trash2,
+  ChevronLeft,
+  ChevronRight,
+} from 'lucide-react'
 import IngestDialog from './IngestDialog'
 import DocumentPreviewDialog from './DocumentPreviewDialog'
 import { useRagSettings, type RagModel } from '@/features/settings/useRagSettings'
@@ -30,7 +39,12 @@ interface Document {
   created_at: string
 }
 
-export default function Sidebar() {
+interface SidebarProps {
+  collapsed?: boolean
+  onToggleCollapse?: () => void
+}
+
+export default function Sidebar({ collapsed = false, onToggleCollapse }: SidebarProps = {}) {
   const [ingestOpen, setIngestOpen] = useState(false)
   const [documents, setDocuments] = useState<Document[]>([])
   const [isLoadingDocs, setIsLoadingDocs] = useState(true)
@@ -126,62 +140,98 @@ export default function Sidebar() {
 
   return (
     <>
-      <aside className="flex h-full w-full min-w-[240px] max-w-[280px] flex-col border-r border-slate-200 bg-white">
+      <aside
+        className={`flex h-full flex-col border-r border-slate-200 bg-white transition-all duration-200 ${
+          collapsed ? 'w-16 min-w-[64px] max-w-[64px]' : 'w-full min-w-[240px] max-w-[280px]'
+        }`}
+      >
+        {/* Collapse/Expand Toggle Button */}
+        {onToggleCollapse && (
+          <div className="flex items-center justify-end border-b border-slate-200 p-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onToggleCollapse}
+              className="h-8 w-8"
+              aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            >
+              {collapsed ? (
+                <ChevronRight className="h-4 w-4" />
+              ) : (
+                <ChevronLeft className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
+        )}
         <ScrollArea className="flex-1 min-h-0 space-y-6">
           {/* Documents */}
           <div>
-            <div className="flex items-center justify-between px-4 py-2">
-              <div className="text-xs font-semibold tracking-wide text-slate-500">
-                DOCUMENTS
-                {!isLoadingDocs && documents.length > 0 && (
-                  <span className="ml-1.5 text-slate-400 font-normal">({documents.length})</span>
-                )}
-              </div>
+            <div
+              className={`flex items-center ${collapsed ? 'justify-center px-2' : 'justify-between px-4'} py-2`}
+            >
+              {!collapsed && (
+                <div className="text-xs font-semibold tracking-wide text-slate-500">
+                  DOCUMENTS
+                  {!isLoadingDocs && documents.length > 0 && (
+                    <span className="ml-1.5 text-slate-400 font-normal">({documents.length})</span>
+                  )}
+                </div>
+              )}
               <Button
                 variant="ghost"
                 size="icon"
                 aria-label="Ingest document"
                 onClick={() => setIngestOpen(true)}
                 className="h-8 w-8"
+                title={collapsed ? 'Ingest document' : undefined}
               >
                 <Plus className="h-4 w-4" />
               </Button>
             </div>
             {isLoadingDocs ? (
-              <div className="flex items-center gap-2 px-4 py-3">
+              <div
+                className={`flex items-center gap-2 ${collapsed ? 'justify-center px-2' : 'px-4'} py-3`}
+              >
                 <Loader2 className="h-3 w-3 animate-spin text-slate-400" />
-                <p className="text-xs text-slate-500">Loading documents...</p>
+                {!collapsed && <p className="text-xs text-slate-500">Loading documents...</p>}
               </div>
             ) : documents.length === 0 ? (
-              <div className="px-4 py-3">
-                <p className="text-xs text-slate-500">No documents yet.</p>
-                <p className="text-xs text-slate-400 mt-1">Click + to add your first document.</p>
-              </div>
+              !collapsed && (
+                <div className="px-4 py-3">
+                  <p className="text-xs text-slate-500">No documents yet.</p>
+                  <p className="text-xs text-slate-400 mt-1">Click + to add your first document.</p>
+                </div>
+              )
             ) : (
-              <div className="space-y-0.5 px-2">
+              <div className={`space-y-0.5 ${collapsed ? 'px-1' : 'px-2'}`}>
                 {documents.map(doc => (
                   <div
                     key={doc.id}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-700 hover:bg-slate-50 rounded-md transition-colors group"
+                    className={`w-full flex items-center ${collapsed ? 'justify-center' : 'gap-2'} px-3 py-2 text-xs text-slate-700 hover:bg-slate-50 rounded-md transition-colors group`}
+                    title={collapsed ? doc.title || doc.source : undefined}
                   >
                     <button
                       type="button"
                       onClick={() => handleDocumentClick(doc)}
-                      className="flex-1 flex items-center gap-2 text-left truncate hover:text-slate-900"
-                      title={`View ${doc.title || doc.source}`}
+                      className={`flex-1 flex items-center ${collapsed ? 'justify-center' : 'gap-2 text-left'} truncate hover:text-slate-900`}
+                      title={collapsed ? `View ${doc.title || doc.source}` : undefined}
                     >
                       <FileText className="h-3.5 w-3.5 text-slate-400 group-hover:text-slate-600 flex-shrink-0" />
-                      <span className="flex-1 truncate">{doc.title || doc.source}</span>
+                      {!collapsed && (
+                        <span className="flex-1 truncate">{doc.title || doc.source}</span>
+                      )}
                     </button>
-                    <button
-                      type="button"
-                      onClick={e => handleDeleteClick(doc, e)}
-                      className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-red-50 rounded text-red-600 hover:text-red-700"
-                      aria-label={`Delete ${doc.title || doc.source}`}
-                      title="Delete document"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
+                    {!collapsed && (
+                      <button
+                        type="button"
+                        onClick={e => handleDeleteClick(doc, e)}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-red-50 rounded text-red-600 hover:text-red-700"
+                        aria-label={`Delete ${doc.title || doc.source}`}
+                        title="Delete document"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    )}
                   </div>
                 ))}
               </div>
@@ -189,31 +239,36 @@ export default function Sidebar() {
           </div>
 
           {/* Chats */}
-          <div>
-            <div className="flex items-center justify-between px-4 py-2">
-              <div className="text-xs font-semibold tracking-wide text-slate-500">CHATS</div>
-              <Button
-                variant="ghost"
-                size="icon"
-                aria-label="New chat"
-                onClick={() => {
-                  // Placeholder – real chat history later
-                }}
-                className="h-8 w-8"
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
+          {!collapsed && (
+            <div>
+              <div className="flex items-center justify-between px-4 py-2">
+                <div className="text-xs font-semibold tracking-wide text-slate-500">CHATS</div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label="New chat"
+                  onClick={() => {
+                    // Placeholder – real chat history later
+                  }}
+                  className="h-8 w-8"
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+              <p className="px-4 text-xs text-slate-500">No chats yet. Start a new chat.</p>
             </div>
-            <p className="px-4 text-xs text-slate-500">No chats yet. Start a new chat.</p>
-          </div>
+          )}
         </ScrollArea>
 
         <div className="border-t border-slate-200 px-4 py-2">
           <Dialog>
             <DialogTrigger asChild>
-              <button className="mt-auto mb-3 flex items-center gap-2 rounded-full px-3 py-2 text-xs text-slate-600 hover:bg-slate-100 hover:text-slate-900">
+              <button
+                className={`mt-auto mb-3 flex items-center ${collapsed ? 'justify-center' : 'gap-2'} rounded-full px-3 py-2 text-xs text-slate-600 hover:bg-slate-100 hover:text-slate-900`}
+                title={collapsed ? 'Settings' : undefined}
+              >
                 <Settings className="h-4 w-4" />
-                <span>Settings</span>
+                {!collapsed && <span>Settings</span>}
               </button>
             </DialogTrigger>
 
