@@ -82,9 +82,9 @@ async function proxyRequest(request: NextRequest, pathSegments: string[]) {
     })
 
     // Copy content-type header if present
-    const contentType = upstream.headers.get('content-type')
-    if (contentType) {
-      response.headers.set('content-type', contentType)
+    const responseContentType = upstream.headers.get('content-type')
+    if (responseContentType) {
+      response.headers.set('content-type', responseContentType)
     }
 
     return response
