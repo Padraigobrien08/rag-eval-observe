@@ -184,10 +184,7 @@ export default function ChatPanel({ sidebarOpen, setSidebarOpen }: ChatPanelProp
               }}
             >
               {/* Title + subtitle */}
-              <div
-                className="text-center"
-                style={{ marginBottom: 'clamp(1rem, 3vw, 1.5rem)' }}
-              >
+              <div className="text-center" style={{ marginBottom: 'clamp(1rem, 3vw, 1.5rem)' }}>
                 <h2
                   className="font-semibold text-slate-900"
                   style={{
