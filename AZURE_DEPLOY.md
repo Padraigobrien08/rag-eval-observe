@@ -188,6 +188,84 @@ az acr build -r $ACR -t rag-eval:1.1 -f backend/Dockerfile .
 az containerapp update -n $APP -g $RG --image "$ACR.azurecr.io/rag-eval:1.1"
 ```
 
+## Finding Your Azure Container Apps URL
+
+### Method 1: Azure Portal - Ingress Section (Most Reliable)
+
+1. Go to [Azure Portal](https://portal.azure.com)
+2. Navigate to your Container App (e.g., `rag-eval-app`)
+3. In the left menu, click **Ingress** (under Settings)
+4. Look for **Application URL** or **FQDN**
+   - It will be something like: `https://rag-eval-app.xyz123.eastus.azurecontainerapps.io`
+
+### Method 2: Azure CLI (Easiest)
+
+```bash
+az containerapp show \
+  -n rag-eval-app \
+  -g rag-rg \
+  --query properties.configuration.ingress.fqdn \
+  -o tsv
+```
+
+This outputs the URL. Add `https://` in front of it.
+
+## Connecting Vercel Frontend to Azure Backend
+
+### Step 1: Configure Vercel Environment Variables
+
+1. In your Vercel project dashboard, go to **Settings** → **Environment Variables**
+2. Add: `AZURE_API_BASE_URL` = Your Azure Container Apps URL
+3. **Important:** After adding, trigger a new deployment (redeploy)
+
+### Step 2: Update Azure CORS Settings
+
+1. Go to Azure Portal → Your Container App → **Configuration** → **Environment variables**
+2. Set `CORS_ALLOW_ORIGINS` to include your Vercel URL:
+   ```
+   https://your-vercel-app.vercel.app,https://your-vercel-app-git-main-username.vercel.app
+   ```
+3. Click **Save** (container will restart automatically)
+
+### Step 3: Verify Connection
+
+Test the health endpoint:
+```bash
+curl https://your-azure-url/api/v1/health
+```
+
+Should return: `{"ok":true,"db":true,"version":"0.1.0"}`
+
+## Testing Backend Connection
+
+### Test Health Endpoint
+
+```bash
+curl https://your-azure-url/api/v1/health
+```
+
+### Common Issues
+
+- **Mixed Content Error**: Use `https://` not `http://`
+- **CORS Error**: Ensure `CORS_ALLOW_ORIGINS` includes your Vercel URL
+- **404 Error**: Verify the backend is running in Azure Portal
+
+## Azure Resource Tags
+
+Recommended tags for cost tracking and organization:
+
+```bash
+az containerapp update \
+  -n rag-eval-app \
+  -g rag-rg \
+  --tags \
+    Project=rag-eval-observability \
+    Environment=production \
+    Component=backend-api \
+    ManagedBy=manual \
+    CostCenter=portfolio
+```
+
 ## Cleanup
 
 To remove all resources:

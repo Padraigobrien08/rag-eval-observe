@@ -71,27 +71,9 @@ export default function Sidebar({ collapsed = false, onToggleCollapse }: Sidebar
     const startTime = typeof performance !== 'undefined' ? performance.now() : Date.now()
     try {
       setIsLoadingDocs(true)
-      if (typeof console !== 'undefined' && console.log) {
-        console.log('[Sidebar] Starting to load documents...')
-      }
       const response = await listDocuments()
-      const loadTime =
-        (typeof performance !== 'undefined' ? performance.now() : Date.now()) - startTime
-      if (typeof console !== 'undefined' && console.log) {
-        console.log('[Sidebar] Documents loaded in', loadTime.toFixed(2), 'ms')
-      }
       setDocuments(response.documents || [])
     } catch (error) {
-      const errorTime =
-        (typeof performance !== 'undefined' ? performance.now() : Date.now()) - startTime
-      if (typeof console !== 'undefined' && console.error) {
-        console.error(
-          '[Sidebar] Failed to load documents after',
-          errorTime.toFixed(2),
-          'ms:',
-          error
-        )
-      }
       setDocuments([])
     } finally {
       setIsLoadingDocs(false)
@@ -127,9 +109,8 @@ export default function Sidebar({ collapsed = false, onToggleCollapse }: Sidebar
       setDocumentToDelete(null)
       // Reload documents list
       await loadDocuments()
-    } catch (error) {
-      console.error('Failed to delete document:', error)
-      // You could add a toast notification here
+        } catch (error) {
+          // You could add a toast notification here
       alert(
         `Failed to delete document: ${error instanceof Error ? error.message : 'Unknown error'}`
       )
@@ -306,10 +287,6 @@ export default function Sidebar({ collapsed = false, onToggleCollapse }: Sidebar
                       value={ragModel}
                       onChange={e => {
                         const newModel = e.target.value as RagModel
-                        console.log('[Sidebar] RAG model changed:', {
-                          oldValue: ragModel,
-                          newValue: newModel,
-                        })
                         setRagModel(newModel)
                       }}
                       className="w-full appearance-none rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-transparent pr-10"

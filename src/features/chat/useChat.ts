@@ -62,11 +62,6 @@ export function useChat() {
         filters: options?.filters,
         rag_model: options?.rag_model,
       }
-      console.log('[useChat] Sending request:', {
-        query: text.substring(0, 50),
-        rag_model: options?.rag_model,
-        requestBody,
-      })
       const resp = await ragQuery(requestBody)
 
       // Extract citations from API response
@@ -93,18 +88,6 @@ export function useChat() {
         }
       }
 
-      // Log response for debugging
-      console.log('[useChat] Response received:', {
-        hasAnswer: !!resp.answer,
-        answerLength: resp.answer?.length || 0,
-        answerPreview: resp.answer?.substring(0, 100),
-        hasOutput: !!resp.output,
-        outputLength: resp.output?.length || 0,
-        rag_model: resp.rag_model,
-        ragModel: resp.ragModel,
-        fullResponse: resp,
-      })
-
       const assistantMessage: ChatMessage = {
         id: uuid(),
         role: 'assistant',
@@ -116,14 +99,8 @@ export function useChat() {
         metadata,
       }
 
-      console.log('[useChat] Assistant message created:', {
-        contentLength: assistantMessage.content?.length || 0,
-        contentPreview: assistantMessage.content?.substring(0, 100),
-        ragModel: assistantMessage.ragModel,
-      })
       setMessages(prev => [...prev, assistantMessage])
     } catch (err: unknown) {
-      console.error(err)
       // Provide user-friendly error messages
       const error = err as Error & { status?: number }
       if (error.status === 429) {

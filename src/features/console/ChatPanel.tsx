@@ -34,7 +34,6 @@ export default function ChatPanel(_props: ChatPanelProps = {}) {
         const health = await checkHealth()
         setConnection(health.ok && health.db ? 'ok' : 'error')
       } catch (error) {
-        console.error('[ChatPanel] Health check failed:', error)
         setConnection('error')
       }
     }
@@ -49,16 +48,7 @@ export default function ChatPanel(_props: ChatPanelProps = {}) {
     return () => clearInterval(interval)
   }, [])
 
-  useEffect(() => {
-    console.log('[ChatPanel] ragModel changed:', ragModel)
-  }, [ragModel])
-
   const handleSend = (content: string) => {
-    console.log('[ChatPanel] handleSend called', {
-      ragModel,
-      topK,
-      debug,
-    })
     void sendMessage(content, {
       topK,
       debug,
@@ -68,11 +58,6 @@ export default function ChatPanel(_props: ChatPanelProps = {}) {
   }
 
   const handleExampleClick = async (prompt: string) => {
-    console.log('[ChatPanel] handleExampleClick called', {
-      ragModel,
-      topK,
-      debug,
-    })
     // Always send immediately for examples
     await sendMessage(prompt, {
       topK,

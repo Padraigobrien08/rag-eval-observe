@@ -75,10 +75,6 @@ export async function listDocuments(limit = 100, offset = 0) {
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
 
-    if (typeof console !== 'undefined' && console.log) {
-      console.log('[listDocuments] Starting fetch to', `${API_BASE_URL}/api/v1/documents`)
-    }
-
     const res = await fetch(`${API_BASE_URL}/api/v1/documents?limit=${limit}&offset=${offset}`, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' },
@@ -94,32 +90,8 @@ export async function listDocuments(limit = 100, offset = 0) {
     }
 
     const data = await res.json()
-    const parseTime = typeof performance !== 'undefined' ? performance.now() : Date.now()
-    const totalTime = parseTime - startTime
-
-    if (typeof console !== 'undefined' && console.log) {
-      console.log('[listDocuments] Timing:', {
-        fetch_ms: fetchTime - startTime,
-        parse_ms: parseTime - fetchTime,
-        total_ms: totalTime,
-        document_count: data.documents?.length || 0,
-      })
-    }
-
     return data
   } catch (error: unknown) {
-    const errorTime = typeof performance !== 'undefined' ? performance.now() : Date.now()
-    const elapsed = errorTime - startTime
-
-    if (typeof console !== 'undefined' && console.error) {
-      const err = error as { name?: string; message?: string }
-      if (err.name === 'AbortError') {
-        console.error('[listDocuments] Request timed out after', elapsed, 'ms')
-      } else {
-        console.error('[listDocuments] Error after', elapsed, 'ms:', error)
-      }
-    }
-
     // Provide more helpful error message
     const err = error as { name?: string; message?: string }
     if (err.name === 'AbortError') {
