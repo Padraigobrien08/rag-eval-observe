@@ -141,7 +141,7 @@ export default function Sidebar({ collapsed = false, onToggleCollapse }: Sidebar
   return (
     <>
       <aside
-        className={`relative flex h-full flex-col border-r border-slate-200 bg-white transition-all duration-200 ${
+        className={`relative flex h-full flex-col border-r border-slate-200 bg-white transition-all duration-200 overflow-visible ${
           collapsed ? 'w-16 min-w-[64px] max-w-[64px]' : 'w-full min-w-[240px] max-w-[280px]'
         }`}
       >
@@ -151,13 +151,14 @@ export default function Sidebar({ collapsed = false, onToggleCollapse }: Sidebar
             variant="ghost"
             size="icon"
             onClick={onToggleCollapse}
-            className="absolute -right-3 top-4 z-10 h-6 w-6 rounded-full border border-slate-300 bg-white shadow-sm hover:bg-slate-50"
+            className="absolute -right-3 top-4 z-50 h-7 w-7 rounded-full border border-slate-300 bg-white shadow-md hover:bg-slate-50 hover:shadow-lg transition-all"
             aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            style={{ pointerEvents: 'auto' }}
           >
             {collapsed ? (
-              <ChevronRight className="h-3.5 w-3.5" />
+              <ChevronRight className="h-4 w-4" />
             ) : (
-              <ChevronLeft className="h-3.5 w-3.5" />
+              <ChevronLeft className="h-4 w-4" />
             )}
           </Button>
         )}
