@@ -2,16 +2,19 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Ensure proper viewport and prevent horizontal scroll */
+/* Ensure proper viewport and prevent scrolling */
 html {
   width: 100%;
-  overflow-x: hidden;
+  height: 100%;
+  overflow: hidden;
 }
 
 body {
   width: 100%;
+  height: 100%;
   max-width: 100vw;
-  overflow-x: hidden;
+  max-height: 100vh;
+  overflow: hidden;
   margin: 0;
   padding: 0;
 }
@@ -19,8 +22,10 @@ body {
 #__next,
 [data-nextjs-scroll-focus-boundary] {
   width: 100%;
+  height: 100%;
   max-width: 100vw;
-  overflow-x: hidden;
+  max-height: 100vh;
+  overflow: hidden;
 }
 
 /* Citation highlight animation */

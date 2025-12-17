@@ -27,16 +27,17 @@ export default function ConsoleLayout() {
 
   return (
     <div
-      className="grid h-screen w-full bg-slate-50"
+      className="grid h-full w-full bg-slate-50"
       style={{
         gridTemplateColumns: sidebarCollapsed ? '64px 1fr' : 'minmax(240px, 280px) 1fr',
-        minHeight: '100vh',
+        height: '100%',
+        maxHeight: '100vh',
         transition: 'grid-template-columns 0.2s ease-in-out',
-        overflowX: 'hidden',
+        overflow: 'hidden',
       }}
     >
       {/* Left: sidebar - collapsible */}
-      <div className="overflow-visible relative">
+      <div className="relative" style={{ overflow: 'visible' }}>
         <Sidebar collapsed={sidebarCollapsed} onToggleCollapse={handleToggleCollapse} />
       </div>
 
