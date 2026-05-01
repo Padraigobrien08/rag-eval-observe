@@ -4,7 +4,12 @@ const nextConfig = {
   async rewrites() {
     return [{ source: '/favicon.ico', destination: '/RAGEvalIcon.png' }]
   },
-  webpack: (config, { isServer }) => {
+  webpack: (config, { dev, isServer }) => {
+    // Avoid sporadic MODULE_NOT_FOUND on ./NNN.js chunks in .next/server during dev (stale webpack splitChunks).
+    if (dev && isServer) {
+      config.cache = false
+    }
+
     // Fix for pdfjs-dist in Next.js
     if (!isServer) {
       config.resolve.fallback = {
