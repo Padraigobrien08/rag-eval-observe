@@ -83,7 +83,7 @@ DATABASE_URL=postgresql://postgres:postgres@localhost:5432/ragdb
 # OpenAI
 OPENAI_API_KEY=your-api-key-here
 OPENAI_EMBEDDING_MODEL=text-embedding-3-small
-OPENAI_CHAT_MODEL=gpt-4-turbo-preview
+OPENAI_CHAT_MODEL=gpt-4o-mini
 EMBEDDING_DIMENSION=1536
 
 # Optional: OpenAI API settings

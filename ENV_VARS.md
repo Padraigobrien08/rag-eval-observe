@@ -43,7 +43,7 @@ CORS_ALLOW_ORIGINS=https://your-vercel-app.vercel.app,https://your-vercel-app-gi
 ```env
 # OpenAI Models
 OPENAI_EMBEDDING_MODEL=text-embedding-3-small
-OPENAI_CHAT_MODEL=gpt-4-turbo-preview
+OPENAI_CHAT_MODEL=gpt-4o-mini
 EMBEDDING_DIMENSION=1536
 
 # OpenAI API Settings
