@@ -25,9 +25,9 @@ format:
 db:
 	docker compose up -d postgres
 
-# Database migrations
+# Database schema (same SQL as docker/init; idempotent)
 migrate:
-	tsx src/lib/db/migrate.ts
+	cd backend && uv run python scripts/apply_init_sql.py
 
 # Database seeding
 seed:
