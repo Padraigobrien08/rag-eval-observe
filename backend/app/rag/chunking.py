@@ -29,8 +29,8 @@ class TextChunker:
             chunk_size: Maximum characters per chunk (defaults to settings.CHUNK_SIZE)
             chunk_overlap: Overlap between chunks in characters (defaults to settings.CHUNK_OVERLAP)
         """
-        self.chunk_size = chunk_size or settings.CHUNK_SIZE
-        self.chunk_overlap = chunk_overlap or settings.CHUNK_OVERLAP
+        self.chunk_size = settings.CHUNK_SIZE if chunk_size is None else chunk_size
+        self.chunk_overlap = settings.CHUNK_OVERLAP if chunk_overlap is None else chunk_overlap
 
         if self.chunk_size <= 0:
             raise ValueError("chunk_size must be positive")

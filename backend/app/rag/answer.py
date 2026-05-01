@@ -69,16 +69,21 @@ def sanitize_and_truncate_context(
             remaining_chars -= chunk_chars
             remaining_tokens -= chunk_tokens
         elif remaining_chars > 100:  # Only add if we have meaningful space
-            # Truncate chunk content
-            max_chunk_chars = min(remaining_chars, chunk_chars)
+            # Truncate chunk content (reserve space for ellipsis so total stays within budget)
+            suffix = "..."
+            max_chunk_chars = min(remaining_chars - len(suffix), chunk_chars)
+            if max_chunk_chars < 1:
+                break
             truncated_content = chunk.content[:max_chunk_chars].rsplit(" ", 1)[0]
+            if not truncated_content:
+                truncated_content = chunk.content[:max_chunk_chars]
             truncated_chunk = RetrievedChunk(
                 chunk_id=chunk.chunk_id,
                 document_id=chunk.document_id,
                 title=chunk.title,
                 source=chunk.source,
                 chunk_index=chunk.chunk_index,
-                content=truncated_content + "...",
+                content=truncated_content + suffix,
                 score=chunk.score,
             )
             truncated_chunks.append(truncated_chunk)
