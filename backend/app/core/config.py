@@ -35,6 +35,12 @@ class Settings(BaseSettings):
 
     # Database
     DATABASE_URL: str
+    DB_POOL_MIN_SIZE: int = 5
+    DB_POOL_MAX_SIZE: int = 20
+    DB_COMMAND_TIMEOUT: int = 60
+
+    # Ingest: replace chunks in place when (source, title) already exists (no versioned source)
+    INGEST_REPLACE_IF_EXISTS: bool = False
 
     # OpenAI
     OPENAI_API_KEY: str

@@ -26,6 +26,8 @@ dev = [
     "httpx>=0.26.0",
     "black>=24.1.0",
     "ruff>=0.1.0",
+    "alembic>=1.13.0",
+    "psycopg2-binary>=2.9.9",
 ]
 otel = [
     "opentelemetry-api>=1.22.0",

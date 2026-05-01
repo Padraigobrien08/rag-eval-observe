@@ -118,8 +118,11 @@ async def ingest_document(
     """
     Ingest a document into the database.
 
-    This function is idempotent: if a document with the same (source, title)
-    already exists, it creates a new version with a versioned source.
+    If INGEST_REPLACE_IF_EXISTS is true and a row already exists for (source, title),
+    old chunks are removed and new ones are written (same document id, canonical source).
+
+    Otherwise, if a document with the same (source, title) already exists, a new row
+    is created with a versioned source string.
 
     Args:
         source: Document source
@@ -140,15 +143,23 @@ async def ingest_document(
             f"Document size ({len(text)} chars) exceeds maximum ({MAX_DOCUMENT_SIZE} chars)"
         )
 
-    # Check for existing document
+    # Resolve document identity: replace in place, new versioned row, or new doc
     existing = await find_existing_document(source, title)
-    version = 1
-    if existing:
-        # Find the highest version number
+    replace_existing = bool(existing and settings.INGEST_REPLACE_IF_EXISTS)
+
+    if replace_existing:
+        assert existing is not None
+        document_id = str(existing["id"])
+        versioned_source = source
+        logger.info(
+            "Replacing chunks for existing document",
+            source=source,
+            title=title,
+            document_id=document_id,
+        )
+    elif existing:
         pool = await get_db_pool()
         async with pool.acquire() as conn:
-            # Count existing versions with same base source
-            # Look for documents with same base source (before version suffix)
             version_rows = await conn.fetch(
                 """
                 SELECT source
@@ -158,12 +169,11 @@ async def ingest_document(
                 """,
                 source,
             )
-            # Extract version numbers
             versions = []
             for row in version_rows:
                 source_str = row["source"]
                 if source_str == source:
-                    versions.append(1)  # Original version
+                    versions.append(1)
                 elif " (v" in source_str:
                     try:
                         v = int(source_str.split(" (v")[1].rstrip(")"))
@@ -178,10 +188,11 @@ async def ingest_document(
             title=title,
             version=version,
         )
-
-    # Generate document ID and versioned source
-    document_id = generate_document_id(source, title, version)
-    versioned_source = generate_versioned_source(source, version)
+        document_id = generate_document_id(source, title, version)
+        versioned_source = generate_versioned_source(source, version)
+    else:
+        document_id = generate_document_id(source, title, 1)
+        versioned_source = generate_versioned_source(source, 1)
 
     # Chunk the text
     chunker = TextChunker(
@@ -219,19 +230,34 @@ async def ingest_document(
     async with pool.acquire() as conn:
         async with conn.transaction():
             try:
-                # Insert document
-                await conn.execute(
-                    """
-                    INSERT INTO documents (id, source, title)
-                    VALUES ($1, $2, $3)
-                    ON CONFLICT (id) DO UPDATE
-                    SET source = EXCLUDED.source,
-                        title = EXCLUDED.title
-                    """,
-                    document_id,
-                    versioned_source,
-                    title,
-                )
+                if replace_existing:
+                    await conn.execute(
+                        "DELETE FROM chunks WHERE document_id = $1",
+                        document_id,
+                    )
+                    await conn.execute(
+                        """
+                        UPDATE documents
+                        SET source = $2, title = $3
+                        WHERE id = $1
+                        """,
+                        document_id,
+                        versioned_source,
+                        title,
+                    )
+                else:
+                    await conn.execute(
+                        """
+                        INSERT INTO documents (id, source, title)
+                        VALUES ($1, $2, $3)
+                        ON CONFLICT (id) DO UPDATE
+                        SET source = EXCLUDED.source,
+                            title = EXCLUDED.title
+                        """,
+                        document_id,
+                        versioned_source,
+                        title,
+                    )
 
                 # Insert chunks
                 for i, (chunk, embedding_response) in enumerate(zip(chunks, embedding_responses)):
