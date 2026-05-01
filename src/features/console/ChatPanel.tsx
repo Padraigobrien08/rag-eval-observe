@@ -6,7 +6,7 @@ import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
-import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Card, CardContent } from '@/components/ui/card'
 import { BarChart3, SunMedium, Zap, AlertTriangle, Send, Loader2, Square } from 'lucide-react'
 import { useChat } from '@/features/chat/useChat'
 import ChatLayout from '@/features/chat/ChatLayout'
@@ -431,51 +431,50 @@ export default function ChatPanel(_props: ChatPanelProps = {}) {
               paddingBottom: 'clamp(0.75rem, 2vw, 1rem)',
             }}
           >
-            <form
-              onSubmit={handleSubmit}
-              className="flex items-end gap-2 rounded-2xl border border-slate-300 bg-white px-3 py-2 shadow-sm focus-within:ring-2 focus-within:ring-blue-500"
-            >
-              <Textarea
-                ref={textareaRef}
-                value={input}
-                onChange={e => setInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Message RAG Eval..."
-                rows={1}
-                className="flex-1 bg-transparent resize-none border-none outline-none text-sm text-slate-900 placeholder:text-slate-400 max-h-40"
-                disabled={isLoading}
-              />
-              {isLoading && streamResponses ? (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  className="inline-flex items-center justify-center rounded-full w-9 h-9 shrink-0"
-                  title="Stop generation"
-                  onClick={() => stopStreaming()}
-                >
-                  <Square className="h-4 w-4 fill-current" />
-                </Button>
-              ) : null}
-              <Button
-                type="submit"
-                size="icon"
-                className="inline-flex items-center justify-center rounded-full bg-blue-600 text-white w-9 h-9 hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition"
-                disabled={isLoading || !input.trim()}
-              >
-                {isLoading ? (
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                ) : (
-                  <Send className="h-5 w-5" />
-                )}
-              </Button>
-            </form>
+            <Card className="rounded-2xl border-slate-300 shadow-sm focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-0">
+              <CardContent className="flex items-end gap-2 p-2">
+                <form onSubmit={handleSubmit} className="flex flex-1 items-end gap-2 min-w-0">
+                  <Textarea
+                    ref={textareaRef}
+                    value={input}
+                    onChange={e => setInput(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder="Message RAG Eval..."
+                    rows={1}
+                    className="flex-1 bg-transparent resize-none border-none outline-none text-sm text-slate-900 placeholder:text-slate-400 max-h-40"
+                    disabled={isLoading}
+                  />
+                  {isLoading && streamResponses ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="inline-flex items-center justify-center rounded-full w-9 h-9 shrink-0"
+                      title="Stop generation"
+                      onClick={() => stopStreaming()}
+                    >
+                      <Square className="h-4 w-4 fill-current" />
+                    </Button>
+                  ) : null}
+                  <Button
+                    type="submit"
+                    size="icon"
+                    className="inline-flex items-center justify-center rounded-full bg-blue-600 text-white w-9 h-9 hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                    disabled={isLoading || !input.trim()}
+                  >
+                    {isLoading ? (
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                    ) : (
+                      <Send className="h-5 w-5" />
+                    )}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
             {error && (
-              <Alert variant="destructive" className="mt-2 py-2">
-                <AlertDescription>
-                  {typeof error === 'string' ? error : 'Something went wrong'}
-                </AlertDescription>
-              </Alert>
+              <p className="text-sm text-destructive mt-2 px-0.5" role="status">
+                {typeof error === 'string' ? error : 'Something went wrong'}
+              </p>
             )}
           </div>
         </div>

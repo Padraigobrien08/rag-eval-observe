@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import ReactMarkdown from 'react-markdown'
+import { AlertCircle, Loader2 } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -10,7 +11,10 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Loader2 } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Skeleton } from '@/components/ui/skeleton'
 import type { Citation } from './types'
 import { getDocumentChunks } from '@/lib/api/client'
 
@@ -39,7 +43,6 @@ export default function CitationDetailDialog({
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Reset state when dialog closes
   useEffect(() => {
     if (!open) {
       setChunkContent(null)
@@ -48,7 +51,6 @@ export default function CitationDetailDialog({
     }
   }, [open])
 
-  // Fetch chunk content when dialog opens with a citation
   useEffect(() => {
     if (!open || !citation || !citation.document_id || !citation.chunk_id) return
 
@@ -80,64 +82,32 @@ export default function CitationDetailDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        className="!max-w-lg w-[90vw] max-h-[90vh] overflow-hidden flex flex-col"
-        style={{ maxWidth: '72rem', padding: 0 }}
-      >
-        <div className="flex flex-col h-full">
-          {/* Header */}
-          <div
-            className="shrink-0 border-b border-slate-200 bg-white"
-            style={{
-              paddingTop: '1.5rem',
-              paddingBottom: '1.5rem',
-              paddingLeft: '2rem',
-              paddingRight: '2rem',
-            }}
-          >
+      <DialogContent className="flex max-h-[90vh] w-[90vw] !max-w-lg flex-col overflow-hidden p-0 sm:!max-w-2xl">
+        <div className="flex h-full flex-col">
+          <div className="shrink-0 border-b bg-background px-6 py-4">
             <DialogHeader>
-              <div className="flex items-start" style={{ marginBottom: '0.5rem', gap: '1.25rem' }}>
-                <div
-                  className="flex-shrink-0 flex items-center justify-center rounded-full bg-blue-600 text-white font-semibold"
-                  style={{ width: '2.5rem', height: '2.5rem', fontSize: '0.875rem' }}
+              <div className="flex items-start gap-4">
+                <Badge
+                  variant="default"
+                  className="h-10 w-10 shrink-0 rounded-full p-0 text-sm font-semibold"
                 >
                   {citationNumber}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <DialogTitle
-                    className="text-slate-900 leading-tight"
-                    style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '0.5rem' }}
-                  >
+                </Badge>
+                <div className="min-w-0 flex-1">
+                  <DialogTitle className="text-left text-lg font-semibold leading-tight">
                     {citation.title || citation.source || 'Untitled Document'}
                   </DialogTitle>
-                  <DialogDescription
-                    className="text-slate-600"
-                    style={{ fontSize: '0.875rem', marginBottom: '0.75rem' }}
-                  >
+                  <DialogDescription className="mt-1 text-left text-sm">
                     {citation.source && citation.source !== citation.title
                       ? citation.source
                       : 'Citation details'}
                   </DialogDescription>
-                  <div
-                    className="flex items-center gap-2"
-                    style={{ fontSize: '0.75rem', color: '#64748b' }}
-                  >
-                    <span
-                      className="bg-slate-100 rounded"
-                      style={{
-                        paddingLeft: '0.5rem',
-                        paddingRight: '0.5rem',
-                        paddingTop: '0.25rem',
-                        paddingBottom: '0.25rem',
-                      }}
-                    >
+                  <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                    <Badge variant="secondary" className="font-normal">
                       Chunk {citation.chunk_index}
-                    </span>
-                    <span style={{ color: '#cbd5e1' }}>·</span>
-                    <span
-                      className="font-mono truncate"
-                      style={{ color: '#94a3b8', maxWidth: '200px' }}
-                    >
+                    </Badge>
+                    <span className="text-muted-foreground/60">·</span>
+                    <span className="max-w-[220px] truncate font-mono text-[11px]">
                       {citation.chunk_id}
                     </span>
                   </div>
@@ -146,134 +116,56 @@ export default function CitationDetailDialog({
             </DialogHeader>
           </div>
 
-          {/* Content */}
-          <ScrollArea
-            className="flex-1"
-            style={{
-              paddingLeft: '2rem',
-              paddingRight: '2rem',
-              paddingTop: '1.5rem',
-              paddingBottom: '1.5rem',
-            }}
-          >
-            <div>
-              {isLoading ? (
-                <div
-                  className="flex items-center gap-3 text-slate-600"
-                  style={{ fontSize: '0.875rem', paddingTop: '2rem', paddingBottom: '2rem' }}
-                >
-                  <Loader2 className="h-5 w-5 animate-spin" style={{ color: '#94a3b8' }} />
-                  <span>Loading content...</span>
+          <ScrollArea className="flex-1 px-6 py-4">
+            {isLoading ? (
+              <div className="space-y-3 py-4">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Loading content…</span>
                 </div>
-              ) : chunkContent ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                  <div
-                    className="bg-slate-50 rounded-lg border border-slate-200"
-                    style={{
-                      paddingTop: '1.5rem',
-                      paddingBottom: '1.5rem',
-                      paddingLeft: '1.5rem',
-                      paddingRight: '1.5rem',
-                      boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
-                    }}
-                  >
-                    <p
-                      className="text-slate-700 uppercase tracking-wide"
-                      style={{
-                        fontSize: '0.75rem',
-                        fontWeight: 600,
-                        marginBottom: '1rem',
-                        letterSpacing: '0.05em',
-                      }}
-                    >
-                      Content:
-                    </p>
-                    <div
-                      className="prose prose-sm max-w-none text-slate-800 leading-relaxed"
-                      style={{ lineHeight: '1.75' }}
-                    >
+                <Skeleton className="h-24 w-full" />
+                <Skeleton className="h-16 w-full" />
+              </div>
+            ) : chunkContent ? (
+              <div className="flex flex-col gap-4">
+                <Card className="shadow-sm">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                      Content
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="prose prose-sm max-w-none leading-relaxed text-foreground">
                       <ReactMarkdown>{chunkContent.content}</ReactMarkdown>
                     </div>
-                  </div>
-                  {chunkContent.metadata && Object.keys(chunkContent.metadata).length > 0 && (
-                    <div
-                      className="bg-slate-50 rounded-lg border border-slate-200"
-                      style={{
-                        paddingTop: '1.25rem',
-                        paddingBottom: '1.25rem',
-                        paddingLeft: '1.25rem',
-                        paddingRight: '1.25rem',
-                        boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
-                      }}
-                    >
-                      <p
-                        className="text-slate-700 uppercase tracking-wide"
-                        style={{
-                          fontSize: '0.75rem',
-                          fontWeight: 600,
-                          marginBottom: '1rem',
-                          letterSpacing: '0.05em',
-                        }}
-                      >
+                  </CardContent>
+                </Card>
+                {chunkContent.metadata && Object.keys(chunkContent.metadata).length > 0 && (
+                  <Card className="shadow-sm">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                         Metadata
-                      </p>
-                      <div
-                        className="bg-white rounded border border-slate-200 overflow-x-auto"
-                        style={{
-                          paddingTop: '1rem',
-                          paddingBottom: '1rem',
-                          paddingLeft: '1rem',
-                          paddingRight: '1rem',
-                        }}
-                      >
-                        <pre
-                          className="text-slate-700 font-mono leading-relaxed"
-                          style={{
-                            fontSize: '0.75rem',
-                            margin: 0,
-                            whiteSpace: 'pre-wrap',
-                            wordBreak: 'break-word',
-                          }}
-                        >
-                          {JSON.stringify(chunkContent.metadata, null, 2)}
-                        </pre>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ) : error ? (
-                <div
-                  className="bg-red-50 border border-red-200 rounded-lg"
-                  style={{
-                    paddingTop: '1rem',
-                    paddingBottom: '1rem',
-                    paddingLeft: '1rem',
-                    paddingRight: '1rem',
-                  }}
-                >
-                  <p className="font-medium text-red-800" style={{ fontSize: '0.875rem' }}>
-                    Failed to load content
-                  </p>
-                  <p className="text-red-600" style={{ fontSize: '0.75rem', marginTop: '0.25rem' }}>
-                    {error}
-                  </p>
-                </div>
-              ) : (
-                <div
-                  className="bg-slate-50 border border-slate-200 rounded-lg"
-                  style={{
-                    paddingTop: '1rem',
-                    paddingBottom: '1rem',
-                    paddingLeft: '1rem',
-                    paddingRight: '1rem',
-                  }}
-                >
-                  <p className="text-slate-500" style={{ fontSize: '0.875rem' }}>
-                    Content not available
-                  </p>
-                </div>
-              )}
-            </div>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <pre className="max-h-48 overflow-auto rounded-md border bg-muted/30 p-3 font-mono text-xs leading-relaxed">
+                        {JSON.stringify(chunkContent.metadata, null, 2)}
+                      </pre>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            ) : error ? (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Failed to load content</AlertTitle>
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            ) : (
+              <Alert>
+                <AlertDescription>Content not available</AlertDescription>
+              </Alert>
+            )}
           </ScrollArea>
         </div>
       </DialogContent>

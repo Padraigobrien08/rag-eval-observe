@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback } from 'react'
 import { v4 as uuid } from 'uuid'
 import type { ChatMessage, Citation } from './types'
+import { toast } from 'sonner'
 import { ragQuery, ragQueryStream } from '@/lib/api/client'
 import { estimateChatMessageCostUsd } from '@/lib/openai-pricing'
 
@@ -10,6 +11,11 @@ export function useChat() {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  const setUserError = useCallback((message: string) => {
+    setError(message)
+    toast.error(message)
+  }, [])
   /** While streaming: retrieval UI until first token, then generating UI */
   const [streamPhase, setStreamPhase] = useState<'idle' | 'retrieval' | 'generating'>('idle')
   const streamDeltaStartedRef = useRef(false)
@@ -152,9 +158,9 @@ export function useChat() {
                 return next
               })
               if (msg.toLowerCase().includes('rate limit')) {
-                setError('Rate limit exceeded. Please wait a moment and try again.')
+                setUserError('Rate limit exceeded. Please wait a moment and try again.')
               } else {
-                setError(msg)
+                setUserError(msg)
               }
             },
             onAbort: () => {
@@ -220,11 +226,11 @@ export function useChat() {
     } catch (err: unknown) {
       const error = err as Error & { status?: number }
       if (error.status === 429) {
-        setError('Rate limit exceeded. Please wait a moment and try again.')
+        setUserError('Rate limit exceeded. Please wait a moment and try again.')
       } else if (error.message) {
-        setError(error.message)
+        setUserError(error.message)
       } else {
-        setError('Failed to query backend. Please try again.')
+        setUserError('Failed to query backend. Please try again.')
       }
     } finally {
       streamAbortRef.current = null
