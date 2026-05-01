@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import ReactMarkdown from 'react-markdown'
-import { ChevronDown, ChevronUp } from 'lucide-react'
+import { ChevronDown, ChevronUp, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import type { ChatMessage } from './types'
 import CitationsDropdown from './CitationsDropdown'
@@ -121,6 +121,33 @@ export default function MessageBubble({ message, previousMessage }: MessageBubbl
     return (
       <div className="flex justify-center">
         <p className="text-xs text-slate-400">{message.content}</p>
+      </div>
+    )
+  }
+
+  const streamingEmpty =
+    !isUser && Boolean(message.metadata?.streaming) && !message.content.trim()
+
+  if (streamingEmpty) {
+    return (
+      <div
+        className={`flex w-full justify-start`}
+        style={{ width: '100%', paddingLeft: '2rem', paddingRight: '2rem' }}
+      >
+        <div
+          className="rounded-2xl shadow-sm bg-slate-100 text-slate-600 flex items-center gap-2 animate-pulse"
+          style={{
+            fontSize: '0.9375rem',
+            paddingTop: '0.75rem',
+            paddingBottom: '0.75rem',
+            paddingLeft: '1rem',
+            paddingRight: '1rem',
+            maxWidth: '80%',
+          }}
+        >
+          <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
+          <span>Waiting for the first tokens…</span>
+        </div>
       </div>
     )
   }

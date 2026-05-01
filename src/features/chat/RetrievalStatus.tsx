@@ -5,6 +5,8 @@ import { Loader2, Search, Zap, Layers, GitBranch } from 'lucide-react'
 interface RetrievalStatusProps {
   ragModel: string
   isLoading: boolean
+  /** After retrieval; show a lighter status while the model streams tokens */
+  answerStreaming?: boolean
 }
 
 const modelInfo: Record<string, { name: string; icon: React.ReactNode; steps: string[] }> = {
@@ -46,10 +48,31 @@ const modelInfo: Record<string, { name: string; icon: React.ReactNode; steps: st
   },
 }
 
-export default function RetrievalStatus({ ragModel, isLoading }: RetrievalStatusProps) {
+export default function RetrievalStatus({
+  ragModel,
+  isLoading,
+  answerStreaming = false,
+}: RetrievalStatusProps) {
   if (!isLoading) return null
 
   const info = modelInfo[ragModel] || modelInfo['vector-similarity']
+
+  if (answerStreaming) {
+    return (
+      <div className="flex justify-start mb-4">
+        <div
+          className="rounded-2xl bg-slate-50 border border-slate-200 px-4 py-3 text-sm"
+          style={{ maxWidth: '80%' }}
+        >
+          <div className="flex items-center gap-2 text-slate-800">
+            <Loader2 className="h-4 w-4 animate-spin text-slate-600" />
+            <span className="font-medium">Generating answer</span>
+          </div>
+          <p className="text-xs text-slate-600 mt-2">Streaming tokens from the model…</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="flex justify-start mb-4">

@@ -6,7 +6,7 @@ import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
-import { BarChart3, SunMedium, Zap, AlertTriangle, Send, Loader2 } from 'lucide-react'
+import { BarChart3, SunMedium, Zap, AlertTriangle, Send, Loader2, Square } from 'lucide-react'
 import { useChat } from '@/features/chat/useChat'
 import ChatLayout from '@/features/chat/ChatLayout'
 import { useRagSettings } from '@/features/settings/useRagSettings'
@@ -21,7 +21,8 @@ interface ChatPanelProps {
 
 export default function ChatPanel(_props: ChatPanelProps = {}) {
   const router = useRouter()
-  const { messages, isLoading, error, sendMessage, resetChat } = useChat()
+  const { messages, isLoading, error, sendMessage, resetChat, stopStreaming, streamPhase } =
+    useChat()
   const { topK, debug, ragModel, streamResponses } = useRagSettings()
   const [connection, setConnection] = useState<ConnectionState>('unknown')
   const [input, setInput] = useState('')
@@ -409,6 +410,7 @@ export default function ChatPanel(_props: ChatPanelProps = {}) {
               onSend={handleSend}
               showInput={false}
               ragModel={ragModel}
+              answerStreaming={streamPhase === 'generating'}
             />
           )}
         </div>
@@ -442,6 +444,18 @@ export default function ChatPanel(_props: ChatPanelProps = {}) {
                 className="flex-1 bg-transparent resize-none border-none outline-none text-sm text-slate-900 placeholder:text-slate-400 max-h-40"
                 disabled={isLoading}
               />
+              {isLoading && streamResponses ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="inline-flex items-center justify-center rounded-full w-9 h-9 shrink-0"
+                  title="Stop generation"
+                  onClick={() => stopStreaming()}
+                >
+                  <Square className="h-4 w-4 fill-current" />
+                </Button>
+              ) : null}
               <Button
                 type="submit"
                 size="icon"

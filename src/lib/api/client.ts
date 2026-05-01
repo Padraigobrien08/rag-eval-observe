@@ -46,6 +46,17 @@ function ensureBrowser() {
   }
 }
 
+/** Abort when any of the signals abort (DOM spec `AbortSignal.any` is not universal yet). */
+function combineAbortSignals(a: AbortSignal, b: AbortSignal): AbortSignal {
+  if (a.aborted) return a
+  if (b.aborted) return b
+  const merged = new AbortController()
+  const onAbort = () => merged.abort()
+  a.addEventListener('abort', onAbort)
+  b.addEventListener('abort', onAbort)
+  return merged.signal
+}
+
 export async function ragQuery(body: {
   query: string
   topK?: number
@@ -73,6 +84,8 @@ export async function ragQuery(body: {
   return res.json()
 }
 
+const RAG_STREAM_TIMEOUT_MS = 180_000
+
 export async function ragQueryStream(
   body: {
     query: string
@@ -85,18 +98,46 @@ export async function ragQueryStream(
     onDelta: (text: string) => void
     onDone: (data: Record<string, unknown>) => void
     onError: (message: string) => void
+    onAbort?: () => void
   },
   signal?: AbortSignal
 ): Promise<void> {
   ensureBrowser()
-  const res = await fetch(`${API_BASE_URL}/api/v1/query/stream`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-    signal,
-  })
+
+  let timedOut = false
+  const timeoutController = new AbortController()
+  const timeoutId = window.setTimeout(() => {
+    timedOut = true
+    timeoutController.abort()
+  }, RAG_STREAM_TIMEOUT_MS)
+
+  const combined =
+    signal !== undefined ? combineAbortSignals(signal, timeoutController.signal) : timeoutController.signal
+
+  let res: Response
+  try {
+    res = await fetch(`${API_BASE_URL}/api/v1/query/stream`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+      signal: combined,
+    })
+  } catch {
+    window.clearTimeout(timeoutId)
+    if (timedOut) {
+      handlers.onError('The request timed out. Try again or turn off streaming in settings.')
+      return
+    }
+    if (signal?.aborted) {
+      handlers.onAbort?.()
+      return
+    }
+    handlers.onError('Network error while connecting for streaming.')
+    return
+  }
 
   if (!res.ok) {
+    window.clearTimeout(timeoutId)
     const text = await res.text().catch(() => '')
     handlers.onError(messageFromErrorResponse(text, res.status))
     return
@@ -104,6 +145,7 @@ export async function ragQueryStream(
 
   const reader = res.body?.getReader()
   if (!reader) {
+    window.clearTimeout(timeoutId)
     handlers.onError('No response body')
     return
   }
@@ -111,6 +153,7 @@ export async function ragQueryStream(
   const decoder = new TextDecoder()
   let buffer = ''
   let streamFailed = false
+  let sawDone = false
 
   const processBuffer = (): void => {
     const parts = buffer.split('\n\n')
@@ -132,6 +175,7 @@ export async function ragQueryStream(
         if (o.type === 'delta' && typeof o.text === 'string') {
           handlers.onDelta(o.text)
         } else if (o.type === 'done') {
+          sawDone = true
           handlers.onDone(ev as Record<string, unknown>)
         } else if (o.type === 'error' && typeof o.message === 'string') {
           streamFailed = true
@@ -142,17 +186,55 @@ export async function ragQueryStream(
     }
   }
 
-  while (!streamFailed) {
-    const { done, value } = await reader.read()
-    if (done) {
-      if (buffer.trim()) {
-        buffer += '\n\n'
-        processBuffer()
+  try {
+    while (!streamFailed) {
+      let readResult: ReadableStreamReadResult<Uint8Array>
+      try {
+        readResult = await reader.read()
+      } catch {
+        window.clearTimeout(timeoutId)
+        if (timedOut) {
+          handlers.onError('The request timed out while streaming.')
+          return
+        }
+        if (signal?.aborted) {
+          handlers.onAbort?.()
+          return
+        }
+        handlers.onError('Connection lost while streaming.')
+        return
       }
-      break
+
+      const { done, value } = readResult
+      if (done) {
+        if (buffer.trim()) {
+          buffer += '\n\n'
+          processBuffer()
+        }
+        break
+      }
+      buffer += decoder.decode(value, { stream: true })
+      processBuffer()
     }
-    buffer += decoder.decode(value, { stream: true })
-    processBuffer()
+  } finally {
+    window.clearTimeout(timeoutId)
+    try {
+      reader.releaseLock()
+    } catch {
+      /* ignore */
+    }
+  }
+
+  if (timedOut) {
+    handlers.onError('The request timed out while streaming.')
+    return
+  }
+  if (signal?.aborted) {
+    handlers.onAbort?.()
+    return
+  }
+  if (!sawDone && !streamFailed) {
+    handlers.onError('Stream ended before the answer was complete. Try again.')
   }
 }
 

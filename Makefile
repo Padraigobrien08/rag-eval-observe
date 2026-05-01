@@ -29,9 +29,9 @@ db:
 migrate:
 	cd backend && uv run python scripts/apply_init_sql.py
 
-# Database seeding
+# Database seeding (eval corpus + local demo sources; idempotent)
 seed:
-	tsx src/lib/db/seed.ts
+	cd backend && uv run python scripts/seed_eval_corpus.py
 
 # Evaluation
 eval:

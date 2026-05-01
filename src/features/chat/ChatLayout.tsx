@@ -14,6 +14,8 @@ interface ChatLayoutProps {
   onSend: (content: string) => void
   showInput?: boolean
   ragModel?: string
+  /** Show compact status while the model streams after retrieval */
+  answerStreaming?: boolean
 }
 
 export default function ChatLayout({
@@ -22,6 +24,7 @@ export default function ChatLayout({
   onSend,
   showInput = true,
   ragModel = 'vector-similarity',
+  answerStreaming = false,
 }: ChatLayoutProps) {
   const [input, setInput] = useState('')
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -82,7 +85,13 @@ export default function ChatLayout({
                 />
               )
             })}
-            {isLoading && <RetrievalStatus ragModel={ragModel} isLoading={isLoading} />}
+            {isLoading && (
+              <RetrievalStatus
+                ragModel={ragModel}
+                isLoading={isLoading}
+                answerStreaming={answerStreaming}
+              />
+            )}
             <div ref={messagesEndRef} />
           </div>
         </div>

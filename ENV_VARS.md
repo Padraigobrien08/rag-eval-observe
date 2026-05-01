@@ -18,6 +18,16 @@ AZURE_API_BASE_URL=https://rag-eval-aci-dns-4.bme0cjc9bkevdbd4.westeurope.azurec
 
 **Note:** The frontend now proxies requests through Vercel API routes (`/api/backend/*`), so the backend URL is server-side only and doesn't need the `NEXT_PUBLIC_` prefix. This avoids mixed content and CORS issues.
 
+### Optional: Backend API key (proxy injects header)
+
+If the FastAPI app has `API_KEY` set (see backend section), browsers never see that secret. Add the same value on Vercel so the server-side proxy can attach it:
+
+```env
+AZURE_API_BACKEND_KEY=your-shared-secret
+```
+
+The Next.js route forwards this as `X-API-Key` on every proxied request. Leave unset for local dev when the backend has no `API_KEY`.
+
 ---
 
 ## Backend (Azure Container Apps)
@@ -71,7 +81,26 @@ MAX_CONTEXT_TOKENS=12000
 # Server Configuration
 HOST=0.0.0.0
 PORT=8000
+
+# Optional: require X-API-Key or Authorization: Bearer on all /api/v1/* routes
+# except /health and /metrics (empty = disabled)
+API_KEY=
+
+# OpenTelemetry (install: cd backend && uv sync --extra otel)
+OTEL_ENABLED=false
+OTEL_SERVICE_NAME=rag-eval-backend
+# Standard OTLP HTTP env vars, for example:
+# OTEL_EXPORTER_OTLP_ENDPOINT=https://your-collector:4318/v1/traces
 ```
+
+### Metrics and streaming
+
+- `GET /api/v1/metrics` and `GET /api/v1/metrics/prometheus` expose per-route counters (including `/api/v1/query` and `/api/v1/query/stream`) and token totals. They are in-memory and reset on process restart.
+
+### Evaluation harness
+
+- `EVAL_MAX_CASES` — optional positive integer; truncate the eval dataset for cheaper runs (e.g. in CI smoke jobs).
+- `EVAL_USE_LLM_JUDGE` — `true` / `false` for extra LLM judging in `eval/run_eval.py`.
 
 ---
 
@@ -114,8 +143,9 @@ CORS_ALLOW_ORIGINS=https://rag-eval-observability.vercel.app,https://rag-eval-ob
 
 ### Vercel:
 
-- [ ] Add `NEXT_PUBLIC_API_BASE_URL` pointing to Azure URL
-- [ ] Redeploy after adding environment variable
+- [ ] Add `AZURE_API_BASE_URL` pointing to your FastAPI base URL (no `NEXT_PUBLIC_` prefix)
+- [ ] If the backend uses `API_KEY`, add `AZURE_API_BACKEND_KEY` with the same value
+- [ ] Redeploy after adding environment variables
 
 ### Azure Container Apps:
 
@@ -123,6 +153,8 @@ CORS_ALLOW_ORIGINS=https://rag-eval-observability.vercel.app,https://rag-eval-ob
 - [ ] Add `OPENAI_API_KEY` - **Mark as Secure**
 - [ ] Add `ENVIRONMENT=production`
 - [ ] Add `CORS_ALLOW_ORIGINS` with your Vercel URL(s)
+- [ ] Optional: add `API_KEY` and the same value in Vercel as `AZURE_API_BACKEND_KEY`
+- [ ] Optional: `OTEL_ENABLED=true` and OTLP endpoint env vars after `uv sync --extra otel`
 - [ ] Save and wait for container restart
 
 ---

@@ -55,10 +55,15 @@ async function proxyRequest(request: NextRequest, pathSegments: string[]) {
 
     // Forward specific headers (matching Pages Router pattern)
     // Don't set content-type for FormData - fetch will set it automatically with boundary
-    const headers: HeadersInit = {
+    const headers: Record<string, string> = {
       ...(request.headers.get('authorization')
         ? { authorization: request.headers.get('authorization')! }
         : {}),
+    }
+
+    const backendApiKey = process.env.AZURE_API_BACKEND_KEY?.trim()
+    if (backendApiKey) {
+      headers['x-api-key'] = backendApiKey
     }
 
     // Only set content-type if it's not FormData

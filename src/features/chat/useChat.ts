@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useCallback } from 'react'
 import { v4 as uuid } from 'uuid'
 import type { ChatMessage, Citation } from './types'
 import { ragQuery, ragQueryStream } from '@/lib/api/client'
@@ -10,6 +10,14 @@ export function useChat() {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  /** While streaming: retrieval UI until first token, then generating UI */
+  const [streamPhase, setStreamPhase] = useState<'idle' | 'retrieval' | 'generating'>('idle')
+  const streamDeltaStartedRef = useRef(false)
+  const streamAbortRef = useRef<AbortController | null>(null)
+
+  const stopStreaming = useCallback(() => {
+    streamAbortRef.current?.abort()
+  }, [])
 
   const mapCitations = (raw: unknown): Citation[] =>
     ((raw as unknown[]) || []).map((cit: unknown) => {
@@ -34,6 +42,8 @@ export function useChat() {
     }
   ) => {
     setError(null)
+    streamAbortRef.current?.abort()
+
     const userMessage: ChatMessage = {
       id: uuid(),
       role: 'user',
@@ -55,18 +65,27 @@ export function useChat() {
 
       if (useStream) {
         const assistantId = uuid()
+        const ac = new AbortController()
+        streamAbortRef.current = ac
+        streamDeltaStartedRef.current = false
+        setStreamPhase('retrieval')
+
         setMessages(prev => [
           ...prev,
           {
             id: assistantId,
             role: 'assistant',
             content: '',
-            metadata: {},
+            metadata: { streaming: true },
           },
         ])
 
         await ragQueryStream(requestBody, {
           onDelta: fragment => {
+            if (!streamDeltaStartedRef.current) {
+              streamDeltaStartedRef.current = true
+              setStreamPhase('generating')
+            }
             setMessages(prev => {
               const i = prev.findIndex(m => m.id === assistantId)
               if (i === -1) return prev
@@ -81,6 +100,7 @@ export function useChat() {
             const citations = mapCitations(data.citations)
             const metadata: Record<string, unknown> = {
               ...((data.metadata ?? data.telemetry ?? {}) as Record<string, unknown>),
+              streaming: false,
             }
             const retrievedCount = data.retrieved_chunk_count
             if (typeof retrievedCount === 'number') {
@@ -114,14 +134,48 @@ export function useChat() {
             })
           },
           onError: msg => {
-            setMessages(prev => prev.filter(m => m.id !== assistantId))
+            setMessages(prev => {
+              const i = prev.findIndex(m => m.id === assistantId)
+              if (i === -1) return prev
+              const cur = prev[i]
+              if (cur.role !== 'assistant') return prev
+              if (!cur.content.trim()) {
+                return prev.filter(m => m.id !== assistantId)
+              }
+              const next = [...prev]
+              next[i] = {
+                ...cur,
+                metadata: { ...cur.metadata, streaming: false },
+              }
+              return next
+            })
             if (msg.toLowerCase().includes('rate limit')) {
               setError('Rate limit exceeded. Please wait a moment and try again.')
             } else {
               setError(msg)
             }
           },
-        })
+          onAbort: () => {
+            setMessages(prev => {
+              const i = prev.findIndex(m => m.id === assistantId)
+              if (i === -1) return prev
+              const cur = prev[i]
+              if (cur.role !== 'assistant') return prev
+              if (!cur.content.trim()) {
+                return prev.filter(m => m.id !== assistantId)
+              }
+              const next = [...prev]
+              next[i] = {
+                ...cur,
+                metadata: { ...cur.metadata, streaming: false },
+              }
+              return next
+            })
+            setError(null)
+          },
+        }, ac.signal)
+        streamAbortRef.current = null
+        setStreamPhase('idle')
       } else {
         const resp = await ragQuery(requestBody)
         const citations = mapCitations(resp.citations)
@@ -160,7 +214,6 @@ export function useChat() {
         setMessages(prev => [...prev, assistantMessage])
       }
     } catch (err: unknown) {
-      // Provide user-friendly error messages
       const error = err as Error & { status?: number }
       if (error.status === 429) {
         setError('Rate limit exceeded. Please wait a moment and try again.')
@@ -170,14 +223,27 @@ export function useChat() {
         setError('Failed to query backend. Please try again.')
       }
     } finally {
+      streamAbortRef.current = null
+      setStreamPhase('idle')
       setIsLoading(false)
     }
   }
 
   const resetChat = () => {
+    streamAbortRef.current?.abort()
+    streamAbortRef.current = null
+    setStreamPhase('idle')
     setMessages([])
     setError(null)
   }
 
-  return { messages, isLoading, error, sendMessage, resetChat }
+  return {
+    messages,
+    isLoading,
+    error,
+    sendMessage,
+    resetChat,
+    stopStreaming,
+    streamPhase,
+  }
 }
