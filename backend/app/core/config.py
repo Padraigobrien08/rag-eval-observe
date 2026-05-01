@@ -1,12 +1,30 @@
+from pathlib import Path
+from typing import List, Tuple
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from typing import List
+
+_BACKEND_DIR = Path(__file__).resolve().parent.parent
+_ROOT_ENV = _BACKEND_DIR.parent / ".env"
+_BACKEND_ENV = _BACKEND_DIR / ".env"
+
+
+def _env_files() -> Tuple[str, ...]:
+    """Repo root .env first, then backend/.env (later file overrides)."""
+    paths: List[Path] = []
+    if _ROOT_ENV.is_file():
+        paths.append(_ROOT_ENV)
+    if _BACKEND_ENV.is_file():
+        paths.append(_BACKEND_ENV)
+    if not paths:
+        return (".env",)
+    return tuple(str(p) for p in paths)
 
 
 class Settings(BaseSettings):
     """Application settings."""
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=_env_files(),
         env_file_encoding="utf-8",
         case_sensitive=False,
         extra="ignore",
@@ -22,7 +40,7 @@ class Settings(BaseSettings):
     # OpenAI
     OPENAI_API_KEY: str
     OPENAI_EMBEDDING_MODEL: str = "text-embedding-3-small"
-    OPENAI_CHAT_MODEL: str = "gpt-4-turbo-preview"
+    OPENAI_CHAT_MODEL: str = "gpt-4o-mini"
     EMBEDDING_DIMENSION: int = 1536
 
     # OpenAI API settings
