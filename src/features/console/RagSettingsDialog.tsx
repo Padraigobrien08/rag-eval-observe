@@ -58,7 +58,10 @@ function SettingsSection({
   children: ReactNode
 }) {
   return (
-    <section aria-labelledby={sectionId} className="space-y-4 rounded-xl border bg-muted/30 p-5">
+    <section
+      aria-labelledby={sectionId}
+      className="space-y-4 rounded-xl border border-border/60 bg-muted/30 p-5 shadow-sm"
+    >
       <h3 id={sectionId} className="text-base font-semibold text-foreground">
         {title}
       </h3>
@@ -139,7 +142,7 @@ export default function RagSettingsDialog({ collapsed = false }: RagSettingsDial
 
       <DialogContent
         className={cn(
-          'flex max-h-[85vh] w-[calc(100vw-2rem)] flex-col gap-0 overflow-hidden rounded-2xl border bg-background p-0 shadow-2xl sm:max-w-[560px] sm:w-full'
+          'flex max-h-[85vh] w-[calc(100vw-2rem)] max-w-[560px] flex-col gap-0 overflow-hidden rounded-2xl border bg-background p-0 shadow-2xl'
         )}
       >
         <DialogHeader className="shrink-0 px-6 pb-4 pt-6 text-left sm:pr-14">
@@ -151,7 +154,7 @@ export default function RagSettingsDialog({ collapsed = false }: RagSettingsDial
           </DialogDescription>
         </DialogHeader>
 
-        <div className="max-h-[65vh] min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain px-6 py-2">
+        <div className="max-h-[65vh] min-h-0 flex-1 space-y-8 overflow-y-auto overscroll-contain px-6 py-4">
           <SettingsSection
             sectionId="rag-settings-retrieval"
             title="Retrieval model"
