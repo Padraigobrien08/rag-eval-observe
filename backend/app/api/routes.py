@@ -1,6 +1,6 @@
 from typing import List
 from fastapi import APIRouter, HTTPException, Query, Request, UploadFile, File
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, PlainTextResponse
 import structlog
 
 from app.core.config import settings
@@ -655,6 +655,7 @@ async def query_endpoint(
             "latency_ms": answer_response.latency_ms,
             "token_usage": answer_response.token_usage,
             "rag_model": rag_model,
+            "retrieved_chunk_count": len(retrieved_chunks),
         }
 
         # Log response data for debugging
@@ -829,4 +830,24 @@ async def get_metrics_endpoint(request: Request):
         raise HTTPException(
             status_code=500,
             detail="Failed to retrieve metrics",
+        )
+
+
+@router.get("/metrics/prometheus", response_class=PlainTextResponse)
+async def get_metrics_prometheus_endpoint(request: Request):
+    """In-memory metrics in Prometheus text exposition format (single-process)."""
+    request_id = getattr(request.state, "request_id", "unknown")
+    try:
+        metrics = get_metrics()
+        return metrics.prometheus_text()
+    except Exception as e:
+        logger.error(
+            "Failed to export Prometheus metrics",
+            request_id=request_id,
+            error=str(e),
+            exc_info=True,
+        )
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to export metrics",
         )

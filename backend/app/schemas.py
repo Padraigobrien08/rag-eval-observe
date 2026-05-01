@@ -105,3 +105,4 @@ class QueryResponse(BaseModel):
     token_usage: Optional[Dict[str, int]] = None
     debug: Optional[Dict[str, Any]] = None
     rag_model: Optional[str] = None
+    retrieved_chunk_count: int = 0

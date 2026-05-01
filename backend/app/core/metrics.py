@@ -131,6 +131,35 @@ class MetricsCollector:
             "note": "Metrics are in-memory and reset on restart. Single instance only.",
         }
 
+    def prometheus_text(self) -> str:
+        """Prometheus text format for scraping (counters / gauges, in-memory only)."""
+        lines: List[str] = []
+        uptime = int(time.time() - self.start_time)
+        lines.append("# HELP app_uptime_seconds Process uptime in seconds")
+        lines.append("# TYPE app_uptime_seconds gauge")
+        lines.append(f"app_uptime_seconds {uptime}")
+        lines.append("# HELP http_requests_total Total HTTP requests by route and status")
+        lines.append("# TYPE http_requests_total counter")
+        for route, metrics in self.route_metrics.items():
+            for status_code, count in metrics.status_counts.items():
+                safe_route = route.replace("\\", "\\\\").replace('"', '\\"')
+                lines.append(
+                    f'http_requests_total{{route="{safe_route}",status="{status_code}"}} {count}'
+                )
+        lines.append("# HELP http_request_duration_ms_sum Sum of request latencies in ms")
+        lines.append("# TYPE http_request_duration_ms_sum counter")
+        for route, metrics in self.route_metrics.items():
+            safe_route = route.replace("\\", "\\\\").replace('"', '\\"')
+            lines.append(
+                f'http_request_duration_ms_sum{{route="{safe_route}"}} {metrics.total_latency_ms}'
+            )
+        for key, val in self.token_usage.items():
+            safe_key = key.replace(" ", "_")
+            lines.append(f"# HELP openai_tokens_{safe_key} Total OpenAI tokens ({key})")
+            lines.append(f"# TYPE openai_tokens_{safe_key} counter")
+            lines.append(f"openai_tokens_{safe_key} {val}")
+        return "\n".join(lines) + "\n"
+
     def reset(self) -> None:
         """Reset all metrics (useful for testing)."""
         self.route_metrics.clear()
