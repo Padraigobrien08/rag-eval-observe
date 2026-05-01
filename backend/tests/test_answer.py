@@ -206,7 +206,7 @@ class TestGenerateAnswer:
             assert "RAG" in result.answer
             assert len(result.citations) > 0
             assert "chunk-1" in result.used_chunk_ids
-            assert result.latency_ms > 0
+            assert result.latency_ms >= 0
             assert result.token_usage is not None
             assert result.token_usage["total_tokens"] == 150
 

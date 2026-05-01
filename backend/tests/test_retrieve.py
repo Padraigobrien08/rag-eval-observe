@@ -1,8 +1,22 @@
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
-import asyncpg
 
 from app.rag.retrieve import retrieve, RetrievedChunk, RetrieveError
+
+
+def _mock_pool_with_conn(mock_conn):
+    """Pool.acquire() returns an async context manager (asyncpg-compatible)."""
+    mock_pool = MagicMock()
+    acm = MagicMock()
+    acm.__aenter__ = AsyncMock(return_value=mock_conn)
+    acm.__aexit__ = AsyncMock(return_value=None)
+    mock_pool.acquire = MagicMock(return_value=acm)
+    return mock_pool
+
+
+def _row(**fields):
+    """asyncpg-style row (code uses row['chunk_id'], not attribute access)."""
+    return dict(fields)
 
 
 class TestRetrieveBasic:
@@ -18,36 +32,33 @@ class TestRetrieveBasic:
         mock_openai_client.create_embedding = AsyncMock(return_value=mock_embedding_response)
 
         # Mock database
-        mock_pool = AsyncMock()
         mock_conn = AsyncMock()
-        mock_pool.acquire = AsyncMock(return_value=mock_conn)
-        mock_conn.__aenter__ = AsyncMock(return_value=mock_conn)
-        mock_conn.__aexit__ = AsyncMock(return_value=None)
+        mock_pool = _mock_pool_with_conn(mock_conn)
 
-        # Mock query results
-        mock_row1 = MagicMock()
-        mock_row1.chunk_id = "chunk-1"
-        mock_row1.document_id = "doc-1"
-        mock_row1.title = "Test Doc"
-        mock_row1.source = "test-source"
-        mock_row1.chunk_index = 0
-        mock_row1.content = "Test content"
-        mock_row1.similarity = 0.95
-
-        mock_row2 = MagicMock()
-        mock_row2.chunk_id = "chunk-2"
-        mock_row2.document_id = "doc-1"
-        mock_row2.title = "Test Doc"
-        mock_row2.source = "test-source"
-        mock_row2.chunk_index = 1
-        mock_row2.content = "More content"
-        mock_row2.similarity = 0.85
+        mock_row1 = _row(
+            chunk_id="chunk-1",
+            document_id="doc-1",
+            title="Test Doc",
+            source="test-source",
+            chunk_index=0,
+            content="Test content",
+            similarity=0.95,
+        )
+        mock_row2 = _row(
+            chunk_id="chunk-2",
+            document_id="doc-1",
+            title="Test Doc",
+            source="test-source",
+            chunk_index=1,
+            content="More content",
+            similarity=0.85,
+        )
 
         mock_conn.fetch = AsyncMock(return_value=[mock_row1, mock_row2])
 
         with (
-            patch("app.rag.retrieve.get_openai_client", return_value=mock_openai_client),
-            patch("app.rag.retrieve.get_db_pool", return_value=mock_pool),
+            patch("app.rag.retrieval_strategies.get_openai_client", return_value=mock_openai_client),
+            patch("app.rag.retrieval_strategies.get_db_pool", new=AsyncMock(return_value=mock_pool)),
         ):
             results = await retrieve("test query", top_k=5)
 
@@ -66,26 +77,24 @@ class TestRetrieveBasic:
         mock_embedding_response.embedding = [0.1, 0.2, 0.3] * 512
         mock_openai_client.create_embedding = AsyncMock(return_value=mock_embedding_response)
 
-        mock_pool = AsyncMock()
         mock_conn = AsyncMock()
-        mock_pool.acquire = AsyncMock(return_value=mock_conn)
-        mock_conn.__aenter__ = AsyncMock(return_value=mock_conn)
-        mock_conn.__aexit__ = AsyncMock(return_value=None)
+        mock_pool = _mock_pool_with_conn(mock_conn)
 
-        mock_row = MagicMock()
-        mock_row.chunk_id = "chunk-1"
-        mock_row.document_id = "doc-1"
-        mock_row.title = "Filtered Doc"
-        mock_row.source = "filtered-source"
-        mock_row.chunk_index = 0
-        mock_row.content = "Content"
-        mock_row.similarity = 0.90
+        mock_row = _row(
+            chunk_id="chunk-1",
+            document_id="doc-1",
+            title="Filtered Doc",
+            source="filtered-source",
+            chunk_index=0,
+            content="Content",
+            similarity=0.90,
+        )
 
         mock_conn.fetch = AsyncMock(return_value=[mock_row])
 
         with (
-            patch("app.rag.retrieve.get_openai_client", return_value=mock_openai_client),
-            patch("app.rag.retrieve.get_db_pool", return_value=mock_pool),
+            patch("app.rag.retrieval_strategies.get_openai_client", return_value=mock_openai_client),
+            patch("app.rag.retrieval_strategies.get_db_pool", new=AsyncMock(return_value=mock_pool)),
         ):
             filters = {"source": "filtered-source", "title": "Filtered Doc"}
             results = await retrieve("test query", top_k=5, filters=filters)
@@ -106,17 +115,14 @@ class TestRetrieveBasic:
         mock_embedding_response.embedding = [0.1, 0.2, 0.3] * 512
         mock_openai_client.create_embedding = AsyncMock(return_value=mock_embedding_response)
 
-        mock_pool = AsyncMock()
         mock_conn = AsyncMock()
-        mock_pool.acquire = AsyncMock(return_value=mock_conn)
-        mock_conn.__aenter__ = AsyncMock(return_value=mock_conn)
-        mock_conn.__aexit__ = AsyncMock(return_value=None)
+        mock_pool = _mock_pool_with_conn(mock_conn)
 
         mock_conn.fetch = AsyncMock(return_value=[])
 
         with (
-            patch("app.rag.retrieve.get_openai_client", return_value=mock_openai_client),
-            patch("app.rag.retrieve.get_db_pool", return_value=mock_pool),
+            patch("app.rag.retrieval_strategies.get_openai_client", return_value=mock_openai_client),
+            patch("app.rag.retrieval_strategies.get_db_pool", new=AsyncMock(return_value=mock_pool)),
         ):
             filters = {"source": "test-source"}
             results = await retrieve("test query", top_k=5, filters=filters)
@@ -131,26 +137,24 @@ class TestRetrieveBasic:
         mock_embedding_response.embedding = [0.1, 0.2, 0.3] * 512
         mock_openai_client.create_embedding = AsyncMock(return_value=mock_embedding_response)
 
-        mock_pool = AsyncMock()
         mock_conn = AsyncMock()
-        mock_pool.acquire = AsyncMock(return_value=mock_conn)
-        mock_conn.__aenter__ = AsyncMock(return_value=mock_conn)
-        mock_conn.__aexit__ = AsyncMock(return_value=None)
+        mock_pool = _mock_pool_with_conn(mock_conn)
 
-        mock_row = MagicMock()
-        mock_row.chunk_id = "chunk-1"
-        mock_row.document_id = "doc-1"
-        mock_row.title = None
-        mock_row.source = "test-source"
-        mock_row.chunk_index = 0
-        mock_row.content = "Content"
-        mock_row.similarity = 0.90
+        mock_row = _row(
+            chunk_id="chunk-1",
+            document_id="doc-1",
+            title=None,
+            source="test-source",
+            chunk_index=0,
+            content="Content",
+            similarity=0.90,
+        )
 
         mock_conn.fetch = AsyncMock(return_value=[mock_row])
 
         with (
-            patch("app.rag.retrieve.get_openai_client", return_value=mock_openai_client),
-            patch("app.rag.retrieve.get_db_pool", return_value=mock_pool),
+            patch("app.rag.retrieval_strategies.get_openai_client", return_value=mock_openai_client),
+            patch("app.rag.retrieval_strategies.get_db_pool", new=AsyncMock(return_value=mock_pool)),
         ):
             filters = {"title": None}
             results = await retrieve("test query", top_k=5, filters=filters)
@@ -178,45 +182,42 @@ class TestRetrieveOrdering:
         mock_embedding_response.embedding = query_embedding
         mock_openai_client.create_embedding = AsyncMock(return_value=mock_embedding_response)
 
-        mock_pool = AsyncMock()
         mock_conn = AsyncMock()
-        mock_pool.acquire = AsyncMock(return_value=mock_conn)
-        mock_conn.__aenter__ = AsyncMock(return_value=mock_conn)
-        mock_conn.__aexit__ = AsyncMock(return_value=None)
+        mock_pool = _mock_pool_with_conn(mock_conn)
 
-        # Mock results with decreasing similarity
-        mock_row1 = MagicMock()
-        mock_row1.chunk_id = "chunk-1"
-        mock_row1.document_id = "doc-1"
-        mock_row1.title = "Doc 1"
-        mock_row1.source = "source-1"
-        mock_row1.chunk_index = 0
-        mock_row1.content = "Most similar"
-        mock_row1.similarity = 0.99
-
-        mock_row2 = MagicMock()
-        mock_row2.chunk_id = "chunk-2"
-        mock_row2.document_id = "doc-2"
-        mock_row2.title = "Doc 2"
-        mock_row2.source = "source-2"
-        mock_row2.chunk_index = 0
-        mock_row2.content = "Less similar"
-        mock_row2.similarity = 0.75
-
-        mock_row3 = MagicMock()
-        mock_row3.chunk_id = "chunk-3"
-        mock_row3.document_id = "doc-3"
-        mock_row3.title = "Doc 3"
-        mock_row3.source = "source-3"
-        mock_row3.chunk_index = 0
-        mock_row3.content = "Least similar"
-        mock_row3.similarity = 0.50
+        mock_row1 = _row(
+            chunk_id="chunk-1",
+            document_id="doc-1",
+            title="Doc 1",
+            source="source-1",
+            chunk_index=0,
+            content="Most similar",
+            similarity=0.99,
+        )
+        mock_row2 = _row(
+            chunk_id="chunk-2",
+            document_id="doc-2",
+            title="Doc 2",
+            source="source-2",
+            chunk_index=0,
+            content="Less similar",
+            similarity=0.75,
+        )
+        mock_row3 = _row(
+            chunk_id="chunk-3",
+            document_id="doc-3",
+            title="Doc 3",
+            source="source-3",
+            chunk_index=0,
+            content="Least similar",
+            similarity=0.50,
+        )
 
         mock_conn.fetch = AsyncMock(return_value=[mock_row1, mock_row2, mock_row3])
 
         with (
-            patch("app.rag.retrieve.get_openai_client", return_value=mock_openai_client),
-            patch("app.rag.retrieve.get_db_pool", return_value=mock_pool),
+            patch("app.rag.retrieval_strategies.get_openai_client", return_value=mock_openai_client),
+            patch("app.rag.retrieval_strategies.get_db_pool", new=AsyncMock(return_value=mock_pool)),
         ):
             results = await retrieve("test query", top_k=5)
 
@@ -235,30 +236,28 @@ class TestRetrieveOrdering:
         mock_embedding_response.embedding = [0.1, 0.2, 0.3] * 512
         mock_openai_client.create_embedding = AsyncMock(return_value=mock_embedding_response)
 
-        mock_pool = AsyncMock()
         mock_conn = AsyncMock()
-        mock_pool.acquire = AsyncMock(return_value=mock_conn)
-        mock_conn.__aenter__ = AsyncMock(return_value=mock_conn)
-        mock_conn.__aexit__ = AsyncMock(return_value=None)
+        mock_pool = _mock_pool_with_conn(mock_conn)
 
-        # Create 10 mock rows
         mock_rows = []
         for i in range(10):
-            mock_row = MagicMock()
-            mock_row.chunk_id = f"chunk-{i}"
-            mock_row.document_id = f"doc-{i}"
-            mock_row.title = f"Doc {i}"
-            mock_row.source = f"source-{i}"
-            mock_row.chunk_index = 0
-            mock_row.content = f"Content {i}"
-            mock_row.similarity = 0.9 - (i * 0.01)
-            mock_rows.append(mock_row)
+            mock_rows.append(
+                _row(
+                    chunk_id=f"chunk-{i}",
+                    document_id=f"doc-{i}",
+                    title=f"Doc {i}",
+                    source=f"source-{i}",
+                    chunk_index=0,
+                    content=f"Content {i}",
+                    similarity=0.9 - (i * 0.01),
+                )
+            )
 
         mock_conn.fetch = AsyncMock(return_value=mock_rows)
 
         with (
-            patch("app.rag.retrieve.get_openai_client", return_value=mock_openai_client),
-            patch("app.rag.retrieve.get_db_pool", return_value=mock_pool),
+            patch("app.rag.retrieval_strategies.get_openai_client", return_value=mock_openai_client),
+            patch("app.rag.retrieval_strategies.get_db_pool", new=AsyncMock(return_value=mock_pool)),
         ):
             # Request top_k=3, but mock returns 10
             # The LIMIT in SQL should handle this, but we test the function behavior
@@ -276,10 +275,10 @@ class TestRetrieveErrors:
     @pytest.mark.asyncio
     async def test_retrieve_invalid_top_k(self):
         """Test that invalid top_k raises error."""
-        with pytest.raises(ValueError, match="top_k must be positive"):
+        with pytest.raises(RetrieveError, match="top_k must be positive"):
             await retrieve("test query", top_k=0)
 
-        with pytest.raises(ValueError, match="top_k must be positive"):
+        with pytest.raises(RetrieveError, match="top_k must be positive"):
             await retrieve("test query", top_k=-1)
 
     @pytest.mark.asyncio
@@ -290,7 +289,9 @@ class TestRetrieveErrors:
         mock_openai_client = AsyncMock()
         mock_openai_client.create_embedding = AsyncMock(side_effect=OpenAIError("API error"))
 
-        with patch("app.rag.retrieve.get_openai_client", return_value=mock_openai_client):
+        with patch(
+            "app.rag.retrieval_strategies.get_openai_client", return_value=mock_openai_client
+        ):
             with pytest.raises(RetrieveError, match="Failed to generate embedding"):
                 await retrieve("test query", top_k=5)
 
@@ -302,17 +303,14 @@ class TestRetrieveErrors:
         mock_embedding_response.embedding = [0.1, 0.2, 0.3] * 512
         mock_openai_client.create_embedding = AsyncMock(return_value=mock_embedding_response)
 
-        mock_pool = AsyncMock()
         mock_conn = AsyncMock()
-        mock_pool.acquire = AsyncMock(return_value=mock_conn)
-        mock_conn.__aenter__ = AsyncMock(return_value=mock_conn)
-        mock_conn.__aexit__ = AsyncMock(return_value=None)
+        mock_pool = _mock_pool_with_conn(mock_conn)
 
         mock_conn.fetch = AsyncMock(side_effect=Exception("Database error"))
 
         with (
-            patch("app.rag.retrieve.get_openai_client", return_value=mock_openai_client),
-            patch("app.rag.retrieve.get_db_pool", return_value=mock_pool),
+            patch("app.rag.retrieval_strategies.get_openai_client", return_value=mock_openai_client),
+            patch("app.rag.retrieval_strategies.get_db_pool", new=AsyncMock(return_value=mock_pool)),
         ):
             with pytest.raises(RetrieveError, match="Failed to retrieve chunks"):
                 await retrieve("test query", top_k=5)
@@ -329,30 +327,28 @@ class TestRetrieveScoreMeaning:
         mock_embedding_response.embedding = [0.1, 0.2, 0.3] * 512
         mock_openai_client.create_embedding = AsyncMock(return_value=mock_embedding_response)
 
-        mock_pool = AsyncMock()
         mock_conn = AsyncMock()
-        mock_pool.acquire = AsyncMock(return_value=mock_conn)
-        mock_conn.__aenter__ = AsyncMock(return_value=mock_conn)
-        mock_conn.__aexit__ = AsyncMock(return_value=None)
+        mock_pool = _mock_pool_with_conn(mock_conn)
 
-        # Test various score values
         mock_rows = []
         for score in [1.0, 0.95, 0.5, 0.1, 0.0]:
-            mock_row = MagicMock()
-            mock_row.chunk_id = f"chunk-{score}"
-            mock_row.document_id = "doc-1"
-            mock_row.title = "Test"
-            mock_row.source = "test"
-            mock_row.chunk_index = 0
-            mock_row.content = "Content"
-            mock_row.similarity = score
-            mock_rows.append(mock_row)
+            mock_rows.append(
+                _row(
+                    chunk_id=f"chunk-{score}",
+                    document_id="doc-1",
+                    title="Test",
+                    source="test",
+                    chunk_index=0,
+                    content="Content",
+                    similarity=score,
+                )
+            )
 
         mock_conn.fetch = AsyncMock(return_value=mock_rows)
 
         with (
-            patch("app.rag.retrieve.get_openai_client", return_value=mock_openai_client),
-            patch("app.rag.retrieve.get_db_pool", return_value=mock_pool),
+            patch("app.rag.retrieval_strategies.get_openai_client", return_value=mock_openai_client),
+            patch("app.rag.retrieval_strategies.get_db_pool", new=AsyncMock(return_value=mock_pool)),
         ):
             results = await retrieve("test query", top_k=5)
 
@@ -367,27 +363,24 @@ class TestRetrieveScoreMeaning:
         mock_embedding_response.embedding = [0.1, 0.2, 0.3] * 512
         mock_openai_client.create_embedding = AsyncMock(return_value=mock_embedding_response)
 
-        mock_pool = AsyncMock()
         mock_conn = AsyncMock()
-        mock_pool.acquire = AsyncMock(return_value=mock_conn)
-        mock_conn.__aenter__ = AsyncMock(return_value=mock_conn)
-        mock_conn.__aexit__ = AsyncMock(return_value=None)
+        mock_pool = _mock_pool_with_conn(mock_conn)
 
-        # High similarity should have high score
-        mock_row = MagicMock()
-        mock_row.chunk_id = "chunk-1"
-        mock_row.document_id = "doc-1"
-        mock_row.title = "Test"
-        mock_row.source = "test"
-        mock_row.chunk_index = 0
-        mock_row.content = "Content"
-        mock_row.similarity = 0.95  # High similarity
+        mock_row = _row(
+            chunk_id="chunk-1",
+            document_id="doc-1",
+            title="Test",
+            source="test",
+            chunk_index=0,
+            content="Content",
+            similarity=0.95,
+        )
 
         mock_conn.fetch = AsyncMock(return_value=[mock_row])
 
         with (
-            patch("app.rag.retrieve.get_openai_client", return_value=mock_openai_client),
-            patch("app.rag.retrieve.get_db_pool", return_value=mock_pool),
+            patch("app.rag.retrieval_strategies.get_openai_client", return_value=mock_openai_client),
+            patch("app.rag.retrieval_strategies.get_db_pool", new=AsyncMock(return_value=mock_pool)),
         ):
             results = await retrieve("test query", top_k=5)
 
@@ -408,26 +401,24 @@ class TestRetrieveFilterValidation:
         mock_embedding_response.embedding = [0.1, 0.2, 0.3] * 512
         mock_openai_client.create_embedding = AsyncMock(return_value=mock_embedding_response)
 
-        mock_pool = AsyncMock()
         mock_conn = AsyncMock()
-        mock_pool.acquire = AsyncMock(return_value=mock_conn)
-        mock_conn.__aenter__ = AsyncMock(return_value=mock_conn)
-        mock_conn.__aexit__ = AsyncMock(return_value=None)
+        mock_pool = _mock_pool_with_conn(mock_conn)
 
-        mock_row = MagicMock()
-        mock_row.chunk_id = "chunk-1"
-        mock_row.document_id = "doc-1"
-        mock_row.title = "Test"
-        mock_row.source = "exact-source"
-        mock_row.chunk_index = 0
-        mock_row.content = "Content"
-        mock_row.similarity = 0.9
+        mock_row = _row(
+            chunk_id="chunk-1",
+            document_id="doc-1",
+            title="Test",
+            source="exact-source",
+            chunk_index=0,
+            content="Content",
+            similarity=0.9,
+        )
 
         mock_conn.fetch = AsyncMock(return_value=[mock_row])
 
         with (
-            patch("app.rag.retrieve.get_openai_client", return_value=mock_openai_client),
-            patch("app.rag.retrieve.get_db_pool", return_value=mock_pool),
+            patch("app.rag.retrieval_strategies.get_openai_client", return_value=mock_openai_client),
+            patch("app.rag.retrieval_strategies.get_db_pool", new=AsyncMock(return_value=mock_pool)),
         ):
             filters = {"source": "exact-source"}
             results = await retrieve("test query", top_k=5, filters=filters)
@@ -448,26 +439,24 @@ class TestRetrieveFilterValidation:
         mock_embedding_response.embedding = [0.1, 0.2, 0.3] * 512
         mock_openai_client.create_embedding = AsyncMock(return_value=mock_embedding_response)
 
-        mock_pool = AsyncMock()
         mock_conn = AsyncMock()
-        mock_pool.acquire = AsyncMock(return_value=mock_conn)
-        mock_conn.__aenter__ = AsyncMock(return_value=mock_conn)
-        mock_conn.__aexit__ = AsyncMock(return_value=None)
+        mock_pool = _mock_pool_with_conn(mock_conn)
 
-        mock_row = MagicMock()
-        mock_row.chunk_id = "chunk-1"
-        mock_row.document_id = "doc-1"
-        mock_row.title = "Exact Title"
-        mock_row.source = "test"
-        mock_row.chunk_index = 0
-        mock_row.content = "Content"
-        mock_row.similarity = 0.9
+        mock_row = _row(
+            chunk_id="chunk-1",
+            document_id="doc-1",
+            title="Exact Title",
+            source="test",
+            chunk_index=0,
+            content="Content",
+            similarity=0.9,
+        )
 
         mock_conn.fetch = AsyncMock(return_value=[mock_row])
 
         with (
-            patch("app.rag.retrieve.get_openai_client", return_value=mock_openai_client),
-            patch("app.rag.retrieve.get_db_pool", return_value=mock_pool),
+            patch("app.rag.retrieval_strategies.get_openai_client", return_value=mock_openai_client),
+            patch("app.rag.retrieval_strategies.get_db_pool", new=AsyncMock(return_value=mock_pool)),
         ):
             filters = {"title": "Exact Title"}
             results = await retrieve("test query", top_k=5, filters=filters)
@@ -483,26 +472,24 @@ class TestRetrieveFilterValidation:
         mock_embedding_response.embedding = [0.1, 0.2, 0.3] * 512
         mock_openai_client.create_embedding = AsyncMock(return_value=mock_embedding_response)
 
-        mock_pool = AsyncMock()
         mock_conn = AsyncMock()
-        mock_pool.acquire = AsyncMock(return_value=mock_conn)
-        mock_conn.__aenter__ = AsyncMock(return_value=mock_conn)
-        mock_conn.__aexit__ = AsyncMock(return_value=None)
+        mock_pool = _mock_pool_with_conn(mock_conn)
 
-        mock_row = MagicMock()
-        mock_row.chunk_id = "chunk-1"
-        mock_row.document_id = "doc-1"
-        mock_row.title = "Combined Title"
-        mock_row.source = "combined-source"
-        mock_row.chunk_index = 0
-        mock_row.content = "Content"
-        mock_row.similarity = 0.9
+        mock_row = _row(
+            chunk_id="chunk-1",
+            document_id="doc-1",
+            title="Combined Title",
+            source="combined-source",
+            chunk_index=0,
+            content="Content",
+            similarity=0.9,
+        )
 
         mock_conn.fetch = AsyncMock(return_value=[mock_row])
 
         with (
-            patch("app.rag.retrieve.get_openai_client", return_value=mock_openai_client),
-            patch("app.rag.retrieve.get_db_pool", return_value=mock_pool),
+            patch("app.rag.retrieval_strategies.get_openai_client", return_value=mock_openai_client),
+            patch("app.rag.retrieval_strategies.get_db_pool", new=AsyncMock(return_value=mock_pool)),
         ):
             filters = {"source": "combined-source", "title": "Combined Title"}
             results = await retrieve("test query", top_k=5, filters=filters)

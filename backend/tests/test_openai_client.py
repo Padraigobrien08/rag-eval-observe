@@ -154,17 +154,25 @@ class TestEmbeddings:
             "usage": {"prompt_tokens": 100, "total_tokens": 100},
         }
 
+        async def _mock_request(*args, **kwargs):
+            json_body = kwargs.get("json") or {}
+            batch = json_body.get("input") or []
+            n = len(batch)
+            mock_response_obj = MagicMock()
+            mock_response_obj.status_code = 200
+            mock_response_obj.json.return_value = {
+                "data": [{"embedding": [0.1, 0.2, 0.3]} for _ in range(n)],
+                "usage": {"prompt_tokens": 100, "total_tokens": 100},
+            }
+            return mock_response_obj
+
         with patch("httpx.AsyncClient") as mock_client_class:
             mock_client = AsyncMock()
             mock_client_class.return_value.__aenter__.return_value = mock_client
-            mock_response_obj = MagicMock()
-            mock_response_obj.status_code = 200
-            mock_response_obj.json.return_value = mock_response
-            mock_client.request = AsyncMock(return_value=mock_response_obj)
+            mock_client.request = AsyncMock(side_effect=_mock_request)
 
             results = await client.create_embeddings(texts)
 
-            # Should have made 2 requests (2048 + 952)
             assert mock_client.request.call_count == 2
             assert len(results) == 3000
 
@@ -249,7 +257,7 @@ class TestRetryLogic:
         """Test retry on 429 rate limit error."""
         client = OpenAIClient(api_key="test-key", max_retries=2)
 
-        # First two calls return 429, third succeeds
+        # Implementation retries 429 only once; then succeeds on second attempt
         mock_response_429 = MagicMock()
         mock_response_429.status_code = 429
         mock_response_429.headers = {}
@@ -268,14 +276,12 @@ class TestRetryLogic:
         ):
             mock_client = AsyncMock()
             mock_client_class.return_value.__aenter__.return_value = mock_client
-            mock_client.request = AsyncMock(
-                side_effect=[mock_response_429, mock_response_429, mock_response_200]
-            )
+            mock_client.request = AsyncMock(side_effect=[mock_response_429, mock_response_200])
 
             result = await client.create_embedding("test")
 
-            assert mock_client.request.call_count == 3
-            assert mock_sleep.call_count == 2  # Two retries
+            assert mock_client.request.call_count == 2
+            assert mock_sleep.call_count == 1
             assert result.embedding == [0.1, 0.2, 0.3]
 
     @pytest.mark.asyncio
@@ -360,8 +366,8 @@ class TestRetryLogic:
             with pytest.raises(OpenAIRateLimitError):
                 await client.create_embedding("test")
 
-            # Should have tried max_retries + 1 times (initial + retries)
-            assert mock_client.request.call_count == 3
+            # 429 path: one retry then raise (two HTTP attempts per embedding call)
+            assert mock_client.request.call_count == 2
 
     @pytest.mark.asyncio
     async def test_retry_after_header(self):

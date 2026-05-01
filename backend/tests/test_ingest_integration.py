@@ -8,20 +8,23 @@ from app.rag.ingest import (
     IngestError,
     MAX_DOCUMENT_SIZE,
 )
-from app.db.session import get_db_pool
+
+
+def _make_ingest_pool(mock_conn):
+    """Pool matching asyncpg: await get_db_pool(); async with pool.acquire() as conn."""
+    mock_pool = MagicMock()
+    acm = MagicMock()
+    acm.__aenter__ = AsyncMock(return_value=mock_conn)
+    acm.__aexit__ = AsyncMock(return_value=None)
+    mock_pool.acquire = MagicMock(return_value=acm)
+    return mock_pool
 
 
 @pytest.mark.asyncio
 async def test_ingest_document_integration():
     """Integration test for document ingestion."""
-    # Mock database pool
-    mock_pool = AsyncMock()
     mock_conn = AsyncMock()
-
-    # Mock connection context manager
-    mock_pool.acquire = AsyncMock(return_value=mock_conn)
-    mock_conn.__aenter__ = AsyncMock(return_value=mock_conn)
-    mock_conn.__aexit__ = AsyncMock(return_value=None)
+    mock_pool = _make_ingest_pool(mock_conn)
 
     # Mock transaction
     mock_transaction = AsyncMock()
@@ -37,17 +40,20 @@ async def test_ingest_document_integration():
     mock_conn.execute = AsyncMock()
 
     with (
-        patch("app.rag.ingest.get_db_pool", return_value=mock_pool),
+        patch("app.rag.ingest.get_db_pool", new=AsyncMock(return_value=mock_pool)),
         patch("app.rag.ingest.get_openai_client") as mock_openai,
     ):
         # Mock OpenAI client
         mock_client = AsyncMock()
         mock_openai.return_value = mock_client
 
-        # Mock embedding response
         mock_embedding_response = MagicMock()
         mock_embedding_response.embedding = [0.1, 0.2, 0.3] * 512  # 1536 dims
-        mock_client.create_embeddings = AsyncMock(return_value=[mock_embedding_response])
+
+        async def _embed_batch(texts, model=None):
+            return [mock_embedding_response for _ in texts]
+
+        mock_client.create_embeddings = AsyncMock(side_effect=_embed_batch)
 
         # Test data
         source = "test-source"
@@ -92,12 +98,8 @@ async def test_ingest_document_too_large():
 @pytest.mark.asyncio
 async def test_ingest_idempotency():
     """Test that ingesting the same document creates a new version."""
-    mock_pool = AsyncMock()
     mock_conn = AsyncMock()
-
-    mock_pool.acquire = AsyncMock(return_value=mock_conn)
-    mock_conn.__aenter__ = AsyncMock(return_value=mock_conn)
-    mock_conn.__aexit__ = AsyncMock(return_value=None)
+    mock_pool = _make_ingest_pool(mock_conn)
 
     mock_transaction = AsyncMock()
     mock_transaction.__aenter__ = AsyncMock(return_value=None)
@@ -114,15 +116,13 @@ async def test_ingest_idempotency():
 
     mock_conn.fetchrow = AsyncMock(return_value=existing_doc)
 
-    # Mock version counting - return one existing version
-    version_row = MagicMock()
-    version_row.source = "test-source (v1)"
+    version_row = {"source": "test-source (v1)"}
     mock_conn.fetch = AsyncMock(return_value=[version_row])
 
     mock_conn.execute = AsyncMock()
 
     with (
-        patch("app.rag.ingest.get_db_pool", return_value=mock_pool),
+        patch("app.rag.ingest.get_db_pool", new=AsyncMock(return_value=mock_pool)),
         patch("app.rag.ingest.get_openai_client") as mock_openai,
     ):
         mock_client = AsyncMock()
@@ -130,7 +130,11 @@ async def test_ingest_idempotency():
 
         mock_embedding_response = MagicMock()
         mock_embedding_response.embedding = [0.1, 0.2, 0.3] * 512
-        mock_client.create_embeddings = AsyncMock(return_value=[mock_embedding_response])
+
+        async def _embed_batch(texts, model=None):
+            return [mock_embedding_response for _ in texts]
+
+        mock_client.create_embeddings = AsyncMock(side_effect=_embed_batch)
 
         text = "This is a test document. " * 50
 
@@ -147,12 +151,8 @@ async def test_ingest_idempotency():
 @pytest.mark.asyncio
 async def test_ingest_markdown():
     """Test ingesting markdown document."""
-    mock_pool = AsyncMock()
     mock_conn = AsyncMock()
-
-    mock_pool.acquire = AsyncMock(return_value=mock_conn)
-    mock_conn.__aenter__ = AsyncMock(return_value=mock_conn)
-    mock_conn.__aexit__ = AsyncMock(return_value=None)
+    mock_pool = _make_ingest_pool(mock_conn)
 
     mock_transaction = AsyncMock()
     mock_transaction.__aenter__ = AsyncMock(return_value=None)
@@ -163,7 +163,7 @@ async def test_ingest_markdown():
     mock_conn.execute = AsyncMock()
 
     with (
-        patch("app.rag.ingest.get_db_pool", return_value=mock_pool),
+        patch("app.rag.ingest.get_db_pool", new=AsyncMock(return_value=mock_pool)),
         patch("app.rag.ingest.get_openai_client") as mock_openai,
     ):
         mock_client = AsyncMock()
@@ -171,7 +171,11 @@ async def test_ingest_markdown():
 
         mock_embedding_response = MagicMock()
         mock_embedding_response.embedding = [0.1, 0.2, 0.3] * 512
-        mock_client.create_embeddings = AsyncMock(return_value=[mock_embedding_response])
+
+        async def _embed_batch(texts, model=None):
+            return [mock_embedding_response for _ in texts]
+
+        mock_client.create_embeddings = AsyncMock(side_effect=_embed_batch)
 
         markdown_text = """# Title
 
@@ -196,12 +200,8 @@ More content.
 @pytest.mark.asyncio
 async def test_ingest_transaction_rollback_on_error():
     """Test that transaction is rolled back on error."""
-    mock_pool = AsyncMock()
     mock_conn = AsyncMock()
-
-    mock_pool.acquire = AsyncMock(return_value=mock_conn)
-    mock_conn.__aenter__ = AsyncMock(return_value=mock_conn)
-    mock_conn.__aexit__ = AsyncMock(return_value=None)
+    mock_pool = _make_ingest_pool(mock_conn)
 
     mock_transaction = AsyncMock()
     mock_transaction.__aenter__ = AsyncMock(return_value=None)
@@ -215,7 +215,7 @@ async def test_ingest_transaction_rollback_on_error():
     mock_conn.execute = AsyncMock(side_effect=Exception("Database error"))
 
     with (
-        patch("app.rag.ingest.get_db_pool", return_value=mock_pool),
+        patch("app.rag.ingest.get_db_pool", new=AsyncMock(return_value=mock_pool)),
         patch("app.rag.ingest.get_openai_client") as mock_openai,
     ):
         mock_client = AsyncMock()
@@ -223,7 +223,11 @@ async def test_ingest_transaction_rollback_on_error():
 
         mock_embedding_response = MagicMock()
         mock_embedding_response.embedding = [0.1, 0.2, 0.3] * 512
-        mock_client.create_embeddings = AsyncMock(return_value=[mock_embedding_response])
+
+        async def _embed_batch(texts, model=None):
+            return [mock_embedding_response for _ in texts]
+
+        mock_client.create_embeddings = AsyncMock(side_effect=_embed_batch)
 
         text = "This is a test document. " * 50
 
@@ -241,12 +245,8 @@ async def test_ingest_transaction_rollback_on_error():
 @pytest.mark.asyncio
 async def test_ingest_empty_text():
     """Test that empty text raises an error."""
-    mock_pool = AsyncMock()
     mock_conn = AsyncMock()
-
-    mock_pool.acquire = AsyncMock(return_value=mock_conn)
-    mock_conn.__aenter__ = AsyncMock(return_value=mock_conn)
-    mock_conn.__aexit__ = AsyncMock(return_value=None)
+    mock_pool = _make_ingest_pool(mock_conn)
 
     mock_transaction = AsyncMock()
     mock_transaction.__aenter__ = AsyncMock(return_value=None)
@@ -255,7 +255,7 @@ async def test_ingest_empty_text():
 
     mock_conn.fetchrow = AsyncMock(return_value=None)
 
-    with patch("app.rag.ingest.get_db_pool", return_value=mock_pool):
+    with patch("app.rag.ingest.get_db_pool", new=AsyncMock(return_value=mock_pool)):
         with pytest.raises(IngestError, match="No chunks generated"):
             await ingest_document(
                 source="test-source",
@@ -267,12 +267,8 @@ async def test_ingest_empty_text():
 @pytest.mark.asyncio
 async def test_ingest_embedding_failure():
     """Test handling of embedding generation failure."""
-    mock_pool = AsyncMock()
     mock_conn = AsyncMock()
-
-    mock_pool.acquire = AsyncMock(return_value=mock_conn)
-    mock_conn.__aenter__ = AsyncMock(return_value=mock_conn)
-    mock_conn.__aexit__ = AsyncMock(return_value=None)
+    mock_pool = _make_ingest_pool(mock_conn)
 
     mock_transaction = AsyncMock()
     mock_transaction.__aenter__ = AsyncMock(return_value=None)
@@ -282,7 +278,7 @@ async def test_ingest_embedding_failure():
     mock_conn.fetchrow = AsyncMock(return_value=None)
 
     with (
-        patch("app.rag.ingest.get_db_pool", return_value=mock_pool),
+        patch("app.rag.ingest.get_db_pool", new=AsyncMock(return_value=mock_pool)),
         patch("app.rag.ingest.get_openai_client") as mock_openai,
     ):
         from app.llm.openai_client import OpenAIError
