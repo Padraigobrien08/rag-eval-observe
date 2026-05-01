@@ -9,27 +9,12 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
   DialogFooter,
 } from '@/components/ui/dialog'
-import { Label } from '@/components/ui/label'
-import { Input } from '@/components/ui/input'
-import { Slider } from '@/components/ui/slider'
-import { Switch } from '@/components/ui/switch'
-import {
-  Plus,
-  Settings,
-  FileText,
-  Loader2,
-  ChevronDown,
-  Trash2,
-  ChevronLeft,
-  ChevronRight,
-} from 'lucide-react'
+import { Plus, FileText, Loader2, Trash2, ChevronLeft, ChevronRight } from 'lucide-react'
 import IngestDialog from './IngestDialog'
 import DocumentPreviewDialog from './DocumentPreviewDialog'
-import { useRagSettings, type RagModel } from '@/features/settings/useRagSettings'
-import { useLocalStorage } from '@/features/settings/useLocalStorage'
+import RagSettingsDialog from './RagSettingsDialog'
 import { listDocuments, deleteDocument } from '@/lib/api/client'
 
 interface Document {
@@ -53,28 +38,6 @@ export default function Sidebar({ collapsed = false, onToggleCollapse }: Sidebar
   const [isDeleting, setIsDeleting] = useState(false)
   const [previewDialogOpen, setPreviewDialogOpen] = useState(false)
   const [documentToPreview, setDocumentToPreview] = useState<Document | null>(null)
-  const {
-    topK,
-    debug,
-    streamResponses,
-    ragModel,
-    setTopK,
-    setDebug,
-    setStreamResponses,
-    setRagModel,
-  } = useRagSettings()
-  const [defaultExpandedAnswers, setDefaultExpandedAnswers] = useLocalStorage<boolean>(
-    'rag-eval-default-expanded-answers',
-    false
-  )
-  const currentTopK = topK ?? 8
-
-  const ragModelDescriptions: Record<RagModel, string> = {
-    'vector-similarity': 'Semantic search using cosine similarity on embeddings.',
-    'hybrid-search': 'Combines vector search with keyword matching for better recall.',
-    reranking: 'Uses a reranking model to improve retrieval accuracy.',
-    'multi-query': 'Generates multiple query variations for better coverage.',
-  }
 
   const loadDocuments = async () => {
     try {
@@ -255,216 +218,10 @@ export default function Sidebar({ collapsed = false, onToggleCollapse }: Sidebar
           )}
         </ScrollArea>
 
-        <div className={`border-t border-slate-200 ${collapsed ? 'px-2' : 'px-4'} py-2`}>
-          <Dialog>
-            <DialogTrigger asChild>
-              <button
-                className={`mt-auto mb-3 flex items-center ${collapsed ? 'justify-center' : 'gap-2'} rounded-full px-3 py-2 text-xs text-slate-600 hover:bg-slate-100 hover:text-slate-900`}
-                title={collapsed ? 'Settings' : undefined}
-              >
-                <Settings className="h-4 w-4" />
-                {!collapsed && <span>Settings</span>}
-              </button>
-            </DialogTrigger>
-
-            <DialogContent
-              className="w-[92vw] max-w-lg rounded-2xl border border-slate-200 bg-white"
-              style={{ padding: 'clamp(1rem, 4vw, 2rem)' }}
-            >
-              <DialogHeader>
-                <DialogTitle>Query settings</DialogTitle>
-                <DialogDescription>
-                  Control how many chunks are retrieved and whether debug info is shown.
-                </DialogDescription>
-              </DialogHeader>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-                {/* RAG Model section */}
-                <section style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                    <Label htmlFor="rag-model" className="text-sm font-medium text-slate-900">
-                      RAG Model
-                    </Label>
-                    <p className="text-xs text-slate-500">
-                      Method used for retrieving relevant chunks.
-                    </p>
-                  </div>
-
-                  <div className="relative">
-                    <select
-                      id="rag-model"
-                      value={ragModel}
-                      onChange={e => {
-                        const newModel = e.target.value as RagModel
-                        setRagModel(newModel)
-                      }}
-                      className="w-full appearance-none rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-transparent pr-10"
-                      style={{ paddingRight: '2.5rem' }}
-                    >
-                      <option value="vector-similarity">Vector Similarity Search</option>
-                      <option value="hybrid-search">Hybrid Search (Vector + BM25)</option>
-                      <option value="reranking">Reranking</option>
-                      <option value="multi-query">Multi-Query</option>
-                    </select>
-                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 pointer-events-none" />
-                  </div>
-                  <p className="text-xs text-slate-500 italic">{ragModelDescriptions[ragModel]}</p>
-                </section>
-
-                {/* Top K section */}
-                <section style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                    <Label htmlFor="top-k" className="text-sm font-medium text-slate-900">
-                      Top K
-                    </Label>
-                    <p className="text-xs text-slate-500">
-                      Number of chunks to retrieve per query.
-                    </p>
-                  </div>
-
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                    <div className="flex items-center" style={{ gap: '1rem' }}>
-                      <Input
-                        id="top-k"
-                        type="number"
-                        min={1}
-                        max={50}
-                        step={1}
-                        value={currentTopK}
-                        onChange={e => {
-                          const value = Number(e.target.value)
-                          if (!Number.isNaN(value)) {
-                            const clamped = Math.min(50, Math.max(1, value))
-                            setTopK(clamped)
-                          }
-                        }}
-                        className="w-20 text-sm"
-                      />
-                      <span className="text-xs text-slate-500">chunks per query</span>
-                    </div>
-
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                      <div className="flex items-center justify-between text-xs text-slate-500">
-                        <span>1</span>
-                        <span className="font-medium text-slate-700">Top K: {currentTopK}</span>
-                        <span>50</span>
-                      </div>
-                      <Slider
-                        min={1}
-                        max={50}
-                        step={1}
-                        value={[currentTopK]}
-                        onValueChange={([value]) => setTopK(value)}
-                        className="w-full"
-                      />
-                    </div>
-                  </div>
-                </section>
-
-                {/* Debug mode section */}
-                <section
-                  className="flex items-center justify-between rounded-xl bg-slate-50"
-                  style={{ padding: '1rem', gap: '2rem' }}
-                >
-                  <div
-                    style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', flex: 1 }}
-                  >
-                    <Label htmlFor="debug-mode" className="text-sm font-medium text-slate-900">
-                      Debug mode
-                    </Label>
-                    <p className="text-xs text-slate-500">
-                      Show retrieved chunks and scores under answers.
-                    </p>
-                  </div>
-                  <div className="flex items-center" style={{ gap: '0.75rem', flexShrink: 0 }}>
-                    <span
-                      className={`text-xs font-medium ${debug ? 'text-green-700' : 'text-red-700'}`}
-                    >
-                      {debug ? 'On' : 'Off'}
-                    </span>
-                    <Switch
-                      id="debug-mode"
-                      checked={debug}
-                      onCheckedChange={setDebug}
-                      style={{
-                        backgroundColor: debug ? 'rgb(22, 163, 74)' : 'rgb(239, 68, 68)',
-                      }}
-                    />
-                  </div>
-                </section>
-
-                <section
-                  className="flex items-center justify-between rounded-xl bg-slate-50"
-                  style={{ padding: '1rem', gap: '2rem' }}
-                >
-                  <div
-                    style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', flex: 1 }}
-                  >
-                    <Label
-                      htmlFor="stream-responses"
-                      className="text-sm font-medium text-slate-900"
-                    >
-                      Stream answers
-                    </Label>
-                    <p className="text-xs text-slate-500">
-                      Show tokens as they arrive (SSE). Turn off to use one-shot responses.
-                    </p>
-                  </div>
-                  <div className="flex items-center" style={{ gap: '0.75rem', flexShrink: 0 }}>
-                    <span
-                      className={`text-xs font-medium ${streamResponses ? 'text-green-700' : 'text-red-700'}`}
-                    >
-                      {streamResponses ? 'On' : 'Off'}
-                    </span>
-                    <Switch
-                      id="stream-responses"
-                      checked={streamResponses}
-                      onCheckedChange={setStreamResponses}
-                      style={{
-                        backgroundColor: streamResponses ? 'rgb(22, 163, 74)' : 'rgb(239, 68, 68)',
-                      }}
-                    />
-                  </div>
-                </section>
-
-                {/* Default expanded answers section */}
-                <section
-                  className="flex items-center justify-between rounded-xl bg-slate-50"
-                  style={{ padding: '1rem', gap: '2rem' }}
-                >
-                  <div
-                    style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', flex: 1 }}
-                  >
-                    <Label
-                      htmlFor="default-expanded"
-                      className="text-sm font-medium text-slate-900"
-                    >
-                      Default expanded answers
-                    </Label>
-                    <p className="text-xs text-slate-500">
-                      Show full answer text by default instead of summary.
-                    </p>
-                  </div>
-                  <div className="flex items-center" style={{ gap: '0.75rem', flexShrink: 0 }}>
-                    <span
-                      className={`text-xs font-medium ${defaultExpandedAnswers ? 'text-green-700' : 'text-red-700'}`}
-                    >
-                      {defaultExpandedAnswers ? 'On' : 'Off'}
-                    </span>
-                    <Switch
-                      id="default-expanded"
-                      checked={defaultExpandedAnswers}
-                      onCheckedChange={setDefaultExpandedAnswers}
-                      style={{
-                        backgroundColor: defaultExpandedAnswers
-                          ? 'rgb(22, 163, 74)'
-                          : 'rgb(239, 68, 68)',
-                      }}
-                    />
-                  </div>
-                </section>
-              </div>
-            </DialogContent>
-          </Dialog>
+        <div
+          className={`flex border-t border-slate-200 ${collapsed ? 'justify-center px-2' : 'px-2'} py-2`}
+        >
+          <RagSettingsDialog collapsed={collapsed} />
         </div>
       </aside>
 
