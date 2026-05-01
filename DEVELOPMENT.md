@@ -64,6 +64,8 @@ pnpm exec playwright install   # first time only
 pnpm build && pnpm exec playwright test
 ```
 
+Playwright starts a production `next start` server on **http://127.0.0.1:4173** (see `playwright.config.ts`) so it does not collide with `pnpm dev` on port 3000.
+
 ## Migrations (Alembic)
 
 Baseline schema is still SQL under `docker/init`. After `make migrate`, stamp Alembic once:
