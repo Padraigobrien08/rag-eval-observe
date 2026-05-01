@@ -1,6 +1,5 @@
 'use client'
 
-import { Fragment, type ReactNode } from 'react'
 import { Settings } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -46,47 +45,29 @@ interface RagSettingsDialogProps {
   collapsed?: boolean
 }
 
-function SettingsSection({
-  sectionId,
-  title,
-  description,
-  children,
-}: {
-  sectionId: string
-  title: string
-  description: string
-  children: ReactNode
-}) {
-  return (
-    <section
-      aria-labelledby={sectionId}
-      className="space-y-4 rounded-xl border border-border/60 bg-muted/30 p-5 shadow-sm"
-    >
-      <h3 id={sectionId} className="text-base font-semibold text-foreground">
-        {title}
-      </h3>
-      <p className="text-sm text-muted-foreground">{description}</p>
-      {children}
-    </section>
-  )
-}
-
 function BehaviorRow({
   id,
   label,
   hint,
   checked,
   onCheckedChange,
+  isFirst = false,
 }: {
   id: string
   label: string
   hint: string
   checked: boolean
   onCheckedChange: (v: boolean) => void
+  isFirst?: boolean
 }) {
   return (
-    <div className="flex items-center justify-between gap-4 rounded-lg border bg-background px-4 py-3">
-      <div className="min-w-0 flex-1 pr-2">
+    <div
+      className={cn(
+        'grid grid-cols-[1fr_auto] items-center gap-6 px-4 py-3',
+        !isFirst && 'border-t border-border'
+      )}
+    >
+      <div className="min-w-0">
         <Label htmlFor={id} className="text-sm font-medium text-foreground">
           {label}
         </Label>
@@ -142,31 +123,38 @@ export default function RagSettingsDialog({ collapsed = false }: RagSettingsDial
 
       <DialogContent
         className={cn(
-          'flex max-h-[85vh] w-[calc(100vw-2rem)] max-w-[560px] flex-col gap-0 overflow-hidden rounded-2xl border bg-background p-0 shadow-2xl'
+          'flex max-h-[85vh] w-[calc(100vw-2rem)] max-w-[640px] flex-col gap-0 overflow-hidden rounded-2xl border bg-background p-0 sm:max-w-[640px]'
         )}
       >
-        <DialogHeader className="shrink-0 px-6 pb-4 pt-6 text-left sm:pr-14">
+        <DialogHeader className="shrink-0 border-b px-6 py-5 text-left sm:pr-14">
           <DialogTitle className="text-2xl font-semibold tracking-tight text-foreground">
             RAG settings
           </DialogTitle>
           <DialogDescription className="mt-1 text-sm text-muted-foreground">
-            Retrieval, streaming, and how answers appear in the chat.
+            Configure retrieval and answer behavior.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="max-h-[65vh] min-h-0 flex-1 space-y-8 overflow-y-auto overscroll-contain px-6 py-4">
-          <SettingsSection
-            sectionId="rag-settings-retrieval"
-            title="Retrieval model"
-            description="How relevant chunks are fetched for each query."
-          >
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="rag-model" className="text-sm font-medium text-foreground">
-                  Model
-                </Label>
+        <div className="max-h-[65vh] min-h-0 flex-1 space-y-6 overflow-y-auto overscroll-contain px-6 py-5">
+          <section aria-labelledby="rag-settings-retrieval-heading" className="space-y-3">
+            <h2
+              id="rag-settings-retrieval-heading"
+              className="text-sm font-semibold text-foreground"
+            >
+              Retrieval
+            </h2>
+            <div className="rounded-xl border bg-card p-4 shadow-sm">
+              <div className="grid grid-cols-[1fr_auto] items-center gap-6">
+                <div className="min-w-0">
+                  <Label htmlFor="rag-model" className="text-sm font-medium text-foreground">
+                    Model
+                  </Label>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {ragModelDescriptions[ragModel]}
+                  </p>
+                </div>
                 <Select value={ragModel} onValueChange={value => setRagModel(value as RagModel)}>
-                  <SelectTrigger id="rag-model" className="h-10 w-full">
+                  <SelectTrigger id="rag-model" className="h-10 w-[260px] shrink-0">
                     <SelectValue placeholder="Select model" />
                   </SelectTrigger>
                   <SelectContent position="popper" className="max-h-[min(280px,40vh)]">
@@ -178,72 +166,62 @@ export default function RagSettingsDialog({ collapsed = false }: RagSettingsDial
                   </SelectContent>
                 </Select>
               </div>
-              <p className="text-xs text-muted-foreground">{ragModelDescriptions[ragModel]}</p>
             </div>
-          </SettingsSection>
+          </section>
 
-          <SettingsSection
-            sectionId="rag-settings-top-k"
-            title="Top K"
-            description="Number of chunks to retrieve per query (1–50)."
-          >
-            <Fragment>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between gap-4">
-                  <Label htmlFor="top-k" className="text-sm font-medium text-foreground">
-                    Chunks per query
-                  </Label>
-                  <span
-                    className="shrink-0 rounded-md border border-border bg-background px-2.5 py-1 text-xs font-semibold tabular-nums text-foreground shadow-sm"
-                    aria-live="polite"
-                  >
-                    Top K: {currentTopK}
-                  </span>
-                </div>
-                <Input
-                  id="top-k"
-                  type="number"
-                  min={1}
-                  max={50}
-                  step={1}
-                  value={currentTopK}
-                  onChange={e => {
-                    const value = Number(e.target.value)
-                    if (!Number.isNaN(value)) {
-                      setTopK(Math.min(50, Math.max(1, value)))
-                    }
-                  }}
-                  className="h-10 w-24 tabular-nums"
-                  aria-describedby="top-k-hint"
-                />
-                <p id="top-k-hint" className="sr-only">
-                  Adjust between 1 and 50 using the field or slider.
+          <div className="rounded-xl border bg-card p-4 shadow-sm">
+            <div className="grid grid-cols-[1fr_auto] items-center gap-6">
+              <div className="min-w-0">
+                <Label htmlFor="top-k" className="text-sm font-medium text-foreground">
+                  Top K
+                </Label>
+                <p id="top-k-hint" className="mt-1 text-xs text-muted-foreground">
+                  Number of chunks to retrieve per query (1–50).
                 </p>
               </div>
-              <div className="mt-3 space-y-3">
-                <Slider
-                  min={1}
-                  max={50}
-                  step={1}
-                  value={[currentTopK]}
-                  onValueChange={([value]) => setTopK(value)}
-                  aria-label="Top K"
-                />
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>1</span>
-                  <span>50</span>
-                </div>
+              <Input
+                id="top-k"
+                type="number"
+                min={1}
+                max={50}
+                step={1}
+                value={currentTopK}
+                onChange={e => {
+                  const value = Number(e.target.value)
+                  if (!Number.isNaN(value)) {
+                    setTopK(Math.min(50, Math.max(1, value)))
+                  }
+                }}
+                className="h-10 w-20 shrink-0 tabular-nums"
+                aria-describedby="top-k-hint"
+              />
+            </div>
+            <div className="mt-4 space-y-3">
+              <Slider
+                min={1}
+                max={50}
+                step={1}
+                value={[currentTopK]}
+                onValueChange={([value]) => setTopK(value)}
+                aria-label="Top K"
+              />
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>1</span>
+                <span>50</span>
               </div>
-            </Fragment>
-          </SettingsSection>
+            </div>
+          </div>
 
-          <SettingsSection
-            sectionId="rag-settings-behavior"
-            title="Behavior"
-            description="Debug output, streaming, and default answer layout."
-          >
-            <div className="flex flex-col gap-4">
+          <section aria-labelledby="rag-settings-behavior-heading" className="space-y-3">
+            <h2
+              id="rag-settings-behavior-heading"
+              className="text-sm font-semibold text-foreground"
+            >
+              Behavior
+            </h2>
+            <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
               <BehaviorRow
+                isFirst
                 id="debug-mode"
                 label="Debug mode"
                 hint="Show retrieved chunks and scores under answers."
@@ -265,10 +243,10 @@ export default function RagSettingsDialog({ collapsed = false }: RagSettingsDial
                 onCheckedChange={setDefaultExpandedAnswers}
               />
             </div>
-          </SettingsSection>
+          </section>
         </div>
 
-        <DialogFooter className="flex shrink-0 flex-row justify-end gap-2 border-t bg-muted/30 px-6 py-4">
+        <DialogFooter className="flex shrink-0 flex-row justify-end gap-2 border-t px-6 py-4">
           <DialogClose asChild>
             <Button type="button" variant="outline" className="w-auto">
               Cancel
