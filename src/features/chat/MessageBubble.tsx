@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import ReactMarkdown from 'react-markdown'
 import { ChevronDown, ChevronUp, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import type { ChatMessage } from './types'
 import CitationsDropdown from './CitationsDropdown'
 import InlineCitation from './InlineCitation'
@@ -230,14 +231,16 @@ export default function MessageBubble({ message, previousMessage }: MessageBubbl
               <div className="space-y-3">
                 {typeof message.metadata?.retrieved_chunk_count === 'number' &&
                   message.metadata.retrieved_chunk_count === 0 && (
-                    <p
-                      className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900"
+                    <Alert
+                      className="border-amber-200 bg-amber-50 text-amber-900 [&>svg]:text-amber-700"
                       role="status"
                     >
-                      No document chunks were retrieved. Answers may be generic—use the{' '}
-                      <strong className="font-semibold">+</strong> control in the documents sidebar
-                      to ingest files, or rephrase your question.
-                    </p>
+                      <AlertDescription>
+                        No document chunks were retrieved. Answers may be generic—use the{' '}
+                        <strong className="font-semibold">+</strong> control in the documents
+                        sidebar to ingest files, or rephrase your question.
+                      </AlertDescription>
+                    </Alert>
                   )}
                 {/* Summary Section */}
                 {summary.length > 0 && (

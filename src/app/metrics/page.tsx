@@ -5,7 +5,18 @@ import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { ArrowLeft, RefreshCw, Clock, Activity, DollarSign, Database } from 'lucide-react'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Progress } from '@/components/ui/progress'
+import {
+  ArrowLeft,
+  RefreshCw,
+  Clock,
+  Activity,
+  DollarSign,
+  Database,
+  AlertCircle,
+} from 'lucide-react'
 import { getMetrics } from '@/lib/api/client'
 import { estimateDashboardTokenCostUsd } from '@/lib/openai-pricing'
 
@@ -82,9 +93,23 @@ export default function MetricsPage() {
   if (isLoading && !metrics) {
     return (
       <div className="min-h-screen bg-slate-50 p-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-center h-64">
-            <RefreshCw className="h-8 w-8 animate-spin text-slate-400" />
+        <div className="max-w-7xl mx-auto space-y-8">
+          <div className="flex items-center justify-between">
+            <Skeleton className="h-10 w-40" />
+            <Skeleton className="h-10 w-28" />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Card key={i}>
+                <CardHeader className="space-y-2">
+                  <Skeleton className="h-4 w-24" />
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <Skeleton className="h-8 w-32" />
+                  <Skeleton className="h-3 w-full" />
+                </CardContent>
+              </Card>
+            ))}
           </div>
         </div>
       </div>
@@ -94,11 +119,17 @@ export default function MetricsPage() {
   if (error && !metrics) {
     return (
       <div className="min-h-screen bg-slate-50 p-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col items-center justify-center h-64 gap-4">
-            <p className="text-red-600">{error}</p>
-            <Button onClick={() => void fetchMetrics()}>Retry</Button>
-          </div>
+        <div className="max-w-lg mx-auto space-y-4">
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Could not load metrics</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+          <Button onClick={() => void fetchMetrics()}>Retry</Button>
+          <Button variant="ghost" size="sm" onClick={() => router.push('/')}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to chat
+          </Button>
         </div>
       </div>
     )
@@ -317,12 +348,10 @@ export default function MetricsPage() {
                           {count} ({percentage.toFixed(1)}%)
                         </span>
                       </div>
-                      <div className="w-full bg-slate-200 rounded-full h-2">
-                        <div
-                          className="bg-blue-600 h-2 rounded-full transition-all"
-                          style={{ width: `${percentage}%` }}
-                        />
-                      </div>
+                      <Progress
+                        value={percentage}
+                        className="h-2 bg-slate-200 [&>div]:bg-blue-600"
+                      />
                     </div>
                   )
                 })}
@@ -458,9 +487,11 @@ export default function MetricsPage() {
         )}
 
         {/* Note */}
-        <div className="mt-8 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-          <p className="text-sm text-yellow-800">{metrics.note}</p>
-        </div>
+        <Alert className="mt-8 border-yellow-200 bg-yellow-50 text-yellow-900 [&>svg]:text-yellow-700">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle className="text-yellow-900">About these metrics</AlertTitle>
+          <AlertDescription className="text-yellow-900/90">{metrics.note}</AlertDescription>
+        </Alert>
       </div>
     </div>
   )

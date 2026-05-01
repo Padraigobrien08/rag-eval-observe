@@ -6,6 +6,7 @@ import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { BarChart3, SunMedium, Zap, AlertTriangle, Send, Loader2, Square } from 'lucide-react'
 import { useChat } from '@/features/chat/useChat'
 import ChatLayout from '@/features/chat/ChatLayout'
@@ -470,9 +471,11 @@ export default function ChatPanel(_props: ChatPanelProps = {}) {
               </Button>
             </form>
             {error && (
-              <p className="text-sm text-red-600 mt-2" role="alert">
-                {typeof error === 'string' ? error : 'Something went wrong'}
-              </p>
+              <Alert variant="destructive" className="mt-2 py-2">
+                <AlertDescription>
+                  {typeof error === 'string' ? error : 'Something went wrong'}
+                </AlertDescription>
+              </Alert>
             )}
           </div>
         </div>

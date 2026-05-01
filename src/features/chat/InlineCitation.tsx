@@ -1,5 +1,7 @@
 'use client'
 
+import { badgeVariants } from '@/components/ui/badge'
+import { cn } from '@/lib/utils'
 import type { CitationMatch } from './citationParser'
 
 interface InlineCitationProps {
@@ -28,7 +30,10 @@ export default function InlineCitation({ match, onClick }: InlineCitationProps) 
 
   return (
     <span
-      className="inline-flex items-center justify-center h-5 px-2 rounded-full bg-blue-100 text-blue-700 text-xs font-medium cursor-pointer hover:bg-blue-200 transition-colors ml-1 mr-0.5 border border-blue-200"
+      className={cn(
+        badgeVariants({ variant: 'outline' }),
+        'h-5 cursor-pointer justify-center rounded-full border-blue-200 bg-blue-100 px-2 text-xs font-medium text-blue-700 transition-colors hover:bg-blue-200 ml-1 mr-0.5'
+      )}
       style={{ verticalAlign: 'middle', whiteSpace: 'nowrap' }}
       onClick={handleClick}
       onKeyDown={handleKeyDown}
