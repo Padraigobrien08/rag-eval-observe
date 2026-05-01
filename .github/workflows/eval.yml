@@ -1,0 +1,68 @@
+# Manual RAG eval against Postgres + OpenAI. Requires repo secret OPENAI_API_KEY.
+name: Eval
+
+on:
+  workflow_dispatch:
+
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: evaldb
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/evaldb
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      OPENAI_EMBEDDING_MODEL: text-embedding-3-small
+      OPENAI_CHAT_MODEL: gpt-4o-mini
+      EMBEDDING_DIMENSION: 1536
+      EVAL_USE_LLM_JUDGE: "false"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "latest"
+
+      - name: Set up Python
+        run: uv python install 3.11
+
+      - name: Install dependencies
+        run: uv sync --dev
+
+      - name: Wait for Postgres and apply schema
+        run: |
+          until pg_isready -h localhost -p 5432 -U postgres; do
+            sleep 1
+          done
+          uv run python scripts/apply_init_sql.py
+
+      - name: Seed eval corpus
+        run: uv run python scripts/seed_eval_corpus.py
+
+      - name: Run evaluation
+        run: uv run python eval/run_eval.py
+
+      - name: Upload report
+        uses: actions/upload-artifact@v4
+        with:
+          name: eval-report
+          path: backend/eval/report.md
