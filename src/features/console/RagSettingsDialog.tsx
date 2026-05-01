@@ -1,5 +1,6 @@
 'use client'
 
+import type { ReactNode } from 'react'
 import { Settings } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -16,7 +17,6 @@ import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Slider } from '@/components/ui/slider'
 import { Switch } from '@/components/ui/switch'
-import { Separator } from '@/components/ui/separator'
 import {
   Select,
   SelectContent,
@@ -46,16 +46,99 @@ interface RagSettingsDialogProps {
   collapsed?: boolean
 }
 
-function SectionTitle({ id, children }: { id?: string; children: React.ReactNode }) {
+function SettingsPanel({
+  sectionId,
+  title,
+  description,
+  children,
+}: {
+  sectionId: string
+  title: string
+  description: string
+  children: ReactNode
+}) {
   return (
-    <h3 id={id} className="text-sm font-semibold leading-none text-foreground">
-      {children}
-    </h3>
+    <section
+      aria-labelledby={sectionId}
+      className="overflow-hidden rounded-xl border border-border/80 bg-card shadow-sm ring-1 ring-black/[0.04] dark:ring-white/[0.06]"
+    >
+      <header className="border-b border-border/70 bg-muted/30 px-5 py-4">
+        <h3
+          id={sectionId}
+          className="text-base font-semibold leading-none tracking-tight text-foreground"
+        >
+          {title}
+        </h3>
+        <p className="mt-2 text-sm leading-relaxed text-muted-foreground text-pretty">
+          {description}
+        </p>
+      </header>
+      <div className="p-5">{children}</div>
+    </section>
   )
 }
 
-function SectionDescription({ children }: { children: React.ReactNode }) {
-  return <p className="text-sm text-muted-foreground">{children}</p>
+function SettingsPanelList({
+  sectionId,
+  title,
+  description,
+  children,
+}: {
+  sectionId: string
+  title: string
+  description: string
+  children: ReactNode
+}) {
+  return (
+    <section
+      aria-labelledby={sectionId}
+      className="overflow-hidden rounded-xl border border-border/80 bg-card shadow-sm ring-1 ring-black/[0.04] dark:ring-white/[0.06]"
+    >
+      <header className="border-b border-border/70 bg-muted/30 px-5 py-4">
+        <h3
+          id={sectionId}
+          className="text-base font-semibold leading-none tracking-tight text-foreground"
+        >
+          {title}
+        </h3>
+        <p className="mt-2 text-sm leading-relaxed text-muted-foreground text-pretty">
+          {description}
+        </p>
+      </header>
+      <div className="divide-y divide-border/70">{children}</div>
+    </section>
+  )
+}
+
+function SwitchRow({
+  id,
+  label,
+  hint,
+  checked,
+  onCheckedChange,
+}: {
+  id: string
+  label: string
+  hint: string
+  checked: boolean
+  onCheckedChange: (v: boolean) => void
+}) {
+  return (
+    <div className="flex items-start justify-between gap-4 px-5 py-4 transition-colors hover:bg-muted/25">
+      <div className="min-w-0 space-y-1.5 pr-2">
+        <Label htmlFor={id} className="text-sm font-medium leading-none text-foreground">
+          {label}
+        </Label>
+        <p className="text-sm leading-relaxed text-muted-foreground text-pretty">{hint}</p>
+      </div>
+      <Switch
+        id={id}
+        className="mt-0.5 shrink-0"
+        checked={checked}
+        onCheckedChange={onCheckedChange}
+      />
+    </div>
+  )
 }
 
 export default function RagSettingsDialog({ collapsed = false }: RagSettingsDialogProps) {
@@ -82,7 +165,7 @@ export default function RagSettingsDialog({ collapsed = false }: RagSettingsDial
           variant="ghost"
           size={collapsed ? 'icon' : 'sm'}
           className={cn(
-            'text-slate-600 hover:text-slate-900',
+            'text-muted-foreground hover:text-foreground',
             !collapsed && 'h-9 w-full justify-start gap-2 rounded-full px-3 font-normal'
           )}
           aria-label="Open RAG settings"
@@ -95,163 +178,143 @@ export default function RagSettingsDialog({ collapsed = false }: RagSettingsDial
 
       <DialogContent
         className={cn(
-          'flex h-[min(85vh,640px)] w-[calc(100vw-2rem)] max-w-lg flex-col gap-0 overflow-hidden p-0',
+          'flex h-[min(88vh,720px)] w-[calc(100vw-2rem)] max-w-xl flex-col gap-0 overflow-hidden p-0 sm:rounded-2xl',
           'sm:w-full'
         )}
       >
-        <DialogHeader className="shrink-0 space-y-2 border-b bg-background px-6 py-5 pr-14 text-left">
-          <DialogTitle className="text-xl font-semibold tracking-tight">RAG settings</DialogTitle>
-          <DialogDescription className="text-sm leading-relaxed">
+        <DialogHeader className="shrink-0 space-y-2 border-b border-border/80 bg-muted/20 px-6 pb-5 pt-6 text-left sm:space-y-2.5 sm:pb-6 sm:pt-7 sm:pr-16">
+          <DialogTitle className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl sm:leading-none">
+            RAG settings
+          </DialogTitle>
+          <DialogDescription className="text-pretty text-sm leading-relaxed text-muted-foreground sm:text-[0.9375rem] sm:leading-relaxed">
             Retrieval, streaming, and how answers appear in the chat.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 py-5">
-          <div className="space-y-8">
-            <section className="space-y-3" aria-labelledby="rag-model-heading">
-              <div className="space-y-1.5">
-                <SectionTitle id="rag-model-heading">Retrieval model</SectionTitle>
-                <SectionDescription>
-                  How relevant chunks are fetched for each query.
-                </SectionDescription>
-              </div>
-              <Label htmlFor="rag-model" className="sr-only">
-                RAG model
-              </Label>
-              <Select value={ragModel} onValueChange={value => setRagModel(value as RagModel)}>
-                <SelectTrigger id="rag-model" className="w-full bg-background">
-                  <SelectValue placeholder="Select model" />
-                </SelectTrigger>
-                <SelectContent position="popper" className="max-h-[min(280px,40vh)]">
-                  {RAG_MODEL_OPTIONS.map(opt => (
-                    <SelectItem key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="text-xs leading-relaxed text-muted-foreground">
-                {ragModelDescriptions[ragModel]}
-              </p>
-            </section>
-
-            <Separator />
-
-            <section className="space-y-4" aria-labelledby="top-k-heading">
-              <div className="space-y-1.5">
-                <SectionTitle id="top-k-heading">Top K</SectionTitle>
-                <SectionDescription>
-                  Number of chunks to retrieve per query (1–50).
-                </SectionDescription>
-              </div>
-              <div className="flex flex-wrap items-center gap-3">
-                <Label htmlFor="top-k" className="sr-only">
-                  Top K value
-                </Label>
-                <Input
-                  id="top-k"
-                  type="number"
-                  min={1}
-                  max={50}
-                  step={1}
-                  value={currentTopK}
-                  onChange={e => {
-                    const value = Number(e.target.value)
-                    if (!Number.isNaN(value)) {
-                      setTopK(Math.min(50, Math.max(1, value)))
-                    }
-                  }}
-                  className="w-20 bg-background"
-                />
-                <span className="text-xs text-muted-foreground">chunks per query</span>
-              </div>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-xs text-muted-foreground">
-                  <span>1</span>
-                  <span className="font-medium text-foreground">Top K: {currentTopK}</span>
-                  <span>50</span>
-                </div>
-                <Slider
-                  min={1}
-                  max={50}
-                  step={1}
-                  value={[currentTopK]}
-                  onValueChange={([value]) => setTopK(value)}
-                />
-              </div>
-            </section>
-
-            <Separator />
-
-            <section className="space-y-1" aria-labelledby="behavior-heading">
-              <div className="space-y-1.5 pb-3">
-                <SectionTitle id="behavior-heading">Behavior</SectionTitle>
-                <SectionDescription>
-                  Debug output, streaming, and default answer layout.
-                </SectionDescription>
-              </div>
-
-              <div className="flex items-start justify-between gap-4 py-3">
-                <div className="min-w-0 space-y-1 pr-2">
-                  <Label htmlFor="debug-mode" className="text-sm font-medium text-foreground">
-                    Debug mode
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 py-6">
+          <div className="mx-auto flex max-w-lg flex-col gap-6">
+            <SettingsPanel
+              sectionId="rag-model-heading"
+              title="Retrieval model"
+              description="How relevant chunks are fetched for each query."
+            >
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="rag-model"
+                    className="text-xs font-medium uppercase tracking-wide text-muted-foreground"
+                  >
+                    Model
                   </Label>
-                  <p className="text-xs leading-relaxed text-muted-foreground">
-                    Show retrieved chunks and scores under answers.
-                  </p>
+                  <Select value={ragModel} onValueChange={value => setRagModel(value as RagModel)}>
+                    <SelectTrigger id="rag-model" className="h-10 w-full bg-background">
+                      <SelectValue placeholder="Select model" />
+                    </SelectTrigger>
+                    <SelectContent position="popper" className="max-h-[min(280px,40vh)]">
+                      {RAG_MODEL_OPTIONS.map(opt => (
+                        <SelectItem key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
-                <Switch
-                  id="debug-mode"
-                  className="mt-0.5 shrink-0"
-                  checked={debug}
-                  onCheckedChange={setDebug}
-                />
+                <p className="text-sm leading-relaxed text-muted-foreground text-pretty">
+                  {ragModelDescriptions[ragModel]}
+                </p>
               </div>
+            </SettingsPanel>
 
-              <Separator />
-
-              <div className="flex items-start justify-between gap-4 py-3">
-                <div className="min-w-0 space-y-1 pr-2">
-                  <Label htmlFor="stream-responses" className="text-sm font-medium text-foreground">
-                    Stream answers
-                  </Label>
-                  <p className="text-xs leading-relaxed text-muted-foreground">
-                    Stream tokens (SSE). Turn off for one-shot responses.
-                  </p>
+            <SettingsPanel
+              sectionId="top-k-heading"
+              title="Top K"
+              description="Number of chunks to retrieve per query (1–50)."
+            >
+              <div className="space-y-6">
+                <div className="flex flex-wrap items-end gap-3">
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="top-k"
+                      className="text-xs font-medium uppercase tracking-wide text-muted-foreground"
+                    >
+                      Chunks
+                    </Label>
+                    <Input
+                      id="top-k"
+                      type="number"
+                      min={1}
+                      max={50}
+                      step={1}
+                      value={currentTopK}
+                      onChange={e => {
+                        const value = Number(e.target.value)
+                        if (!Number.isNaN(value)) {
+                          setTopK(Math.min(50, Math.max(1, value)))
+                        }
+                      }}
+                      className="h-10 w-[5.5rem] tabular-nums"
+                    />
+                  </div>
+                  <p className="pb-2.5 text-sm text-muted-foreground">per query</p>
                 </div>
-                <Switch
-                  id="stream-responses"
-                  className="mt-0.5 shrink-0"
-                  checked={streamResponses}
-                  onCheckedChange={setStreamResponses}
-                />
-              </div>
 
-              <Separator />
-
-              <div className="flex items-start justify-between gap-4 py-3">
-                <div className="min-w-0 space-y-1 pr-2">
-                  <Label htmlFor="default-expanded" className="text-sm font-medium text-foreground">
-                    Default expanded answers
-                  </Label>
-                  <p className="text-xs leading-relaxed text-muted-foreground">
-                    Show full answer text by default instead of summary only.
-                  </p>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                      Range
+                    </span>
+                    <span className="rounded-md border border-border bg-background px-2.5 py-1 text-xs font-semibold tabular-nums text-foreground shadow-sm">
+                      Top K · {currentTopK}
+                    </span>
+                  </div>
+                  <Slider
+                    min={1}
+                    max={50}
+                    step={1}
+                    value={[currentTopK]}
+                    onValueChange={([value]) => setTopK(value)}
+                  />
+                  <div className="flex justify-between text-xs font-medium tabular-nums text-muted-foreground">
+                    <span>1</span>
+                    <span>50</span>
+                  </div>
                 </div>
-                <Switch
-                  id="default-expanded"
-                  className="mt-0.5 shrink-0"
-                  checked={defaultExpandedAnswers}
-                  onCheckedChange={setDefaultExpandedAnswers}
-                />
               </div>
-            </section>
+            </SettingsPanel>
+
+            <SettingsPanelList
+              sectionId="behavior-heading"
+              title="Behavior"
+              description="Debug output, streaming, and default answer layout."
+            >
+              <SwitchRow
+                id="debug-mode"
+                label="Debug mode"
+                hint="Show retrieved chunks and scores under answers."
+                checked={debug}
+                onCheckedChange={setDebug}
+              />
+              <SwitchRow
+                id="stream-responses"
+                label="Stream answers"
+                hint="Stream tokens (SSE). Turn off for one-shot responses."
+                checked={streamResponses}
+                onCheckedChange={setStreamResponses}
+              />
+              <SwitchRow
+                id="default-expanded"
+                label="Default expanded answers"
+                hint="Show full answer text by default instead of summary only."
+                checked={defaultExpandedAnswers}
+                onCheckedChange={setDefaultExpandedAnswers}
+              />
+            </SettingsPanelList>
           </div>
         </div>
 
-        <DialogFooter className="shrink-0 gap-2 border-t bg-muted/40 px-6 py-4">
+        <DialogFooter className="shrink-0 gap-2 border-t border-border/80 bg-muted/30 px-6 py-4 sm:justify-end">
           <DialogClose asChild>
-            <Button type="button" variant="default" className="w-full sm:w-auto">
+            <Button type="button" variant="default" className="w-full sm:w-auto sm:min-w-[7rem]">
               Done
             </Button>
           </DialogClose>
