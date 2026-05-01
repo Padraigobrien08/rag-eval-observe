@@ -73,16 +73,25 @@ async function proxyRequest(request: NextRequest, pathSegments: string[]) {
       body: method === 'GET' || method === 'HEAD' ? undefined : body,
     })
 
-    // Get response text
-    const text = await upstream.text()
+    const responseContentType = upstream.headers.get('content-type') ?? ''
 
-    // Create response with same status
+    if (responseContentType.includes('text/event-stream') && upstream.body) {
+      const outHeaders = new Headers()
+      outHeaders.set('content-type', responseContentType)
+      outHeaders.set('cache-control', 'no-cache')
+      outHeaders.set('connection', 'keep-alive')
+      const xrid = upstream.headers.get('x-request-id')
+      if (xrid) outHeaders.set('x-request-id', xrid)
+      return new NextResponse(upstream.body, {
+        status: upstream.status,
+        headers: outHeaders,
+      })
+    }
+
+    const text = await upstream.text()
     const response = new NextResponse(text, {
       status: upstream.status,
     })
-
-    // Copy content-type header if present
-    const responseContentType = upstream.headers.get('content-type')
     if (responseContentType) {
       response.headers.set('content-type', responseContentType)
     }

@@ -22,7 +22,7 @@ interface ChatPanelProps {
 export default function ChatPanel(_props: ChatPanelProps = {}) {
   const router = useRouter()
   const { messages, isLoading, error, sendMessage, resetChat } = useChat()
-  const { topK, debug, ragModel } = useRagSettings()
+  const { topK, debug, ragModel, streamResponses } = useRagSettings()
   const [connection, setConnection] = useState<ConnectionState>('unknown')
   const [input, setInput] = useState('')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -54,6 +54,7 @@ export default function ChatPanel(_props: ChatPanelProps = {}) {
       debug,
       filters: undefined,
       rag_model: ragModel,
+      stream: streamResponses,
     })
   }
 
@@ -63,6 +64,7 @@ export default function ChatPanel(_props: ChatPanelProps = {}) {
       topK,
       debug,
       rag_model: ragModel,
+      stream: streamResponses,
     })
   }
 

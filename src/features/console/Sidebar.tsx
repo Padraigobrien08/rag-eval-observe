@@ -53,7 +53,16 @@ export default function Sidebar({ collapsed = false, onToggleCollapse }: Sidebar
   const [isDeleting, setIsDeleting] = useState(false)
   const [previewDialogOpen, setPreviewDialogOpen] = useState(false)
   const [documentToPreview, setDocumentToPreview] = useState<Document | null>(null)
-  const { topK, debug, ragModel, setTopK, setDebug, setRagModel } = useRagSettings()
+  const {
+    topK,
+    debug,
+    streamResponses,
+    ragModel,
+    setTopK,
+    setDebug,
+    setStreamResponses,
+    setRagModel,
+  } = useRagSettings()
   const [defaultExpandedAnswers, setDefaultExpandedAnswers] = useLocalStorage<boolean>(
     'rag-eval-default-expanded-answers',
     false
@@ -378,6 +387,37 @@ export default function Sidebar({ collapsed = false, onToggleCollapse }: Sidebar
                       onCheckedChange={setDebug}
                       style={{
                         backgroundColor: debug ? 'rgb(22, 163, 74)' : 'rgb(239, 68, 68)',
+                      }}
+                    />
+                  </div>
+                </section>
+
+                <section
+                  className="flex items-center justify-between rounded-xl bg-slate-50"
+                  style={{ padding: '1rem', gap: '2rem' }}
+                >
+                  <div
+                    style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', flex: 1 }}
+                  >
+                    <Label htmlFor="stream-responses" className="text-sm font-medium text-slate-900">
+                      Stream answers
+                    </Label>
+                    <p className="text-xs text-slate-500">
+                      Show tokens as they arrive (SSE). Turn off to use one-shot responses.
+                    </p>
+                  </div>
+                  <div className="flex items-center" style={{ gap: '0.75rem', flexShrink: 0 }}>
+                    <span
+                      className={`text-xs font-medium ${streamResponses ? 'text-green-700' : 'text-red-700'}`}
+                    >
+                      {streamResponses ? 'On' : 'Off'}
+                    </span>
+                    <Switch
+                      id="stream-responses"
+                      checked={streamResponses}
+                      onCheckedChange={setStreamResponses}
+                      style={{
+                        backgroundColor: streamResponses ? 'rgb(22, 163, 74)' : 'rgb(239, 68, 68)',
                       }}
                     />
                   </div>

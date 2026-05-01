@@ -73,6 +73,89 @@ export async function ragQuery(body: {
   return res.json()
 }
 
+export async function ragQueryStream(
+  body: {
+    query: string
+    topK?: number
+    debug?: boolean
+    filters?: Record<string, unknown>
+    rag_model?: string
+  },
+  handlers: {
+    onDelta: (text: string) => void
+    onDone: (data: Record<string, unknown>) => void
+    onError: (message: string) => void
+  },
+  signal?: AbortSignal
+): Promise<void> {
+  ensureBrowser()
+  const res = await fetch(`${API_BASE_URL}/api/v1/query/stream`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+    signal,
+  })
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => '')
+    handlers.onError(messageFromErrorResponse(text, res.status))
+    return
+  }
+
+  const reader = res.body?.getReader()
+  if (!reader) {
+    handlers.onError('No response body')
+    return
+  }
+
+  const decoder = new TextDecoder()
+  let buffer = ''
+  let streamFailed = false
+
+  const processBuffer = (): void => {
+    const parts = buffer.split('\n\n')
+    buffer = parts.pop() ?? ''
+    outer: for (const block of parts) {
+      for (const line of block.split('\n')) {
+        const trimmed = line.trim()
+        if (!trimmed.startsWith('data:')) continue
+        const jsonStr = trimmed.slice(5).trim()
+        if (!jsonStr || jsonStr === '[DONE]') continue
+        let ev: unknown
+        try {
+          ev = JSON.parse(jsonStr)
+        } catch {
+          continue
+        }
+        if (typeof ev !== 'object' || ev === null || !('type' in ev)) continue
+        const o = ev as { type: string; text?: string; message?: string }
+        if (o.type === 'delta' && typeof o.text === 'string') {
+          handlers.onDelta(o.text)
+        } else if (o.type === 'done') {
+          handlers.onDone(ev as Record<string, unknown>)
+        } else if (o.type === 'error' && typeof o.message === 'string') {
+          streamFailed = true
+          handlers.onError(o.message)
+          break outer
+        }
+      }
+    }
+  }
+
+  while (!streamFailed) {
+    const { done, value } = await reader.read()
+    if (done) {
+      if (buffer.trim()) {
+        buffer += '\n\n'
+        processBuffer()
+      }
+      break
+    }
+    buffer += decoder.decode(value, { stream: true })
+    processBuffer()
+  }
+}
+
 export async function ingestDocument(body: {
   source: string
   title?: string
