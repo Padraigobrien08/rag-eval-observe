@@ -25,9 +25,9 @@ format:
 db:
 	docker compose up -d postgres
 
-# Database schema (same SQL as docker/init; idempotent)
+# Database schema (same SQL as docker/init; idempotent) + Alembic revisions
 migrate:
-	cd backend && uv run python scripts/apply_init_sql.py
+	cd backend && uv run python scripts/apply_init_sql.py && uv run alembic upgrade head
 
 # Database seeding (eval corpus + local demo sources; idempotent)
 seed:

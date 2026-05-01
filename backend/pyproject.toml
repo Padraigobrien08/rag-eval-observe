@@ -26,6 +26,7 @@ dev = [
     "httpx>=0.26.0",
     "black>=24.1.0",
     "ruff>=0.1.0",
+    "mypy>=1.8.0",
     "alembic>=1.13.0",
     "psycopg2-binary>=2.9.9",
 ]
@@ -55,3 +56,8 @@ ignore = ["E501"]
 line-length = 100
 target-version = ["py311"]
 
+[tool.mypy]
+python_version = "3.11"
+ignore_missing_imports = true
+warn_unused_ignores = true
+plugins = ["pydantic.mypy"]

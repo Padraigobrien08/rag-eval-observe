@@ -9,6 +9,7 @@ Usage:
     Set REDIS_URL and REDIS_ENABLED=true in environment variables.
     The rate limiter will automatically use Redis if enabled.
 """
+
 import time
 
 import redis.asyncio as redis
@@ -30,8 +31,8 @@ class RedisRateLimiter:
     def __init__(
         self,
         redis_url: str,
-        max_requests: int = None,
-        window_seconds: int = None,
+        max_requests: int | None = None,
+        window_seconds: int | None = None,
     ):
         """
         Initialize Redis rate limiter.
@@ -46,7 +47,7 @@ class RedisRateLimiter:
         self.redis_url = redis_url
         self._redis_client: redis.Redis | None = None
 
-    async def _get_redis(self) -> 'redis.Redis':
+    async def _get_redis(self) -> "redis.Redis":
         """Get or create Redis client."""
         if self._redis_client is None:
             self._redis_client = redis.from_url(
@@ -115,7 +116,7 @@ class RedisRateLimiter:
             # In production, you might want to fail closed instead
             return True, self.max_requests - 1
 
-    async def reset(self, identifier: str = None) -> None:
+    async def reset(self, identifier: str | None = None) -> None:
         """
         Reset rate limit for identifier or all identifiers.
 
@@ -150,8 +151,8 @@ def get_redis_rate_limiter() -> RedisRateLimiter | None:
     """Get or create global Redis rate limiter if enabled."""
     global _redis_rate_limiter
 
-    redis_enabled = getattr(settings, 'REDIS_ENABLED', False)
-    redis_url = getattr(settings, 'REDIS_URL', None)
+    redis_enabled = getattr(settings, "REDIS_ENABLED", False)
+    redis_url = getattr(settings, "REDIS_URL", None)
 
     if not redis_enabled or not redis_url:
         return None
@@ -161,4 +162,3 @@ def get_redis_rate_limiter() -> RedisRateLimiter | None:
         logger.info("Redis rate limiter initialized", redis_url=redis_url)
 
     return _redis_rate_limiter
-

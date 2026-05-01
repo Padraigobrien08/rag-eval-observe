@@ -244,7 +244,9 @@ async def generate_answer(
             query=query,
             has_document_list_context=bool(document_list_context),
             document_list_context_length=len(document_list_context) if document_list_context else 0,
-            document_list_context_preview=document_list_context[:200] if document_list_context else None,
+            document_list_context_preview=document_list_context[:200]
+            if document_list_context
+            else None,
             chunks_count=len(sanitized_chunks),
         )
 

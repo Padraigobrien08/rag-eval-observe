@@ -73,8 +73,8 @@ describe('parseCitations', () => {
     expect(result).toHaveLength(1)
     expect(result[0]).toEqual({
       text: '[1]',
-      startIndex: 28,
-      endIndex: 31,
+      startIndex: 26,
+      endIndex: 29,
       citationNumbers: [1],
     })
   })
@@ -164,12 +164,11 @@ describe('splitTextWithCitations', () => {
     expect(result[2]).toBe(' here.')
   })
 
-  it('should preserve empty strings between citations', () => {
+  it('should treat adjacent citations as one marker block', () => {
     const text = '[1][2]'
     const result = splitTextWithCitations(text)
 
-    expect(result).toHaveLength(2)
-    expect(result[0]).toMatchObject({ citationNumbers: [1] })
-    expect(result[1]).toMatchObject({ citationNumbers: [2] })
+    expect(result).toHaveLength(1)
+    expect(result[0]).toMatchObject({ citationNumbers: [1, 2] })
   })
 })

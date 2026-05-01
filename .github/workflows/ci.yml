@@ -30,6 +30,9 @@ jobs:
       - name: Typecheck
         run: pnpm typecheck
 
+      - name: Unit tests (Jest)
+        run: pnpm exec jest --ci
+
       - name: Build
         run: pnpm build
 
@@ -61,20 +64,11 @@ jobs:
       - name: Install dependencies
         run: uv sync --frozen --extra dev
 
-      - name: Install ruff
-        run: uv tool install ruff
+      - name: Ruff check
+        run: uv run ruff check .
 
-      - name: Run ruff check and auto-fix
-        run: ruff check --fix --unsafe-fixes .
-
-      - name: Run ruff check (verify)
-        run: ruff check . || (echo "Some ruff errors remain. Run 'ruff check --fix --unsafe-fixes .' locally and commit the fixes." && exit 1)
-
-      - name: Run ruff format
-        run: ruff format .
-
-      - name: Run ruff format check
-        run: ruff format --check . || (echo "Files were reformatted. Run 'ruff format .' locally and commit the changes." && exit 1)
+      - name: Ruff format check
+        run: uv run ruff format --check app tests migrations scripts eval
 
   typecheck:
     runs-on: ubuntu-latest
@@ -96,12 +90,8 @@ jobs:
       - name: Install dependencies
         run: uv sync --frozen --extra dev
 
-      - name: Install mypy
-        run: uv add --dev mypy
-
-      - name: Run mypy
-        run: uv run mypy app/ --ignore-missing-imports
-        continue-on-error: true
+      - name: Mypy (app/core)
+        run: uv run mypy app/core
 
   test:
     runs-on: ubuntu-latest
@@ -151,9 +141,10 @@ jobs:
             sleep 1
           done
           uv run python scripts/apply_init_sql.py
+          uv run alembic upgrade head
 
       - name: Run tests
-        run: uv run pytest tests/ -v --cov=app --cov-report=xml
+        run: uv run pytest tests/ -v --cov=app --cov-report=xml --cov-fail-under=58
 
       - name: Upload coverage
         uses: codecov/codecov-action@v3

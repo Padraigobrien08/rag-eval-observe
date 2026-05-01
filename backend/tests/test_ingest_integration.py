@@ -2,6 +2,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+from app.core.config import settings as app_settings
 from app.rag.ingest import (
     MAX_DOCUMENT_SIZE,
     DocumentTooLargeError,
@@ -93,6 +94,59 @@ async def test_ingest_document_too_large():
         )
 
     assert "exceeds maximum" in str(exc_info.value)
+
+
+@pytest.mark.asyncio
+async def test_ingest_replace_if_exists_reuses_document_id_and_deletes_chunks():
+    """INGEST_REPLACE_IF_EXISTS: same (source, title) keeps document id; chunks replaced."""
+    mock_conn = AsyncMock()
+    mock_pool = _make_ingest_pool(mock_conn)
+
+    mock_transaction = AsyncMock()
+    mock_transaction.__aenter__ = AsyncMock(return_value=None)
+    mock_transaction.__aexit__ = AsyncMock(return_value=None)
+    mock_conn.transaction = MagicMock(return_value=mock_transaction)
+
+    existing_doc = {
+        "id": "stable-doc-id",
+        "source": "my-source",
+        "title": "My Title",
+    }
+    mock_conn.fetchrow = AsyncMock(return_value=existing_doc)
+    mock_conn.execute = AsyncMock()
+
+    with (
+        patch.object(app_settings, "INGEST_REPLACE_IF_EXISTS", True),
+        patch("app.rag.ingest.get_db_pool", new=AsyncMock(return_value=mock_pool)),
+        patch("app.rag.ingest.get_openai_client") as mock_openai,
+    ):
+        mock_client = AsyncMock()
+        mock_openai.return_value = mock_client
+
+        mock_embedding_response = MagicMock()
+        mock_embedding_response.embedding = [0.1, 0.2, 0.3] * 512
+
+        async def _embed_batch(texts, model=None):
+            return [mock_embedding_response for _ in texts]
+
+        mock_client.create_embeddings = AsyncMock(side_effect=_embed_batch)
+
+        text = "Replacement body. " * 50
+        result = await ingest_document(
+            source="my-source",
+            title="My Title",
+            text=text,
+        )
+
+    assert result["document_id"] == "stable-doc-id"
+    calls = [c.args for c in mock_conn.execute.call_args_list]
+    assert any(
+        len(args) >= 2 and "DELETE FROM chunks" in str(args[0]) and args[1] == "stable-doc-id"
+        for args in calls
+    ), "expected DELETE FROM chunks for existing document_id"
+    assert any(len(args) >= 2 and "UPDATE documents" in str(args[0]) for args in calls), (
+        "expected UPDATE documents"
+    )
 
 
 @pytest.mark.asyncio

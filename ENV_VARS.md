@@ -96,7 +96,7 @@ OTEL_SERVICE_NAME=rag-eval-backend
 ### Metrics and streaming
 
 - `GET /api/v1/metrics` and `GET /api/v1/metrics/prometheus` expose per-route counters (including `/api/v1/query` and `/api/v1/query/stream`) and token totals. They are in-memory and reset on process restart.
-- Example Grafana dashboard JSON: `observability/grafana-rag-eval-prometheus.json` (import and point at your Prometheus datasource).
+- Grafana: import `observability/grafana-rag-eval-prometheus.json` or use provisioning files under `observability/grafana/` (see `observability/grafana/README.md`).
 
 ### Logs (correlation)
 

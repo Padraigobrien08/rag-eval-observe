@@ -82,7 +82,10 @@ class QueryRequest(BaseModel):
     top_k: int = Field(8, ge=1, le=100, description="Number of chunks to retrieve", alias="topK")
     filters: dict[str, Any] | None = Field(None, description="Optional filters (source, title)")
     debug: bool = Field(False, description="Include debug information in response")
-    rag_model: str = Field("vector-similarity", description="RAG model to use: vector-similarity, hybrid-search, reranking, multi-query")
+    rag_model: str = Field(
+        "vector-similarity",
+        description="RAG model to use: vector-similarity, hybrid-search, reranking, multi-query",
+    )
 
 
 class CitationResponse(BaseModel):

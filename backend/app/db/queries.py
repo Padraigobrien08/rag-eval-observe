@@ -117,7 +117,9 @@ async def list_documents(limit: int = 100, offset: int = 0) -> list[dict]:
         # Use context manager for proper connection handling
         async with pool.acquire() as conn:
             conn_acquire_time = time.time()
-            logger.info("Connection acquired", elapsed_ms=(conn_acquire_time - pool_acquire_time) * 1000)
+            logger.info(
+                "Connection acquired", elapsed_ms=(conn_acquire_time - pool_acquire_time) * 1000
+            )
 
             # Add timeout for query execution (10 seconds)
             rows = await asyncio.wait_for(
@@ -133,7 +135,11 @@ async def list_documents(limit: int = 100, offset: int = 0) -> list[dict]:
                 timeout=10.0,
             )
             query_time = time.time()
-            logger.info("Query executed", elapsed_ms=(query_time - conn_acquire_time) * 1000, row_count=len(rows))
+            logger.info(
+                "Query executed",
+                elapsed_ms=(query_time - conn_acquire_time) * 1000,
+                row_count=len(rows),
+            )
 
             result = [
                 {
@@ -305,7 +311,12 @@ async def get_query_logs(
             query += f" AND created_at <= ${param_count}::timestamp"
             params.append(end_date)
 
-        query += " ORDER BY created_at DESC LIMIT $" + str(param_count + 1) + " OFFSET $" + str(param_count + 2)
+        query += (
+            " ORDER BY created_at DESC LIMIT $"
+            + str(param_count + 1)
+            + " OFFSET $"
+            + str(param_count + 2)
+        )
         params.extend([limit, offset])
 
         rows = await conn.fetch(query, *params)

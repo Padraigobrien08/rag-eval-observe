@@ -58,8 +58,12 @@ class TestRetrieveBasic:
         mock_conn.fetch = AsyncMock(return_value=[mock_row1, mock_row2])
 
         with (
-            patch("app.rag.retrieval_strategies.get_openai_client", return_value=mock_openai_client),
-            patch("app.rag.retrieval_strategies.get_db_pool", new=AsyncMock(return_value=mock_pool)),
+            patch(
+                "app.rag.retrieval_strategies.get_openai_client", return_value=mock_openai_client
+            ),
+            patch(
+                "app.rag.retrieval_strategies.get_db_pool", new=AsyncMock(return_value=mock_pool)
+            ),
         ):
             results = await retrieve("test query", top_k=5)
 
@@ -94,8 +98,12 @@ class TestRetrieveBasic:
         mock_conn.fetch = AsyncMock(return_value=[mock_row])
 
         with (
-            patch("app.rag.retrieval_strategies.get_openai_client", return_value=mock_openai_client),
-            patch("app.rag.retrieval_strategies.get_db_pool", new=AsyncMock(return_value=mock_pool)),
+            patch(
+                "app.rag.retrieval_strategies.get_openai_client", return_value=mock_openai_client
+            ),
+            patch(
+                "app.rag.retrieval_strategies.get_db_pool", new=AsyncMock(return_value=mock_pool)
+            ),
         ):
             filters = {"source": "filtered-source", "title": "Filtered Doc"}
             results = await retrieve("test query", top_k=5, filters=filters)
@@ -122,8 +130,12 @@ class TestRetrieveBasic:
         mock_conn.fetch = AsyncMock(return_value=[])
 
         with (
-            patch("app.rag.retrieval_strategies.get_openai_client", return_value=mock_openai_client),
-            patch("app.rag.retrieval_strategies.get_db_pool", new=AsyncMock(return_value=mock_pool)),
+            patch(
+                "app.rag.retrieval_strategies.get_openai_client", return_value=mock_openai_client
+            ),
+            patch(
+                "app.rag.retrieval_strategies.get_db_pool", new=AsyncMock(return_value=mock_pool)
+            ),
         ):
             filters = {"source": "test-source"}
             results = await retrieve("test query", top_k=5, filters=filters)
@@ -154,8 +166,12 @@ class TestRetrieveBasic:
         mock_conn.fetch = AsyncMock(return_value=[mock_row])
 
         with (
-            patch("app.rag.retrieval_strategies.get_openai_client", return_value=mock_openai_client),
-            patch("app.rag.retrieval_strategies.get_db_pool", new=AsyncMock(return_value=mock_pool)),
+            patch(
+                "app.rag.retrieval_strategies.get_openai_client", return_value=mock_openai_client
+            ),
+            patch(
+                "app.rag.retrieval_strategies.get_db_pool", new=AsyncMock(return_value=mock_pool)
+            ),
         ):
             filters = {"title": None}
             results = await retrieve("test query", top_k=5, filters=filters)
@@ -217,8 +233,12 @@ class TestRetrieveOrdering:
         mock_conn.fetch = AsyncMock(return_value=[mock_row1, mock_row2, mock_row3])
 
         with (
-            patch("app.rag.retrieval_strategies.get_openai_client", return_value=mock_openai_client),
-            patch("app.rag.retrieval_strategies.get_db_pool", new=AsyncMock(return_value=mock_pool)),
+            patch(
+                "app.rag.retrieval_strategies.get_openai_client", return_value=mock_openai_client
+            ),
+            patch(
+                "app.rag.retrieval_strategies.get_db_pool", new=AsyncMock(return_value=mock_pool)
+            ),
         ):
             results = await retrieve("test query", top_k=5)
 
@@ -257,8 +277,12 @@ class TestRetrieveOrdering:
         mock_conn.fetch = AsyncMock(return_value=mock_rows)
 
         with (
-            patch("app.rag.retrieval_strategies.get_openai_client", return_value=mock_openai_client),
-            patch("app.rag.retrieval_strategies.get_db_pool", new=AsyncMock(return_value=mock_pool)),
+            patch(
+                "app.rag.retrieval_strategies.get_openai_client", return_value=mock_openai_client
+            ),
+            patch(
+                "app.rag.retrieval_strategies.get_db_pool", new=AsyncMock(return_value=mock_pool)
+            ),
         ):
             # Request top_k=3, but mock returns 10
             # The LIMIT in SQL should handle this, but we test the function behavior
@@ -310,8 +334,12 @@ class TestRetrieveErrors:
         mock_conn.fetch = AsyncMock(side_effect=Exception("Database error"))
 
         with (
-            patch("app.rag.retrieval_strategies.get_openai_client", return_value=mock_openai_client),
-            patch("app.rag.retrieval_strategies.get_db_pool", new=AsyncMock(return_value=mock_pool)),
+            patch(
+                "app.rag.retrieval_strategies.get_openai_client", return_value=mock_openai_client
+            ),
+            patch(
+                "app.rag.retrieval_strategies.get_db_pool", new=AsyncMock(return_value=mock_pool)
+            ),
         ):
             with pytest.raises(RetrieveError, match="Failed to retrieve chunks"):
                 await retrieve("test query", top_k=5)
@@ -348,8 +376,12 @@ class TestRetrieveScoreMeaning:
         mock_conn.fetch = AsyncMock(return_value=mock_rows)
 
         with (
-            patch("app.rag.retrieval_strategies.get_openai_client", return_value=mock_openai_client),
-            patch("app.rag.retrieval_strategies.get_db_pool", new=AsyncMock(return_value=mock_pool)),
+            patch(
+                "app.rag.retrieval_strategies.get_openai_client", return_value=mock_openai_client
+            ),
+            patch(
+                "app.rag.retrieval_strategies.get_db_pool", new=AsyncMock(return_value=mock_pool)
+            ),
         ):
             results = await retrieve("test query", top_k=5)
 
@@ -380,8 +412,12 @@ class TestRetrieveScoreMeaning:
         mock_conn.fetch = AsyncMock(return_value=[mock_row])
 
         with (
-            patch("app.rag.retrieval_strategies.get_openai_client", return_value=mock_openai_client),
-            patch("app.rag.retrieval_strategies.get_db_pool", new=AsyncMock(return_value=mock_pool)),
+            patch(
+                "app.rag.retrieval_strategies.get_openai_client", return_value=mock_openai_client
+            ),
+            patch(
+                "app.rag.retrieval_strategies.get_db_pool", new=AsyncMock(return_value=mock_pool)
+            ),
         ):
             results = await retrieve("test query", top_k=5)
 
@@ -418,8 +454,12 @@ class TestRetrieveFilterValidation:
         mock_conn.fetch = AsyncMock(return_value=[mock_row])
 
         with (
-            patch("app.rag.retrieval_strategies.get_openai_client", return_value=mock_openai_client),
-            patch("app.rag.retrieval_strategies.get_db_pool", new=AsyncMock(return_value=mock_pool)),
+            patch(
+                "app.rag.retrieval_strategies.get_openai_client", return_value=mock_openai_client
+            ),
+            patch(
+                "app.rag.retrieval_strategies.get_db_pool", new=AsyncMock(return_value=mock_pool)
+            ),
         ):
             filters = {"source": "exact-source"}
             results = await retrieve("test query", top_k=5, filters=filters)
@@ -456,8 +496,12 @@ class TestRetrieveFilterValidation:
         mock_conn.fetch = AsyncMock(return_value=[mock_row])
 
         with (
-            patch("app.rag.retrieval_strategies.get_openai_client", return_value=mock_openai_client),
-            patch("app.rag.retrieval_strategies.get_db_pool", new=AsyncMock(return_value=mock_pool)),
+            patch(
+                "app.rag.retrieval_strategies.get_openai_client", return_value=mock_openai_client
+            ),
+            patch(
+                "app.rag.retrieval_strategies.get_db_pool", new=AsyncMock(return_value=mock_pool)
+            ),
         ):
             filters = {"title": "Exact Title"}
             results = await retrieve("test query", top_k=5, filters=filters)
@@ -489,8 +533,12 @@ class TestRetrieveFilterValidation:
         mock_conn.fetch = AsyncMock(return_value=[mock_row])
 
         with (
-            patch("app.rag.retrieval_strategies.get_openai_client", return_value=mock_openai_client),
-            patch("app.rag.retrieval_strategies.get_db_pool", new=AsyncMock(return_value=mock_pool)),
+            patch(
+                "app.rag.retrieval_strategies.get_openai_client", return_value=mock_openai_client
+            ),
+            patch(
+                "app.rag.retrieval_strategies.get_db_pool", new=AsyncMock(return_value=mock_pool)
+            ),
         ):
             filters = {"source": "combined-source", "title": "Combined Title"}
             results = await retrieve("test query", top_k=5, filters=filters)

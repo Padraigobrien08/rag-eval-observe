@@ -17,7 +17,7 @@ class RateLimiter:
     rate limiting, use a shared store like Redis.
     """
 
-    def __init__(self, max_requests: int = None, window_seconds: int = None):
+    def __init__(self, max_requests: int | None = None, window_seconds: int | None = None):
         """
         Initialize rate limiter.
 
@@ -64,7 +64,7 @@ class RateLimiter:
         remaining = self.max_requests - request_count - 1
         return True, remaining
 
-    def reset(self, identifier: str = None) -> None:
+    def reset(self, identifier: str | None = None) -> None:
         """
         Reset rate limit for identifier or all identifiers.
 
@@ -78,7 +78,7 @@ class RateLimiter:
 
 
 # Global rate limiter instance
-_rate_limiter: RateLimiter = None
+_rate_limiter: RateLimiter | None = None
 
 
 def get_rate_limiter() -> RateLimiter:

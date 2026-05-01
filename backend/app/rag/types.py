@@ -1,4 +1,5 @@
 """Shared types for RAG retrieval."""
+
 from dataclasses import dataclass
 
 
@@ -26,4 +27,3 @@ class RetrieveError(Exception):
     """Base exception for retrieval errors."""
 
     pass
-

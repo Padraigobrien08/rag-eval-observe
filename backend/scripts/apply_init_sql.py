@@ -37,7 +37,10 @@ def _load_database_url() -> str:
         pass
     url = os.environ.get("DATABASE_URL", "").strip()
     if not url:
-        print("DATABASE_URL is not set. Export it or add it to backend/.env or the repo root .env.", file=sys.stderr)
+        print(
+            "DATABASE_URL is not set. Export it or add it to backend/.env or the repo root .env.",
+            file=sys.stderr,
+        )
         sys.exit(1)
     return url
 

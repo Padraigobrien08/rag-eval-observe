@@ -117,8 +117,7 @@ async def rate_limit_middleware(request: Request, call_next):
     """Rate limiting middleware."""
     # Skip rate limiting for health, metrics endpoints, and OPTIONS (CORS preflight)
     if (
-        request.url.path
-        in ["/api/v1/health", "/api/v1/metrics", "/api/v1/metrics/prometheus", "/"]
+        request.url.path in ["/api/v1/health", "/api/v1/metrics", "/api/v1/metrics/prometheus", "/"]
         or request.method == "OPTIONS"
     ):
         return await call_next(request)

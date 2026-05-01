@@ -238,6 +238,7 @@ async def list_documents_endpoint(
 ):
     """List documents with pagination."""
     import time
+
     endpoint_start = time.time()
     request_id = getattr(request.state, "request_id", "unknown")
 

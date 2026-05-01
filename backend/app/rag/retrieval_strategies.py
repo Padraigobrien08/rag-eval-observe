@@ -7,6 +7,7 @@ This module provides different retrieval strategies:
 - Reranking (uses reranking model to improve results)
 - Multi-Query (generates multiple query variations)
 """
+
 import json
 import re
 from abc import ABC, abstractmethod
@@ -55,7 +56,9 @@ class VectorSimilarityStrategy(RetrievalStrategy):
         filters: dict[str, Any] | None = None,
     ) -> list[RetrievedChunk]:
         """Retrieve chunks using vector similarity search."""
-        logger.info("VectorSimilarityStrategy.retrieve called", query_length=len(query), top_k=top_k)
+        logger.info(
+            "VectorSimilarityStrategy.retrieve called", query_length=len(query), top_k=top_k
+        )
         if top_k <= 0:
             raise ValueError("top_k must be positive")
 
@@ -198,7 +201,9 @@ class HybridSearchStrategy(RetrievalStrategy):
                     vector_params.append(filters["title"])
                     vector_param_index += 1
 
-        vector_filter_clause = " AND " + " AND ".join(vector_filter_conditions) if vector_filter_conditions else ""
+        vector_filter_clause = (
+            " AND " + " AND ".join(vector_filter_conditions) if vector_filter_conditions else ""
+        )
 
         # Vector similarity query
         vector_params.append(fetch_k)
@@ -239,7 +244,9 @@ class HybridSearchStrategy(RetrievalStrategy):
                     bm25_params.append(filters["title"])
                     bm25_param_index += 1
 
-        bm25_filter_clause = " AND " + " AND ".join(bm25_filter_conditions) if bm25_filter_conditions else ""
+        bm25_filter_clause = (
+            " AND " + " AND ".join(bm25_filter_conditions) if bm25_filter_conditions else ""
+        )
         bm25_params.append(fetch_k)
 
         # BM25 keyword search query (using PostgreSQL full-text search)
@@ -441,7 +448,7 @@ Chunks:
             # Extract JSON array from response (handle cases where LLM adds extra text)
             content = completion_response.content.strip()
             # Try to find JSON array in the response
-            json_match = re.search(r'\[[\d,\s]+\]', content)
+            json_match = re.search(r"\[[\d,\s]+\]", content)
             if json_match:
                 ranked_indices = json.loads(json_match.group())
             else:
@@ -522,7 +529,7 @@ Return ONLY a JSON array of 3 query strings. Example: ["query 1", "query 2", "qu
 
             # Extract JSON array from response
             content = completion_response.content.strip()
-            json_match = re.search(r'\[.*?\]', content, re.DOTALL)
+            json_match = re.search(r"\[.*?\]", content, re.DOTALL)
             if json_match:
                 query_variations = json.loads(json_match.group())
             else:
@@ -642,8 +649,7 @@ def get_retrieval_strategy(rag_model: str) -> RetrievalStrategy:
     strategy_class = strategies.get(rag_model)
     if not strategy_class:
         raise ValueError(
-            f"Unsupported RAG model: {rag_model}. "
-            f"Supported models: {', '.join(strategies.keys())}"
+            f"Unsupported RAG model: {rag_model}. Supported models: {', '.join(strategies.keys())}"
         )
 
     logger.info(
@@ -652,4 +658,3 @@ def get_retrieval_strategy(rag_model: str) -> RetrievalStrategy:
         strategy_class=strategy_class.__name__,
     )
     return strategy_class()
-

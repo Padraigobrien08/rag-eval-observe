@@ -10,9 +10,9 @@ import json
 import os
 import sys
 import time
-from pathlib import Path
-from typing import List, Dict, Any, Optional
 from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -21,9 +21,9 @@ import structlog
 from dotenv import load_dotenv
 
 from app.core.logging import setup_logging
-from app.rag.retrieve import retrieve
-from app.rag.answer import generate_answer
 from app.llm.openai_client import get_openai_client
+from app.rag.answer import generate_answer
+from app.rag.retrieve import retrieve
 
 # Load environment variables
 load_dotenv()
@@ -38,8 +38,8 @@ class EvaluationCase:
     """Single evaluation case."""
 
     query: str
-    expected_sources: List[str]
-    expected_answer_contains: List[str]
+    expected_sources: list[str]
+    expected_answer_contains: list[str]
 
 
 @dataclass
@@ -47,18 +47,18 @@ class EvaluationResult:
     """Result for a single evaluation case."""
 
     query: str
-    expected_sources: List[str]
-    retrieved_sources: List[str]
+    expected_sources: list[str]
+    retrieved_sources: list[str]
     answer: str
     hit_at_1: bool
     hit_at_3: bool
     hit_at_5: bool
     hit_at_8: bool
     mrr: float
-    llm_judge_correctness: Optional[bool] = None
-    llm_judge_faithfulness: Optional[bool] = None
-    llm_judge_reasoning: Optional[str] = None
-    error: Optional[str] = None
+    llm_judge_correctness: bool | None = None
+    llm_judge_faithfulness: bool | None = None
+    llm_judge_reasoning: str | None = None
+    error: str | None = None
 
 
 @dataclass
@@ -73,15 +73,15 @@ class EvaluationSummary:
     hit_at_5: float
     hit_at_8: float
     mrr: float
-    llm_judge_correctness_rate: Optional[float] = None
-    llm_judge_faithfulness_rate: Optional[float] = None
-    failure_examples: List[Dict[str, Any]] = field(default_factory=list)
+    llm_judge_correctness_rate: float | None = None
+    llm_judge_faithfulness_rate: float | None = None
+    failure_examples: list[dict[str, Any]] = field(default_factory=list)
 
 
-def load_dataset(dataset_path: Path) -> List[EvaluationCase]:
+def load_dataset(dataset_path: Path) -> list[EvaluationCase]:
     """Load evaluation dataset from JSONL file."""
     cases = []
-    with open(dataset_path, "r") as f:
+    with open(dataset_path) as f:
         for line in f:
             if line.strip():
                 data = json.loads(line)
@@ -95,7 +95,7 @@ def load_dataset(dataset_path: Path) -> List[EvaluationCase]:
     return cases
 
 
-def calculate_hit_at_k(retrieved_sources: List[str], expected_sources: List[str], k: int) -> bool:
+def calculate_hit_at_k(retrieved_sources: list[str], expected_sources: list[str], k: int) -> bool:
     """Calculate hit@k: whether any expected source is in top k retrieved."""
     if not expected_sources:
         return False
@@ -109,7 +109,7 @@ def calculate_hit_at_k(retrieved_sources: List[str], expected_sources: List[str]
     return False
 
 
-def calculate_mrr(retrieved_sources: List[str], expected_sources: List[str]) -> float:
+def calculate_mrr(retrieved_sources: list[str], expected_sources: list[str]) -> float:
     """Calculate Mean Reciprocal Rank."""
     if not expected_sources:
         return 0.0
@@ -123,8 +123,8 @@ def calculate_mrr(retrieved_sources: List[str], expected_sources: List[str]) -> 
 
 
 async def llm_judge_correctness(
-    query: str, answer: str, expected_answer_contains: List[str]
-) -> Dict[str, Any]:
+    query: str, answer: str, expected_answer_contains: list[str]
+) -> dict[str, Any]:
     """
     Use LLM to judge answer correctness and faithfulness.
 
@@ -257,7 +257,7 @@ async def evaluate_case(case: EvaluationCase, use_llm_judge: bool = False) -> Ev
         )
 
 
-def generate_report(summary: EvaluationSummary, results: List[EvaluationResult]) -> str:
+def generate_report(summary: EvaluationSummary, results: list[EvaluationResult]) -> str:
     """Generate markdown report."""
     report = f"""# RAG Evaluation Report
 
@@ -398,14 +398,14 @@ async def run_evaluation():
     print(f"Total Cases: {summary.total_cases}")
     print(f"Successful: {summary.successful}")
     print(f"Failed: {summary.failed}")
-    print(f"\nRetrieval Metrics:")
+    print("\nRetrieval Metrics:")
     print(f"  Hit@1: {summary.hit_at_1:.2%}")
     print(f"  Hit@3: {summary.hit_at_3:.2%}")
     print(f"  Hit@5: {summary.hit_at_5:.2%}")
     print(f"  Hit@8: {summary.hit_at_8:.2%}")
     print(f"  MRR: {summary.mrr:.3f}")
     if summary.llm_judge_correctness_rate is not None:
-        print(f"\nLLM Judge Metrics:")
+        print("\nLLM Judge Metrics:")
         print(f"  Correctness: {summary.llm_judge_correctness_rate:.2%}")
         print(f"  Faithfulness: {summary.llm_judge_faithfulness_rate:.2%}")
     print(f"\nReport saved to: {report_path}")

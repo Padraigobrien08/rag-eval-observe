@@ -1,0 +1,113 @@
+# Golden-path E2E against real FastAPI + Postgres (no mocked /api/backend).
+name: E2E integration
+
+on:
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+
+jobs:
+  integration:
+    runs-on: ubuntu-latest
+    env:
+      PW_INTEGRATION: '1'
+      PLAYWRIGHT_BASE_URL: http://127.0.0.1:4173
+      AZURE_API_BASE_URL: http://127.0.0.1:8000
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/e2edb
+      OPENAI_API_KEY: test-key-not-used
+      OPENAI_EMBEDDING_MODEL: text-embedding-3-small
+      OPENAI_CHAT_MODEL: gpt-4o-mini
+      EMBEDDING_DIMENSION: '1536'
+
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: e2edb
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: latest
+
+      - name: Set up Python
+        run: uv python install 3.11
+
+      - name: Install backend deps
+        working-directory: backend
+        run: uv sync --frozen --extra dev
+
+      - name: Apply schema and Alembic
+        working-directory: backend
+        run: |
+          until pg_isready -h localhost -p 5432 -U postgres; do sleep 1; done
+          uv run python scripts/apply_init_sql.py
+          uv run alembic upgrade head
+
+      - name: Start API
+        working-directory: backend
+        run: |
+          uv run uvicorn app.main:app --host 127.0.0.1 --port 8000 &
+          for i in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:8000/api/v1/health >/dev/null; then
+              echo "API ready"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "API failed to start"
+          exit 1
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install frontend deps
+        run: pnpm install --frozen-lockfile
+
+      - name: Build Next.js
+        run: pnpm build
+        env:
+          AZURE_API_BASE_URL: http://127.0.0.1:8000
+
+      - name: Start Next.js
+        run: |
+          pnpm exec next start -H 127.0.0.1 -p 4173 &
+          for i in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:4173/ >/dev/null; then
+              echo "Next ready"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "Next failed to start"
+          exit 1
+        env:
+          AZURE_API_BASE_URL: http://127.0.0.1:8000
+
+      - name: Install Playwright Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Integration E2E
+        run: pnpm exec playwright test
+        env:
+          CI: true
+          PW_INTEGRATION: '1'
+          PLAYWRIGHT_BASE_URL: http://127.0.0.1:4173

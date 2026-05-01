@@ -15,7 +15,7 @@
 2. **Environment**
    - Put `DATABASE_URL` and `OPENAI_API_KEY` in the repo root `.env` and/or `backend/.env` (backend loads both; see `ENV_VARS.md`).
 
-3. **Schema**
+3. **Schema** (Docker init SQL + Alembic `upgrade head`)
 
    ```bash
    make migrate
@@ -56,7 +56,8 @@ Set `OPENAI_API_KEY` in your environment before starting. The web service uses `
 ## Tests
 
 ```bash
-cd backend && uv sync --extra dev && uv run pytest tests/ -q
+cd backend && uv sync --extra dev && uv run pytest tests/ -q --cov=app --cov-fail-under=58
+pnpm exec jest --ci
 pnpm typecheck
 pnpm lint
 pnpm build
@@ -66,20 +67,27 @@ pnpm build && pnpm exec playwright test
 
 Playwright starts a production `next start` server on **http://127.0.0.1:4173** (see `playwright.config.ts`) so it does not collide with `pnpm dev` on port 3000.
 
-## Migrations (Alembic)
+### Integration E2E (real API + Postgres)
 
-Baseline schema is still SQL under `docker/init`. After `make migrate`, stamp Alembic once:
+CI runs this in `.github/workflows/e2e-integration.yml`. Locally, with Postgres migrated and API on port 8000, and Next built with `AZURE_API_BASE_URL=http://127.0.0.1:8000`:
 
 ```bash
-cd backend && uv run alembic stamp 001_baseline
+pnpm build
+PW_INTEGRATION=1 PLAYWRIGHT_BASE_URL=http://127.0.0.1:4173 AZURE_API_BASE_URL=http://127.0.0.1:8000 \
+  pnpm exec next start -H 127.0.0.1 -p 4173 &
+pnpm exec playwright test
 ```
 
-See `backend/migrations/README.md` for incremental revisions.
+Stop the stray `next start` when finished.
+
+## Migrations (Alembic)
+
+`make migrate` applies `docker/init/*.sql` then `alembic upgrade head`. For databases created before Alembic was added, see `backend/migrations/README.md` (one-time `stamp`).
 
 ## Observability
 
 - In-app JSON metrics: `GET /api/v1/metrics`
 - Prometheus text: `GET /api/v1/metrics/prometheus`
-- Import `observability/grafana-rag-eval-prometheus.json` into Grafana (set your Prometheus datasource).
+- Grafana: `observability/grafana/README.md` and `observability/grafana-rag-eval-prometheus.json`.
 
 Structured logs in non-TTY environments are JSON; search by field `request_id` on `http_request` events.
