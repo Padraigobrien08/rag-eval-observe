@@ -4,9 +4,13 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
-import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
-import { Card, CardContent } from '@/components/ui/card'
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupTextarea,
+} from '@/components/ui/input-group'
 import { BarChart3, SunMedium, Zap, AlertTriangle, Send, Loader2, Square } from 'lucide-react'
 import { useChat } from '@/features/chat/useChat'
 import ChatLayout from '@/features/chat/ChatLayout'
@@ -431,35 +435,39 @@ export default function ChatPanel(_props: ChatPanelProps = {}) {
               paddingBottom: 'clamp(0.75rem, 2vw, 1rem)',
             }}
           >
-            <Card className="rounded-2xl border-slate-300 shadow-sm focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-0">
-              <CardContent className="flex items-end gap-2 p-2">
-                <form onSubmit={handleSubmit} className="flex flex-1 items-end gap-2 min-w-0">
-                  <Textarea
-                    ref={textareaRef}
-                    value={input}
-                    onChange={e => setInput(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                    placeholder="Message RAG Eval..."
-                    rows={1}
-                    className="flex-1 bg-transparent resize-none border-none outline-none text-sm text-slate-900 placeholder:text-slate-400 max-h-40"
-                    disabled={isLoading}
-                  />
+            <form onSubmit={handleSubmit} className="w-full min-w-0">
+              <InputGroup className="rounded-2xl border-slate-300 bg-white shadow-sm">
+                <InputGroupTextarea
+                  ref={textareaRef}
+                  value={input}
+                  onChange={e => setInput(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Message RAG Eval..."
+                  rows={1}
+                  className="max-h-40 min-h-[44px] text-sm text-slate-900 placeholder:text-slate-400"
+                  disabled={isLoading}
+                />
+                <InputGroupAddon
+                  align="inline-end"
+                  className="items-end gap-1 border-0 bg-transparent py-2 pr-2"
+                >
                   {isLoading && streamResponses ? (
-                    <Button
+                    <InputGroupButton
                       type="button"
                       variant="outline"
-                      size="icon"
-                      className="inline-flex items-center justify-center rounded-full w-9 h-9 shrink-0"
+                      size="icon-sm"
+                      className="shrink-0 rounded-full"
                       title="Stop generation"
                       onClick={() => stopStreaming()}
                     >
                       <Square className="h-4 w-4 fill-current" />
-                    </Button>
+                    </InputGroupButton>
                   ) : null}
-                  <Button
+                  <InputGroupButton
                     type="submit"
-                    size="icon"
-                    className="inline-flex items-center justify-center rounded-full bg-blue-600 text-white w-9 h-9 hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                    variant="default"
+                    size="icon-sm"
+                    className="shrink-0 rounded-full bg-blue-600 text-white hover:bg-blue-700"
                     disabled={isLoading || !input.trim()}
                   >
                     {isLoading ? (
@@ -467,10 +475,10 @@ export default function ChatPanel(_props: ChatPanelProps = {}) {
                     ) : (
                       <Send className="h-5 w-5" />
                     )}
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
+                  </InputGroupButton>
+                </InputGroupAddon>
+              </InputGroup>
+            </form>
             {error && (
               <p className="text-sm text-destructive mt-2 px-0.5" role="status">
                 {typeof error === 'string' ? error : 'Something went wrong'}
