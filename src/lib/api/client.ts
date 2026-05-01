@@ -4,6 +4,41 @@
 // This avoids mixed content and CORS issues
 const API_BASE_URL = '/api/backend'
 
+/** Normalize FastAPI `detail` (string, object, or validation error list). */
+export function formatApiErrorDetail(detail: unknown): string {
+  if (detail == null) return ''
+  if (typeof detail === 'string') return detail
+  if (Array.isArray(detail)) {
+    return detail
+      .map(item => {
+        if (item && typeof item === 'object' && 'msg' in item) {
+          const loc = 'loc' in item && Array.isArray((item as { loc: unknown }).loc)
+            ? `${(item as { loc: unknown[] }).loc.join('.')}: `
+            : ''
+          return `${loc}${String((item as { msg: unknown }).msg)}`
+        }
+        return JSON.stringify(item)
+      })
+      .join('; ')
+  }
+  if (typeof detail === 'object' && detail !== null && 'message' in detail) {
+    return String((detail as { message: unknown }).message)
+  }
+  return String(detail)
+}
+
+function messageFromErrorResponse(text: string, status: number): string {
+  const fallback = text.trim() || `Request failed with status ${status}`
+  try {
+    const data = JSON.parse(text) as { detail?: unknown; message?: unknown }
+    if (data.detail !== undefined) return formatApiErrorDetail(data.detail) || fallback
+    if (data.message !== undefined) return String(data.message)
+  } catch {
+    /* use fallback */
+  }
+  return fallback
+}
+
 // Helper to ensure we're in browser environment
 function ensureBrowser() {
   if (typeof window === 'undefined') {
@@ -27,14 +62,7 @@ export async function ragQuery(body: {
 
   if (!res.ok) {
     const text = await res.text().catch(() => '')
-    // Try to parse error message from response
-    let errorMessage = text || `Query failed with status ${res.status}`
-    try {
-      const errorData = JSON.parse(text)
-      errorMessage = errorData.detail || errorData.message || errorMessage
-    } catch {
-      // If not JSON, use the text as-is
-    }
+    const errorMessage = messageFromErrorResponse(text, res.status)
 
     // Create error with status code for better handling
     const error = new Error(errorMessage) as Error & { status?: number }
@@ -60,7 +88,7 @@ export async function ingestDocument(body: {
 
   if (!res.ok) {
     const text = await res.text().catch(() => '')
-    throw new Error(text || `Ingest failed with status ${res.status}`)
+    throw new Error(messageFromErrorResponse(text, res.status))
   }
 
   return res.json()

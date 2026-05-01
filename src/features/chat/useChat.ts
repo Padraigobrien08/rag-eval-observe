@@ -6,10 +6,8 @@ import type { ChatMessage, Citation } from './types'
 import { ragQuery } from '@/lib/api/client'
 
 /**
- * Calculate cost in USD from token usage.
- * Pricing for gpt-4-turbo-preview:
- * - Input: $0.01 per 1K tokens
- * - Output: $0.03 per 1K tokens
+ * Calculate cost in USD from token usage (approximate for gpt-4o-mini).
+ * See OpenAI pricing: input ~$0.15 / 1M, output ~$0.60 / 1M (adjust if you change models).
  */
 function calculateCost(tokenUsage?: {
   prompt_tokens?: number
@@ -21,9 +19,8 @@ function calculateCost(tokenUsage?: {
   const inputTokens = tokenUsage.prompt_tokens || 0
   const outputTokens = tokenUsage.completion_tokens || 0
 
-  // Pricing per 1K tokens
-  const INPUT_COST_PER_1K = 0.01 // $0.01 per 1K input tokens
-  const OUTPUT_COST_PER_1K = 0.03 // $0.03 per 1K output tokens
+  const INPUT_COST_PER_1K = 0.00015
+  const OUTPUT_COST_PER_1K = 0.0006
 
   const inputCost = (inputTokens / 1000) * INPUT_COST_PER_1K
   const outputCost = (outputTokens / 1000) * OUTPUT_COST_PER_1K
@@ -79,6 +76,16 @@ export function useChat() {
       // Store debug data (including content snippets) in metadata for hover previews
       const metadata: Record<string, unknown> = {
         ...((resp.metadata ?? resp.telemetry ?? {}) as Record<string, unknown>),
+      }
+
+      const retrievedCount =
+        typeof resp.retrieved_chunk_count === 'number'
+          ? resp.retrieved_chunk_count
+          : typeof (resp as { retrievedChunkCount?: number }).retrievedChunkCount === 'number'
+            ? (resp as { retrievedChunkCount: number }).retrievedChunkCount
+            : undefined
+      if (retrievedCount !== undefined) {
+        metadata.retrieved_chunk_count = retrievedCount
       }
 
       // Include debug retrieved chunks if available (for hover previews)

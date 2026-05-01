@@ -453,8 +453,8 @@ export default function ChatPanel(_props: ChatPanelProps = {}) {
                 )}
               </Button>
             </form>
-            {error && messages.length === 0 && (
-              <p className="text-sm text-red-600 mt-2">
+            {error && (
+              <p className="text-sm text-red-600 mt-2" role="alert">
                 {typeof error === 'string' ? error : 'Something went wrong'}
               </p>
             )}

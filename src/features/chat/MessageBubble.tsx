@@ -202,6 +202,16 @@ export default function MessageBubble({ message, previousMessage }: MessageBubbl
               }}
             >
               <div className="space-y-3">
+                {typeof message.metadata?.retrieved_chunk_count === 'number' &&
+                  message.metadata.retrieved_chunk_count === 0 && (
+                    <p
+                      className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900"
+                      role="status"
+                    >
+                      No document chunks were retrieved. Answers may be generic—try ingesting
+                      documents or rephrasing your question.
+                    </p>
+                  )}
                 {/* Summary Section */}
                 {summary.length > 0 && (
                   <div className="space-y-1.5">
