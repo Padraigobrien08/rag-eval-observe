@@ -63,7 +63,7 @@ function BehaviorRow({
   return (
     <div
       className={cn(
-        'grid grid-cols-[1fr_auto] items-center gap-6 px-4 py-3',
+        'grid grid-cols-[1fr_auto] items-start gap-6 px-4 py-3',
         !isFirst && 'border-t border-border'
       )}
     >
@@ -77,7 +77,7 @@ function BehaviorRow({
       </div>
       <Switch
         id={id}
-        className="shrink-0"
+        className="mt-0.5 shrink-0 justify-self-end"
         checked={checked}
         onCheckedChange={onCheckedChange}
         aria-describedby={`${id}-description`}
@@ -144,7 +144,7 @@ export default function RagSettingsDialog({ collapsed = false }: RagSettingsDial
               Retrieval
             </h2>
             <div className="rounded-xl border bg-card p-4 shadow-sm">
-              <div className="grid grid-cols-[1fr_auto] items-center gap-6">
+              <div className="grid grid-cols-[1fr_auto] items-start gap-6">
                 <div className="min-w-0">
                   <Label htmlFor="rag-model" className="text-sm font-medium text-foreground">
                     Model
@@ -154,7 +154,10 @@ export default function RagSettingsDialog({ collapsed = false }: RagSettingsDial
                   </p>
                 </div>
                 <Select value={ragModel} onValueChange={value => setRagModel(value as RagModel)}>
-                  <SelectTrigger id="rag-model" className="h-10 w-[260px] shrink-0">
+                  <SelectTrigger
+                    id="rag-model"
+                    className="h-10 w-[260px] shrink-0 justify-self-end"
+                  >
                     <SelectValue placeholder="Select model" />
                   </SelectTrigger>
                   <SelectContent position="popper" className="max-h-[min(280px,40vh)]">
@@ -170,7 +173,7 @@ export default function RagSettingsDialog({ collapsed = false }: RagSettingsDial
           </section>
 
           <div className="rounded-xl border bg-card p-4 shadow-sm">
-            <div className="grid grid-cols-[1fr_auto] items-center gap-6">
+            <div className="grid grid-cols-[1fr_auto] items-start gap-6">
               <div className="min-w-0">
                 <Label htmlFor="top-k" className="text-sm font-medium text-foreground">
                   Top K
@@ -192,7 +195,7 @@ export default function RagSettingsDialog({ collapsed = false }: RagSettingsDial
                     setTopK(Math.min(50, Math.max(1, value)))
                   }
                 }}
-                className="h-10 w-20 shrink-0 tabular-nums"
+                className="h-10 w-20 shrink-0 justify-self-end tabular-nums"
                 aria-describedby="top-k-hint"
               />
             </div>
