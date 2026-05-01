@@ -64,9 +64,10 @@ function BehaviorRow({
   return (
     <div
       className={cn(
-        'grid grid-cols-[minmax(0,1fr)_auto] items-center gap-6 px-5 py-4',
+        'box-border grid items-center gap-6 px-5 py-4 sm:px-6',
         !isFirst && 'border-t border-border'
       )}
+      style={{ gridTemplateColumns: 'minmax(0, 1fr) auto' }}
     >
       <div className="min-w-0">
         <Label htmlFor={id} className="text-sm font-medium text-foreground">
@@ -132,10 +133,10 @@ export default function RagSettingsDialog({ collapsed = false }: RagSettingsDial
 
       <DialogContent
         className={cn(
-          'flex max-h-[85vh] w-[min(calc(100vw-2rem),680px)] max-w-[680px] flex-col gap-0 overflow-hidden rounded-2xl border bg-background p-0 shadow-2xl sm:max-w-[680px]'
+          '!flex max-h-[85vh] !w-[min(calc(100vw-2rem),680px)] !max-w-[680px] !flex-col gap-0 overflow-hidden rounded-2xl border bg-background !p-0 shadow-2xl sm:!max-w-[680px]'
         )}
       >
-        <DialogHeader className="shrink-0 space-y-0 border-b px-7 pb-5 pt-6 text-left sm:pr-16">
+        <DialogHeader className="box-border shrink-0 space-y-0 border-b px-8 pb-5 pt-6 text-left sm:px-10 sm:pr-16">
           <DialogTitle className="text-2xl font-semibold tracking-tight text-foreground">
             RAG settings
           </DialogTitle>
@@ -144,11 +145,14 @@ export default function RagSettingsDialog({ collapsed = false }: RagSettingsDial
           </DialogDescription>
         </DialogHeader>
 
-        <div className="max-h-[65vh] min-h-0 flex-1 space-y-7 overflow-y-auto overscroll-contain px-7 py-6">
+        <div className="box-border max-h-[65vh] min-h-0 flex-1 space-y-7 overflow-y-auto overscroll-contain px-8 py-6 sm:px-10">
           <section aria-labelledby="rag-settings-retrieval-heading">
             <SectionLabel id="rag-settings-retrieval-heading">Retrieval</SectionLabel>
-            <div className="rounded-xl border bg-card shadow-sm">
-              <div className="grid grid-cols-[minmax(0,1fr)_280px] items-start gap-6 p-5">
+            <div className="box-border rounded-xl border bg-card shadow-sm">
+              <div
+                className="grid items-start gap-6 p-5 sm:gap-8"
+                style={{ gridTemplateColumns: 'minmax(0, 1fr) 280px' }}
+              >
                 <div className="min-w-0">
                   <Label htmlFor="rag-model" className="text-sm font-medium text-foreground">
                     Model
@@ -176,8 +180,11 @@ export default function RagSettingsDialog({ collapsed = false }: RagSettingsDial
           </section>
 
           <section aria-label="Top K">
-            <div className="rounded-xl border bg-card shadow-sm">
-              <div className="grid grid-cols-[minmax(0,1fr)_96px] items-start gap-6 p-5 pb-4">
+            <div className="box-border rounded-xl border bg-card shadow-sm">
+              <div
+                className="grid items-start gap-6 p-5 pb-4 sm:gap-8"
+                style={{ gridTemplateColumns: 'minmax(0, 1fr) 96px' }}
+              >
                 <div className="min-w-0">
                   <Label htmlFor="top-k" className="text-sm font-medium text-foreground">
                     Top K
@@ -205,7 +212,7 @@ export default function RagSettingsDialog({ collapsed = false }: RagSettingsDial
                   />
                 </div>
               </div>
-              <div className="px-5 pb-5">
+              <div className="box-border px-5 pb-5 pt-1">
                 <Slider
                   min={1}
                   max={50}
@@ -224,7 +231,7 @@ export default function RagSettingsDialog({ collapsed = false }: RagSettingsDial
 
           <section aria-labelledby="rag-settings-behavior-heading">
             <SectionLabel id="rag-settings-behavior-heading">Behavior</SectionLabel>
-            <div className="rounded-xl border bg-card shadow-sm">
+            <div className="box-border rounded-xl border bg-card shadow-sm">
               <BehaviorRow
                 isFirst
                 id="debug-mode"
@@ -251,7 +258,7 @@ export default function RagSettingsDialog({ collapsed = false }: RagSettingsDial
           </section>
         </div>
 
-        <DialogFooter className="flex shrink-0 flex-row justify-end gap-3 border-t bg-muted/30 px-7 py-5 sm:space-x-0">
+        <DialogFooter className="box-border flex shrink-0 flex-row justify-end gap-3 border-t bg-muted/30 px-8 py-5 sm:space-x-0 sm:px-10">
           <DialogClose asChild>
             <Button type="button" variant="outline" className="h-10 px-5">
               Cancel
