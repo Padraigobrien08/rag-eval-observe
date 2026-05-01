@@ -162,6 +162,17 @@ export default function MetricsPage() {
           </Button>
         </div>
 
+        <p className="text-xs text-slate-500 mb-6">
+          Prometheus scrape (same in-memory counters): API{' '}
+          <code className="rounded bg-slate-100 px-1 py-0.5 text-[11px]">
+            /api/v1/metrics/prometheus
+          </code>{' '}
+          · via Next proxy{' '}
+          <code className="rounded bg-slate-100 px-1 py-0.5 text-[11px]">
+            /api/backend/api/v1/metrics/prometheus
+          </code>
+        </p>
+
         {/* System Overview */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <Card>
