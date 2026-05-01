@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  webpack: (config, { isServer, dev }) => {
+  webpack: (config, { isServer }) => {
     // Fix for pdfjs-dist in Next.js
     if (!isServer) {
       config.resolve.fallback = {
@@ -23,30 +23,6 @@ const nextConfig = {
         test: /node_modules\/pdfjs-dist/,
         type: 'javascript/auto',
       })
-    }
-
-    // Improve webpack runtime stability in development
-    if (dev) {
-      // Use consistent module/chunk IDs to prevent webpack runtime errors
-      config.optimization = {
-        ...config.optimization,
-        moduleIds: 'named',
-        chunkIds: 'named',
-        // Disable aggressive chunking that can cause runtime issues
-        splitChunks: {
-          ...config.optimization.splitChunks,
-          cacheGroups: {
-            default: false,
-            vendors: false,
-          },
-        },
-      }
-
-      // Ensure webpack runtime is properly configured
-      if (!config.output) {
-        config.output = {}
-      }
-      config.output.chunkLoadingGlobal = 'webpackChunkLoad'
     }
 
     return config
