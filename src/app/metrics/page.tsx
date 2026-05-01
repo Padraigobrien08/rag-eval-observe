@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { ArrowLeft, RefreshCw, Clock, Activity, DollarSign, Database } from 'lucide-react'
 import { getMetrics } from '@/lib/api/client'
+import { estimateDashboardTokenCostUsd } from '@/lib/openai-pricing'
 
 interface RouteMetrics {
   request_count: number
@@ -47,24 +48,6 @@ function formatUptime(seconds: number): string {
   return `${secs}s`
 }
 
-function calculateCost(tokenUsage: {
-  embedding_prompt_tokens?: number
-  embedding_total_tokens?: number
-  chat_prompt_tokens?: number
-  chat_completion_tokens?: number
-}): number {
-  // OpenAI pricing (approximate)
-  const embeddingCostPer1K = 0.00002 // $0.00002 per 1K tokens
-  const chatPromptCostPer1K = 0.01 // $0.01 per 1K prompt tokens
-  const chatCompletionCostPer1K = 0.03 // $0.03 per 1K completion tokens
-
-  const embeddingCost = ((tokenUsage.embedding_total_tokens || 0) / 1000) * embeddingCostPer1K
-  const chatPromptCost = ((tokenUsage.chat_prompt_tokens || 0) / 1000) * chatPromptCostPer1K
-  const chatCompletionCost =
-    ((tokenUsage.chat_completion_tokens || 0) / 1000) * chatCompletionCostPer1K
-
-  return embeddingCost + chatPromptCost + chatCompletionCost
-}
 
 export default function MetricsPage() {
   const router = useRouter()
@@ -129,7 +112,7 @@ export default function MetricsPage() {
     (sum, route) => sum + route.request_count,
     0
   )
-  const totalCost = calculateCost(metrics.token_usage)
+  const totalCost = estimateDashboardTokenCostUsd(metrics.token_usage)
 
   return (
     <div className="min-h-screen bg-slate-50 p-8">
@@ -228,7 +211,9 @@ export default function MetricsPage() {
               >
                 ${totalCost.toFixed(4)}
               </div>
-              <p className="text-xs text-slate-500 mt-1">Estimated API costs</p>
+              <p className="text-xs text-slate-500 mt-1">
+                Estimated API costs (embedding-3-small + gpt-4o-mini rates)
+              </p>
             </CardContent>
           </Card>
 

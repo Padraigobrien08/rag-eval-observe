@@ -4,29 +4,7 @@ import { useState } from 'react'
 import { v4 as uuid } from 'uuid'
 import type { ChatMessage, Citation } from './types'
 import { ragQuery } from '@/lib/api/client'
-
-/**
- * Calculate cost in USD from token usage (approximate for gpt-4o-mini).
- * See OpenAI pricing: input ~$0.15 / 1M, output ~$0.60 / 1M (adjust if you change models).
- */
-function calculateCost(tokenUsage?: {
-  prompt_tokens?: number
-  completion_tokens?: number
-  total_tokens?: number
-}): number | undefined {
-  if (!tokenUsage) return undefined
-
-  const inputTokens = tokenUsage.prompt_tokens || 0
-  const outputTokens = tokenUsage.completion_tokens || 0
-
-  const INPUT_COST_PER_1K = 0.00015
-  const OUTPUT_COST_PER_1K = 0.0006
-
-  const inputCost = (inputTokens / 1000) * INPUT_COST_PER_1K
-  const outputCost = (outputTokens / 1000) * OUTPUT_COST_PER_1K
-
-  return inputCost + outputCost
-}
+import { estimateChatMessageCostUsd } from '@/lib/openai-pricing'
 
 export function useChat() {
   const [messages, setMessages] = useState<ChatMessage[]>([])
@@ -100,7 +78,7 @@ export function useChat() {
         role: 'assistant',
         content: resp.answer ?? resp.output ?? 'No answer field returned.',
         latencyMs: resp.latency_ms ?? resp.latencyMs,
-        costUsd: calculateCost(resp.token_usage ?? resp.tokenUsage),
+        costUsd: estimateChatMessageCostUsd(resp.token_usage ?? resp.tokenUsage),
         ragModel: resp.rag_model ?? resp.ragModel,
         citations: citations.length > 0 ? citations : undefined,
         metadata,

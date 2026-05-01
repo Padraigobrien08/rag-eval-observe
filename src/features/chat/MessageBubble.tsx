@@ -208,8 +208,9 @@ export default function MessageBubble({ message, previousMessage }: MessageBubbl
                       className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900"
                       role="status"
                     >
-                      No document chunks were retrieved. Answers may be generic—try ingesting
-                      documents or rephrasing your question.
+                      No document chunks were retrieved. Answers may be generic—use the{' '}
+                      <strong className="font-semibold">+</strong> control in the documents sidebar
+                      to ingest files, or rephrase your question.
                     </p>
                   )}
                 {/* Summary Section */}
