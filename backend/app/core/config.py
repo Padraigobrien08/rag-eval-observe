@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import List, Tuple
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -8,9 +7,9 @@ _ROOT_ENV = _BACKEND_DIR.parent / ".env"
 _BACKEND_ENV = _BACKEND_DIR / ".env"
 
 
-def _env_files() -> Tuple[str, ...]:
+def _env_files() -> tuple[str, ...]:
     """Repo root .env first, then backend/.env (later file overrides)."""
-    paths: List[Path] = []
+    paths: list[Path] = []
     if _ROOT_ENV.is_file():
         paths.append(_ROOT_ENV)
     if _BACKEND_ENV.is_file():
@@ -85,8 +84,12 @@ class Settings(BaseSettings):
     HOST: str = "0.0.0.0"
     PORT: int = 8000
 
+    # OpenTelemetry (install backend with: uv sync --extra otel)
+    OTEL_ENABLED: bool = False
+    OTEL_SERVICE_NAME: str = "rag-eval-backend"
+
     @property
-    def cors_origins_list(self) -> List[str]:
+    def cors_origins_list(self) -> list[str]:
         """Get CORS origins as a list."""
         # Use CORS_ALLOW_ORIGINS if set, otherwise fall back to CORS_ORIGINS
         origins_str = self.CORS_ALLOW_ORIGINS.strip() or self.CORS_ORIGINS

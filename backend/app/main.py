@@ -1,14 +1,15 @@
-import uuid
 import time
+import uuid
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Request, Response
+
+import structlog
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-import structlog
 
 from app.api.routes import router
 from app.core.config import settings
-from app.core.logging import setup_logging, log_request
+from app.core.logging import log_request, setup_logging
 from app.core.metrics import get_metrics
 from app.core.rate_limit import get_rate_limiter
 from app.core.rate_limit_redis import get_redis_rate_limiter
@@ -23,18 +24,18 @@ async def lifespan(app: FastAPI):
     setup_logging()
     logger.info("Starting application", environment=settings.ENVIRONMENT)
     await init_db_pool()
-    
+
     # Initialize Redis rate limiter if enabled
     redis_limiter = get_redis_rate_limiter()
     if redis_limiter:
         logger.info("Redis rate limiting enabled")
-    
+
     yield
-    
+
     # Cleanup Redis connection
     if redis_limiter:
         await redis_limiter.close()
-    
+
     logger.info("Shutting down application")
     await close_db_pool()
 
@@ -45,6 +46,34 @@ app = FastAPI(
     version="0.1.0",
     lifespan=lifespan,
 )
+
+if settings.OTEL_ENABLED:
+    try:
+        from opentelemetry import trace
+        from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
+        from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+        from opentelemetry.sdk.resources import Resource
+        from opentelemetry.sdk.trace import TracerProvider
+        from opentelemetry.sdk.trace.export import BatchSpanProcessor
+
+        resource = Resource.create(
+            {
+                "service.name": settings.OTEL_SERVICE_NAME,
+            }
+        )
+        provider = TracerProvider(resource=resource)
+        provider.add_span_processor(BatchSpanProcessor(OTLPSpanExporter()))
+        trace.set_tracer_provider(provider)
+        FastAPIInstrumentor.instrument_app(app)
+        logger.info(
+            "OpenTelemetry enabled",
+            service_name=settings.OTEL_SERVICE_NAME,
+        )
+    except ImportError:
+        logger.warning(
+            "OTEL_ENABLED is true but OpenTelemetry packages are missing; "
+            "install with: uv sync --extra otel",
+        )
 
 app.add_middleware(
     CORSMiddleware,
@@ -174,14 +203,14 @@ async def global_exception_handler(request: Request, exc: Exception):
         error=str(exc),
         exc_info=exc,
     )
-    
+
     # Get origin from request headers for CORS
     origin = request.headers.get("origin")
     headers = {}
     if origin and origin in settings.cors_origins_list:
         headers["Access-Control-Allow-Origin"] = origin
         headers["Access-Control-Allow-Credentials"] = "true"
-    
+
     return JSONResponse(
         status_code=500,
         content={

@@ -27,6 +27,12 @@ dev = [
     "black>=24.1.0",
     "ruff>=0.1.0",
 ]
+otel = [
+    "opentelemetry-api>=1.22.0",
+    "opentelemetry-sdk>=1.22.0",
+    "opentelemetry-instrumentation-fastapi>=0.43b0",
+    "opentelemetry-exporter-otlp-proto-http>=1.22.0",
+]
 
 [build-system]
 requires = ["hatchling"]
