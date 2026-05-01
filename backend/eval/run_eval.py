@@ -313,6 +313,12 @@ async def run_evaluation():
 
     logger.info("Loading evaluation dataset", dataset_path=str(dataset_path))
     cases = load_dataset(dataset_path)
+    max_cases_raw = os.getenv("EVAL_MAX_CASES", "").strip()
+    if max_cases_raw.isdigit():
+        n = int(max_cases_raw)
+        if n > 0:
+            cases = cases[:n]
+            logger.info("Truncated dataset via EVAL_MAX_CASES", max_cases=n)
     logger.info("Loaded cases", count=len(cases))
 
     # Run evaluation

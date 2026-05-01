@@ -1,11 +1,11 @@
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
-from fastapi import HTTPException
+
+import pytest
 from fastapi.testclient import TestClient
 
-from app.main import app
 from app.core.config import settings
 from app.core.rate_limit import RateLimiter, get_rate_limiter
+from app.main import app
 from app.rag.answer import generate_answer, sanitize_and_truncate_context
 from app.rag.retrieve import RetrievedChunk
 
@@ -327,3 +327,36 @@ class TestErrorCodes:
             assert response.status_code == 500
             detail = response.json().get("detail", "")
             assert "Internal server error" in detail or "Retrieval error" in detail
+
+
+class TestOptionalApiKey:
+    """When settings.API_KEY is set, protect /api/v1/* except health and metrics."""
+
+    def test_query_rejects_without_key(self):
+        with patch.object(settings, "API_KEY", "integration-secret"):
+            client = TestClient(app)
+            assert client.get("/api/v1/health").status_code == 200
+            r = client.post("/api/v1/query", json={"query": "x", "top_k": 5})
+            assert r.status_code == 401
+
+    def test_query_accepts_x_api_key(self):
+        from app.rag.answer import AnswerResponse
+
+        with patch.object(settings, "API_KEY", "integration-secret"):
+            client = TestClient(app)
+            with patch("app.rag.retrieve.retrieve", new_callable=AsyncMock) as mock_retrieve:
+                mock_retrieve.return_value = []
+                with patch("app.rag.answer.generate_answer", new_callable=AsyncMock) as mock_ans:
+                    mock_ans.return_value = AnswerResponse(
+                        answer="ok",
+                        citations=[],
+                        used_chunk_ids=[],
+                        latency_ms=1,
+                    )
+                    r = client.post(
+                        "/api/v1/query",
+                        json={"query": "x", "top_k": 5},
+                        headers={"X-API-Key": "integration-secret"},
+                    )
+                    assert r.status_code == 200
+                    assert r.json().get("answer") == "ok"

@@ -88,6 +88,9 @@ class Settings(BaseSettings):
     OTEL_ENABLED: bool = False
     OTEL_SERVICE_NAME: str = "rag-eval-backend"
 
+    # Optional API key for all /api/v1/* routes except health and metrics (empty = disabled)
+    API_KEY: str = ""
+
     @property
     def cors_origins_list(self) -> list[str]:
         """Get CORS origins as a list."""

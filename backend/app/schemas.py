@@ -1,6 +1,6 @@
-from pydantic import BaseModel, Field, ConfigDict
-from typing import List, Optional, Dict, Any
-from datetime import datetime
+from typing import Any
+
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class HealthResponse(BaseModel):
@@ -18,9 +18,9 @@ class ChunkResponse(BaseModel):
     document_id: str
     chunk_index: int
     content: str
-    metadata: Dict[str, Any] = Field(default_factory=dict)
-    similarity: Optional[float] = None
-    created_at: Optional[str] = None
+    metadata: dict[str, Any] = Field(default_factory=dict)
+    similarity: float | None = None
+    created_at: str | None = None
 
 
 class DocumentResponse(BaseModel):
@@ -28,14 +28,14 @@ class DocumentResponse(BaseModel):
 
     id: str
     source: str
-    title: Optional[str] = None
-    created_at: Optional[str] = None
+    title: str | None = None
+    created_at: str | None = None
 
 
 class DocumentListResponse(BaseModel):
     """Document list response with pagination."""
 
-    documents: List[DocumentResponse]
+    documents: list[DocumentResponse]
     total: int
     limit: int
     offset: int
@@ -46,14 +46,14 @@ class SearchRequest(BaseModel):
 
     query: str = Field(..., description="Search query text")
     top_k: int = Field(5, ge=1, le=100, description="Number of results to return")
-    document_id: Optional[str] = Field(None, description="Filter by document ID")
+    document_id: str | None = Field(None, description="Filter by document ID")
 
 
 class SearchResponse(BaseModel):
     """Search response model."""
 
     query: str
-    chunks: List[ChunkResponse]
+    chunks: list[ChunkResponse]
     total: int
 
 
@@ -61,7 +61,7 @@ class IngestRequest(BaseModel):
     """Document ingestion request model."""
 
     source: str = Field(..., description="Document source identifier")
-    title: Optional[str] = Field(None, description="Document title")
+    title: str | None = Field(None, description="Document title")
     text: str = Field(..., description="Document text content")
     is_markdown: bool = Field(False, description="Whether text is markdown")
 
@@ -80,7 +80,7 @@ class QueryRequest(BaseModel):
 
     query: str = Field(..., description="Query text")
     top_k: int = Field(8, ge=1, le=100, description="Number of chunks to retrieve", alias="topK")
-    filters: Optional[Dict[str, Any]] = Field(None, description="Optional filters (source, title)")
+    filters: dict[str, Any] | None = Field(None, description="Optional filters (source, title)")
     debug: bool = Field(False, description="Include debug information in response")
     rag_model: str = Field("vector-similarity", description="RAG model to use: vector-similarity, hybrid-search, reranking, multi-query")
 
@@ -90,7 +90,7 @@ class CitationResponse(BaseModel):
 
     chunk_id: str
     document_id: str
-    title: Optional[str]
+    title: str | None
     source: str
     chunk_index: int
 
@@ -99,10 +99,10 @@ class QueryResponse(BaseModel):
     """Query response model."""
 
     answer: str
-    citations: List[CitationResponse]
-    used_chunk_ids: List[str]
+    citations: list[CitationResponse]
+    used_chunk_ids: list[str]
     latency_ms: int
-    token_usage: Optional[Dict[str, int]] = None
-    debug: Optional[Dict[str, Any]] = None
-    rag_model: Optional[str] = None
+    token_usage: dict[str, int] | None = None
+    debug: dict[str, Any] | None = None
+    rag_model: str | None = None
     retrieved_chunk_count: int = 0

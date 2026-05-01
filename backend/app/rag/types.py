@@ -1,5 +1,4 @@
 """Shared types for RAG retrieval."""
-from typing import Optional
 from dataclasses import dataclass
 
 
@@ -9,7 +8,7 @@ class RetrievedChunk:
 
     chunk_id: str
     document_id: str
-    title: Optional[str]
+    title: str | None
     source: str
     chunk_index: int
     content: str

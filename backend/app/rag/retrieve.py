@@ -1,4 +1,5 @@
-from typing import List, Optional, Dict, Any
+from typing import Any
+
 import structlog
 
 from app.rag.retrieval_strategies import get_retrieval_strategy
@@ -10,9 +11,9 @@ logger = structlog.get_logger()
 async def retrieve(
     query: str,
     top_k: int = 5,
-    filters: Optional[Dict[str, Any]] = None,
+    filters: dict[str, Any] | None = None,
     rag_model: str = "vector-similarity",
-) -> List[RetrievedChunk]:
+) -> list[RetrievedChunk]:
     """
     Retrieve similar chunks using the specified RAG model strategy.
 

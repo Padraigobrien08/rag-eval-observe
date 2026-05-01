@@ -1,7 +1,8 @@
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from app.rag.retrieve import retrieve, RetrievedChunk, RetrieveError
+import pytest
+
+from app.rag.retrieve import RetrieveError, retrieve
 
 
 def _mock_pool_with_conn(mock_conn):
@@ -261,7 +262,7 @@ class TestRetrieveOrdering:
         ):
             # Request top_k=3, but mock returns 10
             # The LIMIT in SQL should handle this, but we test the function behavior
-            results = await retrieve("test query", top_k=3)
+            await retrieve("test query", top_k=3)
 
             # Verify the query was called with LIMIT 3
             call_args = mock_conn.fetch.call_args

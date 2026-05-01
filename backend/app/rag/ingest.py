@@ -1,12 +1,12 @@
-import uuid
 import json
-from typing import Optional, Dict, Any, List
+from typing import Any
+
 import structlog
 
 from app.core.config import settings
 from app.db.session import get_db_pool
-from app.rag.chunking import TextChunker, Chunk
-from app.llm.openai_client import get_openai_client, OpenAIError
+from app.llm.openai_client import OpenAIError, get_openai_client
+from app.rag.chunking import TextChunker
 
 logger = structlog.get_logger()
 
@@ -26,7 +26,7 @@ class DocumentTooLargeError(IngestError):
     pass
 
 
-async def find_existing_document(source: str, title: Optional[str]) -> Optional[Dict[str, Any]]:
+async def find_existing_document(source: str, title: str | None) -> dict[str, Any] | None:
     """
     Find existing document by source and title.
 
@@ -68,7 +68,7 @@ async def find_existing_document(source: str, title: Optional[str]) -> Optional[
         return None
 
 
-def generate_document_id(source: str, title: Optional[str], version: int = 1) -> str:
+def generate_document_id(source: str, title: str | None, version: int = 1) -> str:
     """
     Generate a unique document ID.
 
@@ -111,10 +111,10 @@ def generate_versioned_source(source: str, version: int) -> str:
 
 async def ingest_document(
     source: str,
-    title: Optional[str],
+    title: str | None,
     text: str,
     is_markdown: bool = False,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Ingest a document into the database.
 

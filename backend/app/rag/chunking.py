@@ -1,6 +1,6 @@
 import re
-from typing import List, Dict, Any, Optional
 from dataclasses import dataclass
+from typing import Any
 
 from app.core.config import settings
 
@@ -11,7 +11,7 @@ class Chunk:
 
     chunk_index: int
     content: str
-    metadata: Dict[str, Any]
+    metadata: dict[str, Any]
 
 
 class TextChunker:
@@ -19,8 +19,8 @@ class TextChunker:
 
     def __init__(
         self,
-        chunk_size: Optional[int] = None,
-        chunk_overlap: Optional[int] = None,
+        chunk_size: int | None = None,
+        chunk_overlap: int | None = None,
     ):
         """
         Initialize chunker.
@@ -39,7 +39,7 @@ class TextChunker:
         if self.chunk_overlap >= self.chunk_size:
             raise ValueError("chunk_overlap must be less than chunk_size")
 
-    def chunk(self, text: str, is_markdown: bool = False) -> List[Chunk]:
+    def chunk(self, text: str, is_markdown: bool = False) -> list[Chunk]:
         """
         Chunk text into smaller pieces.
 
@@ -58,7 +58,7 @@ class TextChunker:
         else:
             return self._chunk_plain_text(text)
 
-    def _chunk_plain_text(self, text: str) -> List[Chunk]:
+    def _chunk_plain_text(self, text: str) -> list[Chunk]:
         """Chunk plain text with overlap."""
         chunks = []
         start = 0
@@ -118,7 +118,7 @@ class TextChunker:
 
         return chunks
 
-    def _chunk_markdown(self, text: str) -> List[Chunk]:
+    def _chunk_markdown(self, text: str) -> list[Chunk]:
         """Chunk markdown text with heading awareness."""
         # Parse markdown to extract sections with headings
         sections = self._parse_markdown_sections(text)
@@ -215,7 +215,7 @@ class TextChunker:
 
         return chunks
 
-    def _parse_markdown_sections(self, text: str) -> List[Dict[str, Any]]:
+    def _parse_markdown_sections(self, text: str) -> list[dict[str, Any]]:
         """Parse markdown into sections with heading paths."""
         sections = []
         lines = text.split("\n")
@@ -296,9 +296,9 @@ class TextChunker:
 def chunk_text(
     text: str,
     is_markdown: bool = False,
-    chunk_size: Optional[int] = None,
-    chunk_overlap: Optional[int] = None,
-) -> List[Chunk]:
+    chunk_size: int | None = None,
+    chunk_overlap: int | None = None,
+) -> list[Chunk]:
     """
     Convenience function to chunk text.
 

@@ -10,10 +10,9 @@ Usage:
     The rate limiter will automatically use Redis if enabled.
 """
 import time
-from typing import Tuple, Optional
-import structlog
 
 import redis.asyncio as redis
+import structlog
 
 from app.core.config import settings
 
@@ -45,7 +44,7 @@ class RedisRateLimiter:
         self.max_requests = max_requests or settings.RATE_LIMIT_REQUESTS
         self.window_seconds = window_seconds or settings.RATE_LIMIT_WINDOW
         self.redis_url = redis_url
-        self._redis_client: Optional['redis.Redis'] = None
+        self._redis_client: redis.Redis | None = None
 
     async def _get_redis(self) -> 'redis.Redis':
         """Get or create Redis client."""
@@ -58,7 +57,7 @@ class RedisRateLimiter:
             )
         return self._redis_client
 
-    async def is_allowed(self, identifier: str) -> Tuple[bool, int]:
+    async def is_allowed(self, identifier: str) -> tuple[bool, int]:
         """
         Check if request is allowed using Redis sliding window.
 
@@ -76,23 +75,23 @@ class RedisRateLimiter:
 
             # Use Redis pipeline for atomic operations
             pipe = redis_client.pipeline()
-            
+
             # Remove old entries outside the window
             pipe.zremrangebyscore(key, 0, window_start)
-            
+
             # Count current requests in window
             pipe.zcard(key)
-            
+
             # Add current request
             pipe.zadd(key, {str(now): now})
-            
+
             # Set expiration on key (cleanup)
             pipe.expire(key, self.window_seconds + 1)
-            
+
             # Execute pipeline
             results = await pipe.execute()
             current_count = results[1]  # zcard result
-            
+
             # Check if limit exceeded
             if current_count >= self.max_requests:
                 logger.warning(
@@ -144,22 +143,22 @@ class RedisRateLimiter:
 
 
 # Global Redis rate limiter instance
-_redis_rate_limiter: Optional[RedisRateLimiter] = None
+_redis_rate_limiter: RedisRateLimiter | None = None
 
 
-def get_redis_rate_limiter() -> Optional[RedisRateLimiter]:
+def get_redis_rate_limiter() -> RedisRateLimiter | None:
     """Get or create global Redis rate limiter if enabled."""
     global _redis_rate_limiter
-    
+
     redis_enabled = getattr(settings, 'REDIS_ENABLED', False)
     redis_url = getattr(settings, 'REDIS_URL', None)
-    
+
     if not redis_enabled or not redis_url:
         return None
-    
+
     if _redis_rate_limiter is None:
         _redis_rate_limiter = RedisRateLimiter(redis_url)
         logger.info("Redis rate limiter initialized", redis_url=redis_url)
-    
+
     return _redis_rate_limiter
 

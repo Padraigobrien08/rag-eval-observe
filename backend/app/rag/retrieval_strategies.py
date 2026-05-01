@@ -7,15 +7,16 @@ This module provides different retrieval strategies:
 - Reranking (uses reranking model to improve results)
 - Multi-Query (generates multiple query variations)
 """
-from typing import List, Optional, Dict, Any
-from abc import ABC, abstractmethod
-import structlog
 import json
 import re
+from abc import ABC, abstractmethod
+from typing import Any
 
-from app.rag.types import RetrievedChunk, RetrieveError
+import structlog
+
 from app.db.session import get_db_pool
-from app.llm.openai_client import get_openai_client, OpenAIError
+from app.llm.openai_client import OpenAIError, get_openai_client
+from app.rag.types import RetrievedChunk, RetrieveError
 
 logger = structlog.get_logger()
 
@@ -28,8 +29,8 @@ class RetrievalStrategy(ABC):
         self,
         query: str,
         top_k: int,
-        filters: Optional[Dict[str, Any]] = None,
-    ) -> List[RetrievedChunk]:
+        filters: dict[str, Any] | None = None,
+    ) -> list[RetrievedChunk]:
         """
         Retrieve chunks based on the strategy.
 
@@ -51,8 +52,8 @@ class VectorSimilarityStrategy(RetrievalStrategy):
         self,
         query: str,
         top_k: int,
-        filters: Optional[Dict[str, Any]] = None,
-    ) -> List[RetrievedChunk]:
+        filters: dict[str, Any] | None = None,
+    ) -> list[RetrievedChunk]:
         """Retrieve chunks using vector similarity search."""
         logger.info("VectorSimilarityStrategy.retrieve called", query_length=len(query), top_k=top_k)
         if top_k <= 0:
@@ -73,7 +74,7 @@ class VectorSimilarityStrategy(RetrievalStrategy):
 
         # Base query with vector similarity
         base_query = """
-            SELECT 
+            SELECT
                 c.id as chunk_id,
                 c.document_id,
                 c.chunk_index,
@@ -147,7 +148,7 @@ class VectorSimilarityStrategy(RetrievalStrategy):
 class HybridSearchStrategy(RetrievalStrategy):
     """
     Hybrid search strategy combining vector similarity and BM25 keyword search.
-    
+
     Uses Reciprocal Rank Fusion (RRF) to combine results from both methods.
     """
 
@@ -155,8 +156,8 @@ class HybridSearchStrategy(RetrievalStrategy):
         self,
         query: str,
         top_k: int,
-        filters: Optional[Dict[str, Any]] = None,
-    ) -> List[RetrievedChunk]:
+        filters: dict[str, Any] | None = None,
+    ) -> list[RetrievedChunk]:
         """Retrieve chunks using hybrid search (vector + BM25)."""
         logger.info("HybridSearchStrategy.retrieve called", query_length=len(query), top_k=top_k)
         if top_k <= 0:
@@ -202,7 +203,7 @@ class HybridSearchStrategy(RetrievalStrategy):
         # Vector similarity query
         vector_params.append(fetch_k)
         vector_query = f"""
-            SELECT 
+            SELECT
                 c.id as chunk_id,
                 c.document_id,
                 c.chunk_index,
@@ -240,10 +241,10 @@ class HybridSearchStrategy(RetrievalStrategy):
 
         bm25_filter_clause = " AND " + " AND ".join(bm25_filter_conditions) if bm25_filter_conditions else ""
         bm25_params.append(fetch_k)
-        
+
         # BM25 keyword search query (using PostgreSQL full-text search)
         bm25_query = f"""
-            SELECT 
+            SELECT
                 c.id as chunk_id,
                 c.document_id,
                 c.chunk_index,
@@ -275,7 +276,7 @@ class HybridSearchStrategy(RetrievalStrategy):
                     fetch_k=fetch_k,
                 )
                 bm25_rows = await conn.fetch(bm25_query, *bm25_params)
-                
+
                 logger.info(
                     "Hybrid search: retrieval complete, fusing results",
                     vector_results_count=len(vector_rows),
@@ -286,13 +287,13 @@ class HybridSearchStrategy(RetrievalStrategy):
                 # RRF score = sum(1 / (k + rank)) for each method
                 k = 60  # RRF constant
 
-                chunk_scores: Dict[str, Dict[str, Any]] = {}
+                chunk_scores: dict[str, dict[str, Any]] = {}
 
                 # Process vector results
                 for rank, row in enumerate(vector_rows, start=1):
                     chunk_id = row["chunk_id"]
                     rrf_score = 1.0 / (k + rank)
-                    
+
                     if chunk_id not in chunk_scores:
                         chunk_scores[chunk_id] = {
                             "chunk_id": row["chunk_id"],
@@ -311,7 +312,7 @@ class HybridSearchStrategy(RetrievalStrategy):
                 for rank, row in enumerate(bm25_rows, start=1):
                     chunk_id = row["chunk_id"]
                     rrf_score = 1.0 / (k + rank)
-                    
+
                     if chunk_id not in chunk_scores:
                         chunk_scores[chunk_id] = {
                             "chunk_id": row["chunk_id"],
@@ -366,7 +367,7 @@ class HybridSearchStrategy(RetrievalStrategy):
 class RerankingStrategy(RetrievalStrategy):
     """
     Reranking strategy that uses a reranking model to improve retrieval accuracy.
-    
+
     First retrieves more candidates using vector similarity, then reranks them.
     """
 
@@ -374,13 +375,13 @@ class RerankingStrategy(RetrievalStrategy):
         self,
         query: str,
         top_k: int,
-        filters: Optional[Dict[str, Any]] = None,
-    ) -> List[RetrievedChunk]:
+        filters: dict[str, Any] | None = None,
+    ) -> list[RetrievedChunk]:
         """Retrieve chunks using reranking strategy."""
         logger.info("RerankingStrategy.retrieve called", query_length=len(query), top_k=top_k)
         # First, use vector similarity to get more candidates
         vector_strategy = VectorSimilarityStrategy()
-        
+
         # Fetch more candidates for reranking (typically 3-5x the desired top_k)
         candidate_k = min(top_k * 4, 50)
         logger.info(
@@ -406,7 +407,7 @@ class RerankingStrategy(RetrievalStrategy):
                 candidates_count=len(candidates),
             )
             openai_client = get_openai_client()
-            
+
             # Create a prompt for reranking
             rerank_prompt = f"""You are a relevance scorer. Given a query and a list of document chunks, rank them by relevance.
 
@@ -446,7 +447,7 @@ Chunks:
             else:
                 # Fallback: try parsing the whole content
                 ranked_indices = json.loads(content)
-            
+
             # Reorder candidates based on ranking
             reranked = []
             for idx in ranked_indices:
@@ -479,7 +480,7 @@ Chunks:
 class MultiQueryStrategy(RetrievalStrategy):
     """
     Multi-query strategy that generates multiple query variations and combines results.
-    
+
     Uses LLM to generate query variations, then retrieves for each and combines.
     """
 
@@ -487,15 +488,15 @@ class MultiQueryStrategy(RetrievalStrategy):
         self,
         query: str,
         top_k: int,
-        filters: Optional[Dict[str, Any]] = None,
-    ) -> List[RetrievedChunk]:
+        filters: dict[str, Any] | None = None,
+    ) -> list[RetrievedChunk]:
         """Retrieve chunks using multi-query strategy."""
         logger.info("MultiQueryStrategy.retrieve called", query_length=len(query), top_k=top_k)
         # Generate query variations using LLM
         logger.info("Multi-query: generating query variations", original_query=query)
         try:
             openai_client = get_openai_client()
-            
+
             variation_prompt = f"""Generate 3 different variations of the following search query. Each variation should approach the question from a different angle or use different terminology.
 
 Original query: {query}
@@ -526,7 +527,7 @@ Return ONLY a JSON array of 3 query strings. Example: ["query 1", "query 2", "qu
                 query_variations = json.loads(json_match.group())
             else:
                 query_variations = json.loads(content)
-            
+
             # Add original query
             all_queries = [query] + query_variations
 
@@ -550,12 +551,12 @@ Return ONLY a JSON array of 3 query strings. Example: ["query 1", "query 2", "qu
             queries=all_queries,
         )
         vector_strategy = VectorSimilarityStrategy()
-        
+
         # Fetch more per query to have enough candidates
         per_query_k = min(top_k * 2, 20)
-        
-        all_candidates: Dict[str, RetrievedChunk] = {}
-        
+
+        all_candidates: dict[str, RetrievedChunk] = {}
+
         for i, q in enumerate(all_queries, start=1):
             try:
                 logger.info(
@@ -570,7 +571,7 @@ Return ONLY a JSON array of 3 query strings. Example: ["query 1", "query 2", "qu
                     variation_number=i,
                     candidates_count=len(candidates),
                 )
-                
+
                 # Combine candidates, keeping best score for each chunk
                 for candidate in candidates:
                     chunk_id = candidate.chunk_id
@@ -599,7 +600,7 @@ Return ONLY a JSON array of 3 query strings. Example: ["query 1", "query 2", "qu
             key=lambda x: x.score,
             reverse=True,
         )[:top_k]
-        
+
         logger.info(
             "Multi-query: merge complete",
             final_results_count=len(sorted_candidates),

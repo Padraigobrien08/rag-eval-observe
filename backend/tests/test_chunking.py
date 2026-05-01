@@ -1,5 +1,6 @@
 import pytest
-from app.rag.chunking import TextChunker, Chunk, chunk_text
+
+from app.rag.chunking import Chunk, TextChunker, chunk_text
 
 
 class TestPlainTextChunking:
@@ -44,10 +45,8 @@ class TestPlainTextChunking:
             chunk2_start_clean = chunk2_start.replace(" ", "").replace("\n", "")
 
             # At least some characters should overlap
-            overlap_found = False
             for j in range(min(len(chunk1_end_clean), len(chunk2_start_clean))):
                 if chunk1_end_clean[-j:] == chunk2_start_clean[:j] and j > 0:
-                    overlap_found = True
                     break
 
             # Note: Due to sentence boundary detection, overlap might not always be exact

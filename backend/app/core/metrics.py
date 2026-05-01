@@ -1,7 +1,7 @@
 import time
-from typing import Dict, List, Optional
 from collections import defaultdict
 from dataclasses import dataclass, field
+
 import structlog
 
 logger = structlog.get_logger()
@@ -13,8 +13,8 @@ class RouteMetrics:
 
     route: str
     request_count: int = 0
-    status_counts: Dict[int, int] = field(default_factory=lambda: defaultdict(int))
-    latency_buckets: Dict[str, int] = field(
+    status_counts: dict[int, int] = field(default_factory=lambda: defaultdict(int))
+    latency_buckets: dict[str, int] = field(
         default_factory=lambda: {
             "<100ms": 0,
             "100-500ms": 0,
@@ -55,8 +55,8 @@ class MetricsCollector:
 
     def __init__(self):
         """Initialize metrics collector."""
-        self.route_metrics: Dict[str, RouteMetrics] = {}
-        self.token_usage: Dict[str, int] = {
+        self.route_metrics: dict[str, RouteMetrics] = {}
+        self.token_usage: dict[str, int] = {
             "embedding_prompt_tokens": 0,
             "embedding_total_tokens": 0,
             "chat_prompt_tokens": 0,
@@ -105,7 +105,7 @@ class MetricsCollector:
         self.token_usage["chat_completion_tokens"] += completion_tokens
         self.token_usage["chat_total_tokens"] += total_tokens
 
-    def get_metrics(self) -> Dict:
+    def get_metrics(self) -> dict:
         """
         Get all metrics as a dictionary.
 
@@ -133,7 +133,7 @@ class MetricsCollector:
 
     def prometheus_text(self) -> str:
         """Prometheus text format for scraping (counters / gauges, in-memory only)."""
-        lines: List[str] = []
+        lines: list[str] = []
         uptime = int(time.time() - self.start_time)
         lines.append("# HELP app_uptime_seconds Process uptime in seconds")
         lines.append("# TYPE app_uptime_seconds gauge")
@@ -174,7 +174,7 @@ class MetricsCollector:
 
 
 # Global metrics instance
-_metrics: Optional[MetricsCollector] = None
+_metrics: MetricsCollector | None = None
 
 
 def get_metrics() -> MetricsCollector:

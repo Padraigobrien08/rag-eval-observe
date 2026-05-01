@@ -1,12 +1,12 @@
+
 import asyncpg
-from typing import Optional
 import structlog
 
 from app.core.config import settings
 
 logger = structlog.get_logger()
 
-_pool: Optional[asyncpg.Pool] = None
+_pool: asyncpg.Pool | None = None
 
 
 async def init_db_pool() -> None:

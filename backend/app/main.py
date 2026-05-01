@@ -80,9 +80,36 @@ app.add_middleware(
     allow_origins=settings.cors_origins_list,
     allow_credentials=True,
     allow_methods=["GET", "POST", "DELETE"],
-    allow_headers=["Content-Type", "Authorization", "X-Request-ID"],
+    allow_headers=["Content-Type", "Authorization", "X-Request-ID", "X-API-Key"],
     expose_headers=["X-Request-ID"],
 )
+
+
+@app.middleware("http")
+async def optional_api_key_middleware(request: Request, call_next):
+    """When API_KEY is set, require Authorization: Bearer <key> or X-API-Key header."""
+    if not settings.API_KEY.strip():
+        return await call_next(request)
+
+    path = request.url.path
+    if (
+        path in ("/", "/api/v1/health", "/api/v1/metrics", "/api/v1/metrics/prometheus")
+        or request.method == "OPTIONS"
+    ):
+        return await call_next(request)
+
+    auth = (request.headers.get("Authorization") or "").strip()
+    bearer = ""
+    if auth.lower().startswith("bearer "):
+        bearer = auth[7:].strip()
+    header_key = (request.headers.get("X-API-Key") or "").strip()
+    if bearer == settings.API_KEY or header_key == settings.API_KEY:
+        return await call_next(request)
+
+    return JSONResponse(
+        status_code=401,
+        content={"detail": "Invalid or missing API key"},
+    )
 
 
 @app.middleware("http")

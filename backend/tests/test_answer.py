@@ -1,16 +1,17 @@
-import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
+import pytest
+
+from app.llm.openai_client import ChatCompletionResponse, TokenUsage
 from app.rag.answer import (
-    generate_answer,
-    generate_answer_stream,
-    build_prompt,
-    extract_citations,
     AnswerError,
     AnswerResponse,
+    build_prompt,
+    extract_citations,
+    generate_answer,
+    generate_answer_stream,
 )
 from app.rag.retrieve import RetrievedChunk
-from app.llm.openai_client import ChatCompletionResponse, TokenUsage
 
 
 class TestBuildPrompt:

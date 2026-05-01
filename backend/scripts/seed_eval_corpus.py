@@ -3,7 +3,8 @@
 Load minimal corpus into Postgres so eval/run_eval.py has documents to retrieve.
 
 Requires DATABASE_URL, OPENAI_API_KEY, and schema from scripts/apply_init_sql.py.
-Idempotent enough for CI: re-ingesting may create versioned sources per ingest rules.
+Skips sources that already exist in the database (by `source` field) so CI and
+re-runs do not duplicate embeddings.
 """
 
 from __future__ import annotations
@@ -18,6 +19,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from dotenv import load_dotenv
 
+from app.db.queries import list_documents
 from app.db.session import close_db_pool, init_db_pool
 from app.rag.ingest import ingest_document
 
@@ -95,7 +97,13 @@ async def main() -> None:
 
     await init_db_pool()
     try:
+        existing_docs = await list_documents(limit=500, offset=0)
+        existing_sources = {d.get("source") for d in existing_docs if d.get("source")}
+
         for doc in CORPUS:
+            if doc["source"] in existing_sources:
+                print(f"skip {doc['source']} (already in database)")
+                continue
             result = await ingest_document(
                 source=doc["source"],
                 title=doc["title"],
@@ -103,6 +111,7 @@ async def main() -> None:
                 is_markdown=False,
             )
             print(f"ingested {doc['source']}: {result}")
+            existing_sources.add(doc["source"])
     finally:
         await close_db_pool()
 

@@ -1,14 +1,14 @@
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
+
 import httpx
+import pytest
 
 from app.llm.openai_client import (
+    ChatCompletionResponse,
+    EmbeddingResponse,
     OpenAIClient,
     OpenAIError,
     OpenAIRateLimitError,
-    OpenAITransientError,
-    EmbeddingResponse,
-    ChatCompletionResponse,
     TokenUsage,
     get_openai_client,
     set_openai_client,
@@ -149,7 +149,7 @@ class TestEmbeddings:
         # Create 3000 texts to trigger batching (batch size is 2048)
         texts = [f"text {i}" for i in range(3000)]
 
-        mock_response = {
+        {
             "data": [{"embedding": [0.1, 0.2, 0.3]} for _ in range(2048)],
             "usage": {"prompt_tokens": 100, "total_tokens": 100},
         }
@@ -240,7 +240,7 @@ class TestChatCompletions:
             mock_client.request = AsyncMock(return_value=mock_response_obj)
 
             messages = [{"role": "user", "content": "Test"}]
-            result = await client.create_chat_completion(messages, temperature=0.9, max_tokens=100)
+            await client.create_chat_completion(messages, temperature=0.9, max_tokens=100)
 
             # Verify parameters were passed
             call_args = mock_client.request.call_args
@@ -559,7 +559,6 @@ class TestGlobalClient:
             mock_settings.OPENAI_TIMEOUT = 60
 
             # Import here to get fresh module state
-            from app.llm.openai_client import _client as module_client
 
             # Reset module-level client
             import app.llm.openai_client as client_module

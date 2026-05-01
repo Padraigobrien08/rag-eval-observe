@@ -1,15 +1,13 @@
-from typing import List, Optional
-import asyncpg
 import json
+
 import structlog
 
-from app.core.config import settings
 from app.db.session import get_db_pool
 
 logger = structlog.get_logger()
 
 
-async def get_document_by_id(document_id: str) -> Optional[dict]:
+async def get_document_by_id(document_id: str) -> dict | None:
     """Get a document by ID."""
     pool = await get_db_pool()
     async with pool.acquire() as conn:
@@ -23,17 +21,17 @@ async def get_document_by_id(document_id: str) -> Optional[dict]:
 
 
 async def search_chunks(
-    query_embedding: List[float],
+    query_embedding: list[float],
     top_k: int = 5,
-    document_id: Optional[str] = None,
-) -> List[dict]:
+    document_id: str | None = None,
+) -> list[dict]:
     """Search for similar chunks using vector similarity."""
     pool = await get_db_pool()
     embedding_str = "[" + ",".join(map(str, query_embedding)) + "]"
 
     if document_id:
         query = """
-            SELECT 
+            SELECT
                 id,
                 document_id,
                 chunk_index,
@@ -48,7 +46,7 @@ async def search_chunks(
         params = [embedding_str, document_id, top_k]
     else:
         query = """
-            SELECT 
+            SELECT
                 id,
                 document_id,
                 chunk_index,
@@ -77,7 +75,7 @@ async def search_chunks(
         ]
 
 
-async def get_chunks_by_document_id(document_id: str) -> List[dict]:
+async def get_chunks_by_document_id(document_id: str) -> list[dict]:
     """Get all chunks for a document."""
     pool = await get_db_pool()
     async with pool.acquire() as conn:
@@ -103,24 +101,24 @@ async def get_chunks_by_document_id(document_id: str) -> List[dict]:
         ]
 
 
-async def list_documents(limit: int = 100, offset: int = 0) -> List[dict]:
+async def list_documents(limit: int = 100, offset: int = 0) -> list[dict]:
     """List documents with pagination."""
-    import time
     import asyncio
-    
+    import time
+
     start_time = time.time()
     logger.info("list_documents called", limit=limit, offset=offset)
-    
+
     try:
         pool = await get_db_pool()
         pool_acquire_time = time.time()
         logger.info("Pool acquired", elapsed_ms=(pool_acquire_time - start_time) * 1000)
-        
+
         # Use context manager for proper connection handling
         async with pool.acquire() as conn:
             conn_acquire_time = time.time()
             logger.info("Connection acquired", elapsed_ms=(conn_acquire_time - pool_acquire_time) * 1000)
-            
+
             # Add timeout for query execution (10 seconds)
             rows = await asyncio.wait_for(
                 conn.fetch(
@@ -136,7 +134,7 @@ async def list_documents(limit: int = 100, offset: int = 0) -> List[dict]:
             )
             query_time = time.time()
             logger.info("Query executed", elapsed_ms=(query_time - conn_acquire_time) * 1000, row_count=len(rows))
-            
+
             result = [
                 {
                     "id": row["id"],
@@ -147,7 +145,7 @@ async def list_documents(limit: int = 100, offset: int = 0) -> List[dict]:
                 for row in rows
             ]
             processing_time = time.time()
-            
+
             logger.info(
                 "list_documents completed",
                 pool_acquire_ms=(pool_acquire_time - start_time) * 1000,
@@ -157,9 +155,9 @@ async def list_documents(limit: int = 100, offset: int = 0) -> List[dict]:
                 total_ms=(processing_time - start_time) * 1000,
                 document_count=len(result),
             )
-            
+
             return result
-    except asyncio.TimeoutError as e:
+    except TimeoutError as e:
         logger.error("Database operation timed out", error=str(e))
         raise RuntimeError(f"Database query timed out: {str(e)}")
     except Exception as e:
@@ -191,23 +189,23 @@ async def delete_document(document_id: str) -> bool:
 async def log_query(
     query_text: str,
     rag_model: str,
-    top_k: Optional[int] = None,
-    request_id: Optional[str] = None,
-    client_ip: Optional[str] = None,
-    user_agent: Optional[str] = None,
-    latency_ms: Optional[int] = None,
-    token_usage: Optional[dict] = None,
+    top_k: int | None = None,
+    request_id: str | None = None,
+    client_ip: str | None = None,
+    user_agent: str | None = None,
+    latency_ms: int | None = None,
+    token_usage: dict | None = None,
     citations_count: int = 0,
-    answer_length: Optional[int] = None,
+    answer_length: int | None = None,
 ) -> None:
     """
     Log a query to the database for monitoring and analytics.
-    
+
     This is designed to be non-blocking - errors are logged but don't affect the query response.
     """
     import uuid
     from decimal import Decimal
-    
+
     try:
         # Calculate cost from token usage
         cost_usd = None
@@ -219,15 +217,15 @@ async def log_query(
             input_tokens = token_usage.get("prompt_tokens", 0) or 0
             output_tokens = token_usage.get("completion_tokens", 0) or 0
             embedding_tokens = token_usage.get("embedding_total_tokens", 0) or 0
-            
+
             input_cost = (input_tokens / 1000) * 0.01
             output_cost = (output_tokens / 1000) * 0.03
             embedding_cost = (embedding_tokens / 1000) * 0.00002
-            
+
             cost_usd = Decimal(str(input_cost + output_cost + embedding_cost)).quantize(
                 Decimal("0.000001")
             )
-        
+
         pool = await get_db_pool()
         async with pool.acquire() as conn:
             await conn.execute(
@@ -263,27 +261,27 @@ async def log_query(
 async def get_query_logs(
     limit: int = 100,
     offset: int = 0,
-    rag_model: Optional[str] = None,
-    start_date: Optional[str] = None,
-    end_date: Optional[str] = None,
-) -> List[dict]:
+    rag_model: str | None = None,
+    start_date: str | None = None,
+    end_date: str | None = None,
+) -> list[dict]:
     """
     Get query logs with optional filtering.
-    
+
     Args:
         limit: Maximum number of logs to return
         offset: Number of logs to skip
         rag_model: Filter by RAG model
         start_date: Filter by start date (ISO format)
         end_date: Filter by end date (ISO format)
-    
+
     Returns:
         List of query log dictionaries
     """
     pool = await get_db_pool()
     async with pool.acquire() as conn:
         query = """
-            SELECT 
+            SELECT
                 id, query_text, rag_model, top_k, request_id, client_ip, user_agent,
                 latency_ms, token_usage, cost_usd, citations_count, answer_length, created_at
             FROM queries
@@ -291,25 +289,25 @@ async def get_query_logs(
         """
         params = []
         param_count = 0
-        
+
         if rag_model:
             param_count += 1
             query += f" AND rag_model = ${param_count}"
             params.append(rag_model)
-        
+
         if start_date:
             param_count += 1
             query += f" AND created_at >= ${param_count}::timestamp"
             params.append(start_date)
-        
+
         if end_date:
             param_count += 1
             query += f" AND created_at <= ${param_count}::timestamp"
             params.append(end_date)
-        
+
         query += " ORDER BY created_at DESC LIMIT $" + str(param_count + 1) + " OFFSET $" + str(param_count + 2)
         params.extend([limit, offset])
-        
+
         rows = await conn.fetch(query, *params)
         return [
             {
@@ -332,19 +330,19 @@ async def get_query_logs(
 
 
 async def get_query_stats(
-    start_date: Optional[str] = None,
-    end_date: Optional[str] = None,
+    start_date: str | None = None,
+    end_date: str | None = None,
 ) -> dict:
     """
     Get aggregated query statistics.
-    
+
     Returns:
         Dictionary with stats including total queries, total cost, average latency, etc.
     """
     pool = await get_db_pool()
     async with pool.acquire() as conn:
         query = """
-            SELECT 
+            SELECT
                 COUNT(*) as total_queries,
                 SUM(cost_usd) as total_cost,
                 AVG(latency_ms) as avg_latency_ms,
@@ -356,19 +354,19 @@ async def get_query_stats(
         """
         params = []
         param_count = 0
-        
+
         if start_date:
             param_count += 1
             query += f" AND created_at >= ${param_count}::timestamp"
             params.append(start_date)
-        
+
         if end_date:
             param_count += 1
             query += f" AND created_at <= ${param_count}::timestamp"
             params.append(end_date)
-        
+
         row = await conn.fetchrow(query, *params)
-        
+
         return {
             "total_queries": row["total_queries"] or 0,
             "total_cost_usd": float(row["total_cost"]) if row["total_cost"] else 0.0,

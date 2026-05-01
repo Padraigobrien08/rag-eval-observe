@@ -1,12 +1,12 @@
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
-import asyncpg
+
+import pytest
 
 from app.rag.ingest import (
-    ingest_document,
+    MAX_DOCUMENT_SIZE,
     DocumentTooLargeError,
     IngestError,
-    MAX_DOCUMENT_SIZE,
+    ingest_document,
 )
 
 
