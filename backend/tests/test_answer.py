@@ -3,6 +3,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from app.rag.answer import (
     generate_answer,
+    generate_answer_stream,
     build_prompt,
     extract_citations,
     AnswerError,
@@ -292,3 +293,49 @@ class TestGenerateAnswer:
             assert result.citations[1]["chunk_id"] == "chunk-2"
             assert "chunk-1" in result.used_chunk_ids
             assert "chunk-2" in result.used_chunk_ids
+
+
+class TestGenerateAnswerStream:
+    """Streaming answer generation."""
+
+    @pytest.mark.asyncio
+    async def test_stream_yields_deltas_and_done(self):
+        chunks = [
+            RetrievedChunk(
+                chunk_id="chunk-1",
+                document_id="doc-1",
+                title="Test Doc",
+                source="test-source",
+                chunk_index=0,
+                content="Test content about RAG.",
+                score=0.95,
+            )
+        ]
+
+        async def mock_stream(*args, **kwargs):
+            yield "RAG "
+            yield "answer [1]."
+            yield TokenUsage(prompt_tokens=100, completion_tokens=50, total_tokens=150)
+
+        mock_openai_client = AsyncMock()
+        mock_openai_client.stream_chat_completion = mock_stream
+
+        with patch("app.rag.answer.get_openai_client", return_value=mock_openai_client):
+            events = []
+            async for ev in generate_answer_stream(
+                "What is RAG?",
+                chunks,
+                rag_model="vector-similarity",
+                retrieved_chunk_count=1,
+            ):
+                events.append(ev)
+
+        deltas = [e for e in events if e.get("type") == "delta"]
+        assert len(deltas) == 2
+        assert deltas[0]["text"] == "RAG "
+        done = events[-1]
+        assert done["type"] == "done"
+        assert "RAG" in done["answer"]
+        assert done["token_usage"]["total_tokens"] == 150
+        assert done["rag_model"] == "vector-similarity"
+        assert done["retrieved_chunk_count"] == 1

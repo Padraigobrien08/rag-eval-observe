@@ -248,6 +248,40 @@ class TestChatCompletions:
             assert json_data["temperature"] == 0.9
             assert json_data["max_tokens"] == 100
 
+    @pytest.mark.asyncio
+    async def test_stream_chat_completion(self):
+        """Stream yields text fragments then optional usage chunk."""
+        client = OpenAIClient(api_key="test-key", chat_model="gpt-4o-mini")
+
+        async def fake_lines():
+            yield 'data: {"choices":[{"delta":{"content":"Hello "}}]}'
+            yield 'data: {"choices":[{"delta":{"content":"world"}}],"usage":{"prompt_tokens":2,"completion_tokens":3,"total_tokens":5}}'
+            yield "data: [DONE]"
+
+        mock_stream_resp = MagicMock()
+        mock_stream_resp.status_code = 200
+        mock_stream_resp.aiter_lines = fake_lines
+
+        stream_cm = MagicMock()
+        stream_cm.__aenter__ = AsyncMock(return_value=mock_stream_resp)
+        stream_cm.__aexit__ = AsyncMock(return_value=None)
+
+        with patch("httpx.AsyncClient") as mock_client_class:
+            mock_inner = AsyncMock()
+            mock_inner.stream = MagicMock(return_value=stream_cm)
+            mock_client_class.return_value.__aenter__.return_value = mock_inner
+
+            out = []
+            async for item in client.stream_chat_completion(
+                [{"role": "user", "content": "Hi"}],
+            ):
+                out.append(item)
+
+        assert out[0] == "Hello "
+        assert out[1] == "world"
+        assert isinstance(out[2], TokenUsage)
+        assert out[2].total_tokens == 5
+
 
 class TestRetryLogic:
     """Test retry logic with exponential backoff."""

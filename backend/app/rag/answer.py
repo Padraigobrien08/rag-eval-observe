@@ -1,12 +1,14 @@
-import time
 import re
-from typing import List, Dict, Any, Optional
+import time
+from collections.abc import AsyncIterator
 from dataclasses import dataclass
+from typing import Any
+
 import structlog
 
 from app.core.config import settings
+from app.llm.openai_client import OpenAIError, TokenUsage, get_openai_client
 from app.rag.types import RetrievedChunk
-from app.llm.openai_client import get_openai_client, OpenAIError, TokenUsage
 
 logger = structlog.get_logger()
 
@@ -16,10 +18,10 @@ class AnswerResponse:
     """Answer response with citations and metadata."""
 
     answer: str
-    citations: List[Dict[str, Any]]
-    used_chunk_ids: List[str]
+    citations: list[dict[str, Any]]
+    used_chunk_ids: list[str]
     latency_ms: int
-    token_usage: Optional[Dict[str, int]] = None
+    token_usage: dict[str, int] | None = None
 
 
 class AnswerError(Exception):
@@ -29,8 +31,8 @@ class AnswerError(Exception):
 
 
 def sanitize_and_truncate_context(
-    chunks: List[RetrievedChunk],
-) -> List[RetrievedChunk]:
+    chunks: list[RetrievedChunk],
+) -> list[RetrievedChunk]:
     """
     Sanitize and truncate context to fit within token/char budget.
 
@@ -123,7 +125,7 @@ def sanitize_text(text: str) -> str:
 
 
 def build_prompt(
-    query: str, chunks: List[RetrievedChunk], document_list_context: Optional[str] = None
+    query: str, chunks: list[RetrievedChunk], document_list_context: str | None = None
 ) -> str:
     """
     Build prompt for answer generation with prompt injection mitigation.
@@ -214,8 +216,8 @@ Answer (with citations if applicable):"""
 
 async def generate_answer(
     query: str,
-    retrieved_chunks: List[RetrievedChunk],
-    document_list_context: Optional[str] = None,
+    retrieved_chunks: list[RetrievedChunk],
+    document_list_context: str | None = None,
 ) -> AnswerResponse:
     """
     Generate answer from query and retrieved chunks.
@@ -248,7 +250,7 @@ async def generate_answer(
 
         # Build prompt with context (including document list if provided)
         prompt = build_prompt(query, sanitized_chunks, document_list_context)
-        
+
         # Log prompt preview for debugging
         logger.debug(
             "Prompt built",
@@ -258,13 +260,13 @@ async def generate_answer(
 
         # Call OpenAI chat completion
         openai_client = get_openai_client()
-        
+
         # Adjust system message based on whether we have document list context
         if document_list_context:
             system_message = "You are a helpful assistant that answers questions about available documents and document content. When asked about what documents are available, list them clearly from the SYSTEM INFORMATION provided."
         else:
             system_message = "You are a helpful assistant that answers questions based on provided context. Always cite your sources and only use information from the provided context."
-        
+
         messages = [
             {
                 "role": "system",
@@ -347,7 +349,129 @@ async def generate_answer(
         raise AnswerError(f"Failed to generate answer: {str(e)}") from e
 
 
-def extract_citations(answer: str, chunks: List[RetrievedChunk]) -> List[Dict[str, Any]]:
+async def generate_answer_stream(
+    query: str,
+    retrieved_chunks: list[RetrievedChunk],
+    document_list_context: str | None = None,
+    *,
+    rag_model: str,
+    retrieved_chunk_count: int,
+    include_debug: bool = False,
+) -> AsyncIterator[dict[str, Any]]:
+    """
+    Stream answer tokens, then emit a final \"done\" event with citations and metadata.
+
+    Events:
+      - {\"type\": \"delta\", \"text\": str}
+      - {\"type\": \"done\", ...} (same shape as non-streaming JSON fields)
+    """
+    start_time = time.time()
+
+    try:
+        sanitized_chunks = sanitize_and_truncate_context(retrieved_chunks)
+        logger.info(
+            "Building streaming answer",
+            query=query,
+            has_document_list_context=bool(document_list_context),
+            chunks_count=len(sanitized_chunks),
+        )
+
+        prompt = build_prompt(query, sanitized_chunks, document_list_context)
+
+        if document_list_context:
+            system_message = (
+                "You are a helpful assistant that answers questions about available documents "
+                "and document content. When asked about what documents are available, list them "
+                "clearly from the SYSTEM INFORMATION provided."
+            )
+        else:
+            system_message = (
+                "You are a helpful assistant that answers questions based on provided context. "
+                "Always cite your sources and only use information from the provided context."
+            )
+
+        messages = [
+            {"role": "system", "content": system_message},
+            {"role": "user", "content": prompt},
+        ]
+
+        openai_client = get_openai_client()
+        raw_parts: list[str] = []
+        stream_usage: TokenUsage | None = None
+        async for item in openai_client.stream_chat_completion(
+            messages=messages,
+            temperature=0.7,
+            max_tokens=1000,
+        ):
+            if isinstance(item, TokenUsage):
+                stream_usage = item
+                continue
+            raw_parts.append(item)
+            yield {"type": "delta", "text": item}
+
+        answer = sanitize_text("".join(raw_parts))
+        citations = extract_citations(answer, sanitized_chunks)
+        used_chunk_ids = [c["chunk_id"] for c in citations]
+        latency_ms = int((time.time() - start_time) * 1000)
+
+        token_usage_dict = None
+        if stream_usage:
+            token_usage_dict = {
+                "prompt_tokens": stream_usage.prompt_tokens,
+                "completion_tokens": stream_usage.completion_tokens,
+                "total_tokens": stream_usage.total_tokens,
+            }
+
+        done: dict[str, Any] = {
+            "type": "done",
+            "answer": answer,
+            "citations": citations,
+            "used_chunk_ids": used_chunk_ids,
+            "latency_ms": latency_ms,
+            "token_usage": token_usage_dict,
+            "rag_model": rag_model,
+            "retrieved_chunk_count": retrieved_chunk_count,
+        }
+
+        if include_debug:
+            done["debug"] = {
+                "retrieved": [
+                    {
+                        "chunk_id": chunk.chunk_id,
+                        "document_id": chunk.document_id,
+                        "title": chunk.title,
+                        "source": chunk.source,
+                        "chunk_index": chunk.chunk_index,
+                        "content_snippet": chunk.content[:200]
+                        + ("..." if len(chunk.content) > 200 else ""),
+                        "score": chunk.score,
+                    }
+                    for chunk in retrieved_chunks
+                ],
+            }
+
+        logger.info(
+            "Streaming answer completed",
+            query_length=len(query),
+            answer_length=len(answer),
+            citations_count=len(citations),
+            latency_ms=latency_ms,
+        )
+        yield done
+
+    except OpenAIError as e:
+        logger.error("OpenAI API error during streaming answer", error=str(e))
+        raise AnswerError(f"Failed to generate answer: {str(e)}") from e
+    except Exception as e:
+        logger.error(
+            "Unexpected error during streaming answer",
+            error=str(e),
+            exc_info=True,
+        )
+        raise AnswerError(f"Failed to generate answer: {str(e)}") from e
+
+
+def extract_citations(answer: str, chunks: list[RetrievedChunk]) -> list[dict[str, Any]]:
     """
     Extract citations from answer text.
 

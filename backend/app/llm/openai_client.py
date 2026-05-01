@@ -1,7 +1,9 @@
 import asyncio
-import time
-from typing import List, Optional, Dict, Any
+import json
+from collections.abc import AsyncIterator
 from dataclasses import dataclass
+from typing import Any
+
 import httpx
 import structlog
 
@@ -23,8 +25,8 @@ class TokenUsage:
 class EmbeddingResponse:
     """Embedding response with metadata."""
 
-    embedding: List[float]
-    token_usage: Optional[TokenUsage] = None
+    embedding: list[float]
+    token_usage: TokenUsage | None = None
 
 
 @dataclass
@@ -32,8 +34,8 @@ class ChatCompletionResponse:
     """Chat completion response with metadata."""
 
     content: str
-    token_usage: Optional[TokenUsage] = None
-    finish_reason: Optional[str] = None
+    token_usage: TokenUsage | None = None
+    finish_reason: str | None = None
 
 
 class OpenAIError(Exception):
@@ -59,11 +61,11 @@ class OpenAIClient:
 
     def __init__(
         self,
-        api_key: Optional[str] = None,
-        embedding_model: Optional[str] = None,
-        chat_model: Optional[str] = None,
-        max_retries: Optional[int] = None,
-        timeout: Optional[int] = None,
+        api_key: str | None = None,
+        embedding_model: str | None = None,
+        chat_model: str | None = None,
+        max_retries: int | None = None,
+        timeout: int | None = None,
     ):
         """
         Initialize OpenAI client.
@@ -89,7 +91,7 @@ class OpenAIClient:
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",
         }
-        
+
         # Request throttling disabled - single queries only make 2 API calls
         # (1 embedding + 1 chat completion), which shouldn't hit rate limits
         # If rate limits are hit, it's likely due to multiple concurrent requests
@@ -99,9 +101,9 @@ class OpenAIClient:
         self,
         method: str,
         url: str,
-        json_data: Dict[str, Any],
+        json_data: dict[str, Any],
         operation: str,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Make HTTP request with exponential backoff retry and throttling.
 
@@ -142,7 +144,7 @@ class OpenAIClient:
                     # Rate limit (429) - handle carefully
                     if response.status_code == 429:
                         retry_after = self._get_retry_after(response)
-                        
+
                         # For rate limits, respect the Retry-After header if provided
                         # If not provided, use shorter wait times based on operation type
                         if retry_after:
@@ -168,8 +170,8 @@ class OpenAIClient:
                         else:
                             # Already retried once, fail fast with clear message
                             raise OpenAIRateLimitError(
-                                f"Rate limit exceeded after retry. Please wait a moment before trying again. "
-                                f"If this persists, you may need to upgrade your OpenAI account tier."
+                                "Rate limit exceeded after retry. Please wait a moment before trying again. "
+                                "If this persists, you may need to upgrade your OpenAI account tier."
                             )
 
                     # Server errors (5xx) - retry with backoff
@@ -244,7 +246,7 @@ class OpenAIClient:
 
         raise OpenAIError("Unexpected error in retry logic")
 
-    def _get_retry_after(self, response: httpx.Response) -> Optional[float]:
+    def _get_retry_after(self, response: httpx.Response) -> float | None:
         """Extract Retry-After header value."""
         retry_after = response.headers.get("Retry-After")
         if retry_after:
@@ -254,7 +256,7 @@ class OpenAIClient:
                 pass
         return None
 
-    def _parse_token_usage(self, usage_data: Optional[Dict[str, Any]]) -> Optional[TokenUsage]:
+    def _parse_token_usage(self, usage_data: dict[str, Any] | None) -> TokenUsage | None:
         """Parse token usage from API response."""
         if not usage_data:
             return None
@@ -265,7 +267,7 @@ class OpenAIClient:
             total_tokens=usage_data.get("total_tokens", 0),
         )
 
-    async def create_embedding(self, text: str, model: Optional[str] = None) -> EmbeddingResponse:
+    async def create_embedding(self, text: str, model: str | None = None) -> EmbeddingResponse:
         """
         Create embedding for a single text.
 
@@ -282,8 +284,8 @@ class OpenAIClient:
         return responses[0]
 
     async def create_embeddings(
-        self, texts: List[str], model: Optional[str] = None
-    ) -> List[EmbeddingResponse]:
+        self, texts: list[str], model: str | None = None
+    ) -> list[EmbeddingResponse]:
         """
         Create embeddings for multiple texts (batch).
 
@@ -356,10 +358,10 @@ class OpenAIClient:
 
     async def create_chat_completion(
         self,
-        messages: List[Dict[str, str]],
-        model: Optional[str] = None,
+        messages: list[dict[str, str]],
+        model: str | None = None,
         temperature: float = 0.7,
-        max_tokens: Optional[int] = None,
+        max_tokens: int | None = None,
     ) -> ChatCompletionResponse:
         """
         Create chat completion.
@@ -424,9 +426,89 @@ class OpenAIClient:
             finish_reason=choice.get("finish_reason"),
         )
 
+    async def stream_chat_completion(
+        self,
+        messages: list[dict[str, str]],
+        model: str | None = None,
+        temperature: float = 0.7,
+        max_tokens: int | None = None,
+    ) -> AsyncIterator[str | TokenUsage]:
+        """
+        Stream chat completion (SSE from OpenAI).
+
+        Yields text fragments (str) and optionally a final TokenUsage when the
+        stream includes usage (stream_options.include_usage). Records chat token
+        metrics when usage is present.
+        """
+        model_name = model or self.chat_model
+        url = f"{self.base_url}/chat/completions"
+
+        json_data: dict[str, Any] = {
+            "model": model_name,
+            "messages": messages,
+            "temperature": temperature,
+            "stream": True,
+            "stream_options": {"include_usage": True},
+        }
+        if max_tokens:
+            json_data["max_tokens"] = max_tokens
+
+        read_timeout = max(float(self.timeout), 120.0)
+        timeout = httpx.Timeout(self.timeout, read=read_timeout)
+
+        async with httpx.AsyncClient(timeout=timeout) as client:
+            async with client.stream(
+                "POST",
+                url,
+                headers=self.headers,
+                json=json_data,
+            ) as response:
+                if response.status_code == 429:
+                    body = (await response.aread()).decode("utf-8", errors="replace")
+                    raise OpenAIRateLimitError(f"Rate limited: {body}")
+                if response.status_code >= 400:
+                    body = (await response.aread()).decode("utf-8", errors="replace")
+                    if 500 <= response.status_code < 600:
+                        raise OpenAITransientError(f"OpenAI error {response.status_code}: {body}")
+                    raise OpenAIError(f"OpenAI error {response.status_code}: {body}")
+
+                async for line in response.aiter_lines():
+                    if not line.startswith("data:"):
+                        continue
+                    data = line[len("data:") :].strip()
+                    if data == "[DONE]":
+                        break
+                    try:
+                        chunk = json.loads(data)
+                    except json.JSONDecodeError:
+                        continue
+
+                    for choice in chunk.get("choices") or []:
+                        delta = choice.get("delta") or {}
+                        content = delta.get("content")
+                        if content:
+                            yield content
+
+                    usage_data = chunk.get("usage")
+                    if usage_data:
+                        token_usage = self._parse_token_usage(usage_data)
+                        if token_usage:
+                            try:
+                                from app.core.metrics import get_metrics
+
+                                metrics = get_metrics()
+                                metrics.record_chat_tokens(
+                                    prompt_tokens=token_usage.prompt_tokens,
+                                    completion_tokens=token_usage.completion_tokens,
+                                    total_tokens=token_usage.total_tokens,
+                                )
+                            except Exception:
+                                pass
+                            yield token_usage
+
 
 # Global client instance (can be overridden for testing)
-_client: Optional[OpenAIClient] = None
+_client: OpenAIClient | None = None
 
 
 def get_openai_client() -> OpenAIClient:
@@ -437,7 +519,7 @@ def get_openai_client() -> OpenAIClient:
     return _client
 
 
-def set_openai_client(client: Optional[OpenAIClient]) -> None:
+def set_openai_client(client: OpenAIClient | None) -> None:
     """Set global OpenAI client (useful for testing)."""
     global _client
     _client = client
