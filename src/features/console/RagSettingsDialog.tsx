@@ -3,6 +3,7 @@
 import type { ReactNode } from 'react'
 import { Settings } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card'
 import {
   Dialog,
   DialogClose,
@@ -17,6 +18,7 @@ import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Slider } from '@/components/ui/slider'
 import { Switch } from '@/components/ui/switch'
+import { Separator } from '@/components/ui/separator'
 import {
   Select,
   SelectContent,
@@ -46,7 +48,7 @@ interface RagSettingsDialogProps {
   collapsed?: boolean
 }
 
-function SettingsPanel({
+function SettingsSectionCard({
   sectionId,
   title,
   description,
@@ -58,55 +60,23 @@ function SettingsPanel({
   children: ReactNode
 }) {
   return (
-    <section
-      aria-labelledby={sectionId}
-      className="overflow-hidden rounded-xl border border-border bg-card shadow-sm"
-    >
-      <header className="border-b border-border bg-muted/35 px-6 py-5">
-        <h3
-          id={sectionId}
-          className="text-lg font-semibold leading-tight tracking-tight text-foreground"
-        >
-          {title}
-        </h3>
-        <p className="mt-2 max-w-prose text-[0.8125rem] leading-relaxed text-muted-foreground text-pretty sm:text-sm">
-          {description}
-        </p>
-      </header>
-      <div className="p-6">{children}</div>
-    </section>
-  )
-}
-
-function SettingsPanelList({
-  sectionId,
-  title,
-  description,
-  children,
-}: {
-  sectionId: string
-  title: string
-  description: string
-  children: ReactNode
-}) {
-  return (
-    <section
-      aria-labelledby={sectionId}
-      className="overflow-hidden rounded-xl border border-border bg-card shadow-sm"
-    >
-      <header className="border-b border-border bg-muted/35 px-6 py-5">
-        <h3
-          id={sectionId}
-          className="text-lg font-semibold leading-tight tracking-tight text-foreground"
-        >
-          {title}
-        </h3>
-        <p className="mt-2 max-w-prose text-[0.8125rem] leading-relaxed text-muted-foreground text-pretty sm:text-sm">
-          {description}
-        </p>
-      </header>
-      <div className="divide-y divide-border">{children}</div>
-    </section>
+    <Card className="overflow-hidden rounded-xl border-border/50 bg-background shadow-sm ring-1 ring-black/[0.04] dark:ring-white/[0.06]">
+      <section aria-labelledby={sectionId} className="contents">
+        <CardHeader className="space-y-1.5 p-5 pb-4">
+          <h3
+            id={sectionId}
+            className="text-base font-semibold leading-snug tracking-tight text-foreground"
+          >
+            {title}
+          </h3>
+          <CardDescription className="text-xs leading-relaxed text-muted-foreground">
+            {description}
+          </CardDescription>
+        </CardHeader>
+        <Separator className="bg-border/60" />
+        <CardContent className="p-5 pt-5">{children}</CardContent>
+      </section>
+    </Card>
   )
 }
 
@@ -124,12 +94,12 @@ function SwitchRow({
   onCheckedChange: (v: boolean) => void
 }) {
   return (
-    <div className="flex items-start justify-between gap-4 px-6 py-5 transition-colors hover:bg-muted/20">
+    <div className="flex items-start justify-between gap-4 px-5 py-4">
       <div className="min-w-0 space-y-1 pr-2">
         <Label htmlFor={id} className="text-sm font-medium leading-snug text-foreground">
           {label}
         </Label>
-        <p className="text-xs leading-relaxed text-muted-foreground text-pretty sm:text-[0.8125rem] sm:leading-relaxed">
+        <p id={`${id}-description`} className="text-xs leading-relaxed text-muted-foreground">
           {hint}
         </p>
       </div>
@@ -138,6 +108,7 @@ function SwitchRow({
         className="mt-0.5 shrink-0"
         checked={checked}
         onCheckedChange={onCheckedChange}
+        aria-describedby={`${id}-description`}
       />
     </div>
   )
@@ -180,36 +151,35 @@ export default function RagSettingsDialog({ collapsed = false }: RagSettingsDial
 
       <DialogContent
         className={cn(
-          'flex h-[min(88vh,720px)] w-[calc(100vw-2rem)] max-w-xl flex-col gap-0 overflow-hidden p-0 sm:rounded-2xl',
+          'flex max-h-[85vh] w-[calc(100vw-2rem)] max-w-[35rem] flex-col gap-0 overflow-hidden rounded-2xl border-0 bg-background p-0',
+          'shadow-[0_24px_48px_-12px_rgba(15,23,42,0.12),0_0_0_1px_rgba(15,23,42,0.06)]',
+          'dark:shadow-[0_24px_48px_-12px_rgba(0,0,0,0.45),0_0_0_1px_rgba(255,255,255,0.08)]',
           'sm:w-full'
         )}
       >
-        <DialogHeader className="shrink-0 space-y-2 border-b border-border/80 bg-muted/20 px-6 pb-5 pt-6 text-left sm:space-y-2.5 sm:pb-6 sm:pt-7 sm:pr-16">
-          <DialogTitle className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl sm:leading-none">
+        <DialogHeader className="shrink-0 space-y-1.5 px-6 pb-1 pt-6 text-left sm:pr-14">
+          <DialogTitle className="text-lg font-semibold tracking-tight text-foreground sm:text-xl">
             RAG settings
           </DialogTitle>
-          <DialogDescription className="text-pretty text-sm leading-relaxed text-muted-foreground sm:text-[0.9375rem] sm:leading-relaxed">
+          <DialogDescription className="text-sm leading-relaxed text-muted-foreground">
             Retrieval, streaming, and how answers appear in the chat.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 py-7 sm:py-8">
-          <div className="mx-auto flex max-w-lg flex-col gap-8">
-            <SettingsPanel
-              sectionId="rag-model-heading"
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 py-5">
+          <div className="flex flex-col gap-5">
+            <SettingsSectionCard
+              sectionId="rag-settings-retrieval"
               title="Retrieval model"
               description="How relevant chunks are fetched for each query."
             >
-              <div className="space-y-5">
-                <div className="space-y-2.5">
-                  <Label
-                    htmlFor="rag-model"
-                    className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground"
-                  >
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="rag-model" className="text-sm font-medium text-foreground">
                     Model
                   </Label>
                   <Select value={ragModel} onValueChange={value => setRagModel(value as RagModel)}>
-                    <SelectTrigger id="rag-model" className="h-11 w-full bg-background text-[15px]">
+                    <SelectTrigger id="rag-model" className="h-10 w-full bg-background">
                       <SelectValue placeholder="Select model" />
                     </SelectTrigger>
                     <SelectContent position="popper" className="max-h-[min(280px,40vh)]">
@@ -221,26 +191,23 @@ export default function RagSettingsDialog({ collapsed = false }: RagSettingsDial
                     </SelectContent>
                   </Select>
                 </div>
-                <p className="border-t border-border/80 pt-5 text-sm leading-relaxed text-muted-foreground text-pretty">
+                <p className="text-xs leading-relaxed text-muted-foreground">
                   {ragModelDescriptions[ragModel]}
                 </p>
               </div>
-            </SettingsPanel>
+            </SettingsSectionCard>
 
-            <SettingsPanel
-              sectionId="top-k-heading"
+            <SettingsSectionCard
+              sectionId="rag-settings-top-k"
               title="Top K"
               description="Number of chunks to retrieve per query (1–50)."
             >
-              <div className="space-y-8">
-                <div>
-                  <Label
-                    htmlFor="top-k"
-                    className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground"
-                  >
-                    Chunks per query
-                  </Label>
-                  <div className="mt-2.5 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+              <div className="space-y-5">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                  <div className="space-y-2">
+                    <Label htmlFor="top-k" className="text-sm font-medium text-foreground">
+                      Chunks per query
+                    </Label>
                     <Input
                       id="top-k"
                       type="number"
@@ -254,68 +221,93 @@ export default function RagSettingsDialog({ collapsed = false }: RagSettingsDial
                           setTopK(Math.min(50, Math.max(1, value)))
                         }
                       }}
-                      className="h-11 w-full max-w-[5.5rem] tabular-nums text-[15px] font-medium sm:w-[4.75rem]"
+                      className="h-10 w-full max-w-[5.5rem] tabular-nums sm:w-24"
+                      aria-describedby="top-k-hint"
                     />
-                    <p className="text-sm leading-snug text-muted-foreground">
-                      Type a value or use the slider — valid range is 1–50.
-                    </p>
                   </div>
-                </div>
-
-                <div className="space-y-3">
-                  <div className="flex justify-center">
-                    <span className="rounded-full border border-border bg-background px-3 py-1 text-xs font-semibold tabular-nums text-foreground shadow-sm">
-                      Top K · {currentTopK}
+                  <div className="flex flex-col items-start gap-1 sm:items-end">
+                    <span className="text-xs text-muted-foreground">Current value</span>
+                    <span
+                      className="inline-flex min-w-[4.5rem] items-center justify-center rounded-lg border border-border/60 bg-muted/40 px-3 py-2 text-sm font-semibold tabular-nums text-foreground"
+                      aria-live="polite"
+                    >
+                      {currentTopK}
                     </span>
                   </div>
+                </div>
+                <p id="top-k-hint" className="sr-only">
+                  Adjust with the number field or the slider. Allowed range 1 through 50.
+                </p>
+
+                <div className="space-y-3">
                   <Slider
                     min={1}
                     max={50}
                     step={1}
                     value={[currentTopK]}
                     onValueChange={([value]) => setTopK(value)}
+                    aria-label="Top K"
                   />
-                  <div className="flex justify-between text-[11px] font-medium tabular-nums text-muted-foreground">
+                  <div className="flex justify-between text-xs font-medium tabular-nums text-muted-foreground">
                     <span>1</span>
                     <span>50</span>
                   </div>
                 </div>
               </div>
-            </SettingsPanel>
+            </SettingsSectionCard>
 
-            <SettingsPanelList
-              sectionId="behavior-heading"
-              title="Behavior"
-              description="Debug output, streaming, and default answer layout."
-            >
-              <SwitchRow
-                id="debug-mode"
-                label="Debug mode"
-                hint="Show retrieved chunks and scores under answers."
-                checked={debug}
-                onCheckedChange={setDebug}
-              />
-              <SwitchRow
-                id="stream-responses"
-                label="Stream answers"
-                hint="Stream tokens (SSE). Turn off for one-shot responses."
-                checked={streamResponses}
-                onCheckedChange={setStreamResponses}
-              />
-              <SwitchRow
-                id="default-expanded"
-                label="Default expanded answers"
-                hint="Show full answer text by default instead of summary only."
-                checked={defaultExpandedAnswers}
-                onCheckedChange={setDefaultExpandedAnswers}
-              />
-            </SettingsPanelList>
+            <Card className="overflow-hidden rounded-xl border-border/50 bg-background shadow-sm ring-1 ring-black/[0.04] dark:ring-white/[0.06]">
+              <section aria-labelledby="rag-settings-behavior">
+                <CardHeader className="space-y-1.5 p-5 pb-4">
+                  <h3
+                    id="rag-settings-behavior"
+                    className="text-base font-semibold leading-snug tracking-tight text-foreground"
+                  >
+                    Behavior
+                  </h3>
+                  <CardDescription className="text-xs leading-relaxed text-muted-foreground">
+                    Debug output, streaming, and default answer layout.
+                  </CardDescription>
+                </CardHeader>
+                <Separator className="bg-border/60" />
+                <CardContent className="p-0">
+                  <SwitchRow
+                    id="debug-mode"
+                    label="Debug mode"
+                    hint="Show retrieved chunks and scores under answers."
+                    checked={debug}
+                    onCheckedChange={setDebug}
+                  />
+                  <Separator className="bg-border/60" />
+                  <SwitchRow
+                    id="stream-responses"
+                    label="Stream answers"
+                    hint="Stream tokens (SSE). Turn off for one-shot responses."
+                    checked={streamResponses}
+                    onCheckedChange={setStreamResponses}
+                  />
+                  <Separator className="bg-border/60" />
+                  <SwitchRow
+                    id="default-expanded"
+                    label="Default expanded answers"
+                    hint="Show full answer text by default instead of summary only."
+                    checked={defaultExpandedAnswers}
+                    onCheckedChange={setDefaultExpandedAnswers}
+                  />
+                </CardContent>
+              </section>
+            </Card>
           </div>
         </div>
 
-        <DialogFooter className="shrink-0 gap-2 border-t border-border/80 bg-muted/30 px-6 py-4 sm:justify-end">
+        <DialogFooter className="shrink-0 gap-2 border-t border-border/50 bg-background/95 px-5 py-4 backdrop-blur-sm sm:flex-row sm:justify-end">
           <DialogClose asChild>
-            <Button type="button" variant="default" className="w-full sm:w-auto sm:min-w-[7rem]">
+            <Button type="button" variant="outline" className="sm:w-auto">
+              Cancel
+            </Button>
+          </DialogClose>
+          <DialogClose asChild>
+            <Button type="button" variant="default" className="sm:w-auto">
               Done
             </Button>
           </DialogClose>
