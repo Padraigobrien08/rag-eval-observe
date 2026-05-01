@@ -1,6 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  async rewrites() {
+    return [{ source: '/favicon.ico', destination: '/RAGEvalIcon.png' }]
+  },
   webpack: (config, { isServer }) => {
     // Fix for pdfjs-dist in Next.js
     if (!isServer) {
