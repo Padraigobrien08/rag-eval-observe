@@ -96,6 +96,15 @@ OTEL_SERVICE_NAME=rag-eval-backend
 ### Metrics and streaming
 
 - `GET /api/v1/metrics` and `GET /api/v1/metrics/prometheus` expose per-route counters (including `/api/v1/query` and `/api/v1/query/stream`) and token totals. They are in-memory and reset on process restart.
+- Example Grafana dashboard JSON: `observability/grafana-rag-eval-prometheus.json` (import and point at your Prometheus datasource).
+
+### Logs (correlation)
+
+- Non-TTY environments use JSON logs. Each request emits `http_request` with `request_id`, `route`, `method`, `status_code`, and `latency_ms` — use `request_id` to tie logs to the `X-Request-ID` response header.
+
+### CI notifications (optional)
+
+- Repository secret **`SLACK_WEBHOOK_URL`**: if set, failed **Eval** and **Eval smoke** workflows POST a short message to Slack.
 
 ### Evaluation harness
 
@@ -111,6 +120,14 @@ Here's a complete example with all required variables filled in:
 ```env
 # REQUIRED - Database (Neon DB)
 DATABASE_URL=postgresql://neondb_owner:password@ep-xxx-xxx.us-east-2.aws.neon.tech/neondb?sslmode=require
+
+# Optional asyncpg pool (defaults: 5 / 20 / 60s)
+# DB_POOL_MIN_SIZE=5
+# DB_POOL_MAX_SIZE=20
+# DB_COMMAND_TIMEOUT=60
+
+# Optional: re-ingest replaces chunks for same (source, title) instead of versioned sources
+# INGEST_REPLACE_IF_EXISTS=false
 
 # REQUIRED - OpenAI (MARK AS SECURE)
 OPENAI_API_KEY=sk-proj-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx

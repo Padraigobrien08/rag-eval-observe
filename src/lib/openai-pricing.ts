@@ -31,8 +31,7 @@ export function estimateDashboardTokenCostUsd(tokenUsage: {
   chat_prompt_tokens?: number
   chat_completion_tokens?: number
 }): number {
-  const embeddingCost =
-    ((tokenUsage.embedding_total_tokens || 0) / 1000) * EMBEDDING_COST_PER_1K
+  const embeddingCost = ((tokenUsage.embedding_total_tokens || 0) / 1000) * EMBEDDING_COST_PER_1K
   const chatPromptCost =
     ((tokenUsage.chat_prompt_tokens || 0) / 1000) * CHAT_PROMPT_COST_PER_1K_MINI
   const chatCompletionCost =

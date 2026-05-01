@@ -399,7 +399,10 @@ export default function Sidebar({ collapsed = false, onToggleCollapse }: Sidebar
                   <div
                     style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', flex: 1 }}
                   >
-                    <Label htmlFor="stream-responses" className="text-sm font-medium text-slate-900">
+                    <Label
+                      htmlFor="stream-responses"
+                      className="text-sm font-medium text-slate-900"
+                    >
                       Stream answers
                     </Label>
                     <p className="text-xs text-slate-500">

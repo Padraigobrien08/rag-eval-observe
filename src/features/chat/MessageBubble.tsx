@@ -125,8 +125,7 @@ export default function MessageBubble({ message, previousMessage }: MessageBubbl
     )
   }
 
-  const streamingEmpty =
-    !isUser && Boolean(message.metadata?.streaming) && !message.content.trim()
+  const streamingEmpty = !isUser && Boolean(message.metadata?.streaming) && !message.content.trim()
 
   if (streamingEmpty) {
     return (

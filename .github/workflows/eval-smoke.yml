@@ -1,16 +1,13 @@
-# Manual RAG eval against Postgres + OpenAI. Requires repo secret OPENAI_API_KEY.
-name: Eval
+# Cheap eval run: small case count. Weekly + manual.
+name: Eval smoke
 
 on:
+  schedule:
+    - cron: '0 6 * * 1'
   workflow_dispatch:
-    inputs:
-      eval_max_cases:
-        description: "EVAL_MAX_CASES — set e.g. 5 for a cheap smoke run; leave empty for full dataset"
-        required: false
-        default: ""
 
 jobs:
-  eval:
+  eval-smoke:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -37,8 +34,8 @@ jobs:
       OPENAI_EMBEDDING_MODEL: text-embedding-3-small
       OPENAI_CHAT_MODEL: gpt-4o-mini
       EMBEDDING_DIMENSION: 1536
-      EVAL_USE_LLM_JUDGE: "false"
-      EVAL_MAX_CASES: ${{ inputs.eval_max_cases }}
+      EVAL_USE_LLM_JUDGE: 'false'
+      EVAL_MAX_CASES: '5'
 
     steps:
       - uses: actions/checkout@v4
@@ -46,7 +43,7 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v3
         with:
-          version: "latest"
+          version: latest
 
       - name: Set up Python
         run: uv python install 3.11
@@ -64,13 +61,13 @@ jobs:
       - name: Seed eval corpus
         run: uv run python scripts/seed_eval_corpus.py
 
-      - name: Run evaluation
+      - name: Run evaluation (subset)
         run: uv run python eval/run_eval.py
 
       - name: Upload report
         uses: actions/upload-artifact@v4
         with:
-          name: eval-report
+          name: eval-smoke-report
           path: backend/eval/report.md
 
       - name: Notify Slack on failure
@@ -80,6 +77,6 @@ jobs:
         run: |
           if [ -n "${SLACK_WEBHOOK_URL:-}" ]; then
             curl -fsS -X POST -H 'Content-type: application/json' \
-              --data '{"text":"RAG eval workflow failed — see GitHub Actions."}' \
+              --data '{"text":"RAG eval-smoke workflow failed — see GitHub Actions."}' \
               "$SLACK_WEBHOOK_URL"
           fi

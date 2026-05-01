@@ -48,7 +48,6 @@ function formatUptime(seconds: number): string {
   return `${secs}s`
 }
 
-
 export default function MetricsPage() {
   const router = useRouter()
   const [metrics, setMetrics] = useState<MetricsData | null>(null)

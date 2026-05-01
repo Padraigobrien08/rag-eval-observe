@@ -80,100 +80,104 @@ export function useChat() {
           },
         ])
 
-        await ragQueryStream(requestBody, {
-          onDelta: fragment => {
-            if (!streamDeltaStartedRef.current) {
-              streamDeltaStartedRef.current = true
-              setStreamPhase('generating')
-            }
-            setMessages(prev => {
-              const i = prev.findIndex(m => m.id === assistantId)
-              if (i === -1) return prev
-              const next = [...prev]
-              const cur = next[i]
-              if (cur.role !== 'assistant') return prev
-              next[i] = { ...cur, content: cur.content + fragment }
-              return next
-            })
+        await ragQueryStream(
+          requestBody,
+          {
+            onDelta: fragment => {
+              if (!streamDeltaStartedRef.current) {
+                streamDeltaStartedRef.current = true
+                setStreamPhase('generating')
+              }
+              setMessages(prev => {
+                const i = prev.findIndex(m => m.id === assistantId)
+                if (i === -1) return prev
+                const next = [...prev]
+                const cur = next[i]
+                if (cur.role !== 'assistant') return prev
+                next[i] = { ...cur, content: cur.content + fragment }
+                return next
+              })
+            },
+            onDone: data => {
+              const citations = mapCitations(data.citations)
+              const metadata: Record<string, unknown> = {
+                ...((data.metadata ?? data.telemetry ?? {}) as Record<string, unknown>),
+                streaming: false,
+              }
+              const retrievedCount = data.retrieved_chunk_count
+              if (typeof retrievedCount === 'number') {
+                metadata.retrieved_chunk_count = retrievedCount
+              }
+              const dbg = data.debug as { retrieved?: unknown } | undefined
+              if (dbg?.retrieved) {
+                metadata.debug = { retrieved: dbg.retrieved }
+              }
+              setMessages(prev => {
+                const i = prev.findIndex(m => m.id === assistantId)
+                if (i === -1) return prev
+                const next = [...prev]
+                const cur = next[i]
+                if (cur.role !== 'assistant') return prev
+                next[i] = {
+                  ...cur,
+                  content:
+                    (typeof data.answer === 'string' && data.answer) ||
+                    cur.content ||
+                    'No answer returned.',
+                  latencyMs: data.latency_ms as number | undefined,
+                  costUsd: estimateChatMessageCostUsd(
+                    data.token_usage as Record<string, number> | undefined
+                  ),
+                  ragModel: data.rag_model as string | undefined,
+                  citations: citations.length > 0 ? citations : undefined,
+                  metadata: { ...cur.metadata, ...metadata },
+                }
+                return next
+              })
+            },
+            onError: msg => {
+              setMessages(prev => {
+                const i = prev.findIndex(m => m.id === assistantId)
+                if (i === -1) return prev
+                const cur = prev[i]
+                if (cur.role !== 'assistant') return prev
+                if (!cur.content.trim()) {
+                  return prev.filter(m => m.id !== assistantId)
+                }
+                const next = [...prev]
+                next[i] = {
+                  ...cur,
+                  metadata: { ...cur.metadata, streaming: false },
+                }
+                return next
+              })
+              if (msg.toLowerCase().includes('rate limit')) {
+                setError('Rate limit exceeded. Please wait a moment and try again.')
+              } else {
+                setError(msg)
+              }
+            },
+            onAbort: () => {
+              setMessages(prev => {
+                const i = prev.findIndex(m => m.id === assistantId)
+                if (i === -1) return prev
+                const cur = prev[i]
+                if (cur.role !== 'assistant') return prev
+                if (!cur.content.trim()) {
+                  return prev.filter(m => m.id !== assistantId)
+                }
+                const next = [...prev]
+                next[i] = {
+                  ...cur,
+                  metadata: { ...cur.metadata, streaming: false },
+                }
+                return next
+              })
+              setError(null)
+            },
           },
-          onDone: data => {
-            const citations = mapCitations(data.citations)
-            const metadata: Record<string, unknown> = {
-              ...((data.metadata ?? data.telemetry ?? {}) as Record<string, unknown>),
-              streaming: false,
-            }
-            const retrievedCount = data.retrieved_chunk_count
-            if (typeof retrievedCount === 'number') {
-              metadata.retrieved_chunk_count = retrievedCount
-            }
-            const dbg = data.debug as { retrieved?: unknown } | undefined
-            if (dbg?.retrieved) {
-              metadata.debug = { retrieved: dbg.retrieved }
-            }
-            setMessages(prev => {
-              const i = prev.findIndex(m => m.id === assistantId)
-              if (i === -1) return prev
-              const next = [...prev]
-              const cur = next[i]
-              if (cur.role !== 'assistant') return prev
-              next[i] = {
-                ...cur,
-                content:
-                  (typeof data.answer === 'string' && data.answer) ||
-                  cur.content ||
-                  'No answer returned.',
-                latencyMs: data.latency_ms as number | undefined,
-                costUsd: estimateChatMessageCostUsd(
-                  data.token_usage as Record<string, number> | undefined
-                ),
-                ragModel: data.rag_model as string | undefined,
-                citations: citations.length > 0 ? citations : undefined,
-                metadata: { ...cur.metadata, ...metadata },
-              }
-              return next
-            })
-          },
-          onError: msg => {
-            setMessages(prev => {
-              const i = prev.findIndex(m => m.id === assistantId)
-              if (i === -1) return prev
-              const cur = prev[i]
-              if (cur.role !== 'assistant') return prev
-              if (!cur.content.trim()) {
-                return prev.filter(m => m.id !== assistantId)
-              }
-              const next = [...prev]
-              next[i] = {
-                ...cur,
-                metadata: { ...cur.metadata, streaming: false },
-              }
-              return next
-            })
-            if (msg.toLowerCase().includes('rate limit')) {
-              setError('Rate limit exceeded. Please wait a moment and try again.')
-            } else {
-              setError(msg)
-            }
-          },
-          onAbort: () => {
-            setMessages(prev => {
-              const i = prev.findIndex(m => m.id === assistantId)
-              if (i === -1) return prev
-              const cur = prev[i]
-              if (cur.role !== 'assistant') return prev
-              if (!cur.content.trim()) {
-                return prev.filter(m => m.id !== assistantId)
-              }
-              const next = [...prev]
-              next[i] = {
-                ...cur,
-                metadata: { ...cur.metadata, streaming: false },
-              }
-              return next
-            })
-            setError(null)
-          },
-        }, ac.signal)
+          ac.signal
+        )
         streamAbortRef.current = null
         setStreamPhase('idle')
       } else {

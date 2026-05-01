@@ -39,5 +39,26 @@ services:
       - ./backend:/app/backend
     command: uv run uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
+  # Next.js dev server (optional): docker compose --profile full up
+  web:
+    profiles: ["full"]
+    image: node:20-bookworm-slim
+    working_dir: /workspace
+    volumes:
+      - .:/workspace
+    ports:
+      - "3000:3000"
+    environment:
+      AZURE_API_BASE_URL: http://api:8000
+    command:
+      - bash
+      - -lc
+      - |
+        corepack enable && corepack prepare pnpm@9 --activate &&
+        cd /workspace && pnpm install && pnpm dev --hostname 0.0.0.0 --port 3000
+    depends_on:
+      api:
+        condition: service_started
+
 volumes:
   postgres_data:

@@ -12,6 +12,10 @@
 
 The live deployment includes sample documents about RAG, so you can test the functionality immediately by clicking one of the example queries.
 
+## Developer setup
+
+See **[DEVELOPMENT.md](./DEVELOPMENT.md)** for the full local workflow (Postgres, migrate, seed, API, web, tests, Playwright, Alembic).
+
 ## Overview
 
 RAG Eval Observability is a full-stack platform designed to help developers and researchers build, test, and deploy production-ready RAG systems. It combines a modern web interface with a robust backend API, providing everything needed to ingest documents, query knowledge bases, and monitor system performance.
@@ -103,6 +107,7 @@ Choose from multiple RAG models optimized for different scenarios:
 ### Technology Stack
 
 **Frontend:**
+
 - Next.js 14+ (App Router)
 - TypeScript
 - Tailwind CSS
@@ -110,12 +115,14 @@ Choose from multiple RAG models optimized for different scenarios:
 - React Markdown
 
 **Backend:**
+
 - FastAPI (Python 3.11+)
 - PostgreSQL with pgvector extension
 - OpenAI API (embeddings & chat completions)
 - Redis (optional, for distributed rate limiting)
 
 **Infrastructure:**
+
 - Docker & Docker Compose
 - Vercel (frontend deployment)
 - Azure Container Apps (backend deployment)
@@ -178,7 +185,6 @@ Choose from multiple RAG models optimized for different scenarios:
    ```
 
 6. **Access the application:**
-
    - Frontend: http://localhost:3000
    - API Docs: http://localhost:8000/docs
    - Health Check: http://localhost:8000/api/v1/health
@@ -237,12 +243,14 @@ See [ENV_VARS.md](./ENV_VARS.md) for complete environment variable documentation
 Documents can be uploaded via the web interface or API:
 
 **Web Interface:**
+
 1. Click the "+" button in the Documents sidebar
 2. Drag and drop files or click to browse
 3. Enter source and title (optional)
 4. Click "Ingest"
 
 **API:**
+
 ```bash
 curl -X POST http://localhost:8000/api/v1/ingest \
   -F "file=@document.pdf" \
@@ -253,11 +261,13 @@ curl -X POST http://localhost:8000/api/v1/ingest \
 ### Querying the RAG System
 
 **Web Interface:**
+
 - Type questions in the chat interface
 - Select RAG model in Settings
 - View citations and metadata for each response
 
 **API:**
+
 ```bash
 curl -X POST http://localhost:8000/api/v1/query \
   -H "Content-Type: application/json" \
@@ -269,6 +279,7 @@ curl -X POST http://localhost:8000/api/v1/query \
 ```
 
 **Available RAG Models:**
+
 - `vector-similarity` - Semantic search using cosine similarity
 - `hybrid-search` - Combines vector search with BM25
 - `reranking` - Uses reranking model for improved accuracy
@@ -283,6 +294,7 @@ make eval
 ```
 
 This runs the evaluation harness and generates a report with:
+
 - Retrieval metrics (Hit@K, MRR)
 - LLM-judge metrics (if enabled)
 - Failure examples and analysis
@@ -293,16 +305,16 @@ See [Evaluation Instructions](#evaluation-framework) for details.
 
 ### Core Endpoints
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/v1/health` | GET | Health check and database connectivity |
-| `/api/v1/query` | POST | Query the RAG system |
-| `/api/v1/ingest` | POST | Ingest documents (text or file) |
-| `/api/v1/documents` | GET | List all documents |
-| `/api/v1/documents/{id}` | DELETE | Delete a document |
-| `/api/v1/documents/{id}/chunks` | GET | Get document chunks |
-| `/api/v1/metrics` | GET | Get system metrics |
-| `/api/v1/extract-text` | POST | Extract text from files |
+| Endpoint                        | Method | Description                            |
+| ------------------------------- | ------ | -------------------------------------- |
+| `/api/v1/health`                | GET    | Health check and database connectivity |
+| `/api/v1/query`                 | POST   | Query the RAG system                   |
+| `/api/v1/ingest`                | POST   | Ingest documents (text or file)        |
+| `/api/v1/documents`             | GET    | List all documents                     |
+| `/api/v1/documents/{id}`        | DELETE | Delete a document                      |
+| `/api/v1/documents/{id}/chunks` | GET    | Get document chunks                    |
+| `/api/v1/metrics`               | GET    | Get system metrics                     |
+| `/api/v1/extract-text`          | POST   | Extract text from files                |
 
 See [backend/README.md](./backend/README.md) and [docs/API_CONTRACT.md](./docs/API_CONTRACT.md) for complete API documentation.
 
@@ -339,10 +351,12 @@ make eval
 ### Evaluation Metrics
 
 **Retrieval Metrics:**
+
 - **Hit@K**: Whether any expected source appears in top K retrieved results
 - **MRR (Mean Reciprocal Rank)**: Average reciprocal rank of first relevant result
 
 **LLM Judge Metrics** (optional):
+
 - **Correctness**: Does the answer correctly address the question?
 - **Faithfulness**: Is the answer grounded in context, not hallucinated?
 
@@ -396,6 +410,7 @@ rag-eval-observability/
 ### Makefile Commands
 
 **Frontend:**
+
 - `make dev` - Start development server
 - `make lint` - Run linting
 - `make test` - Run tests
@@ -403,16 +418,19 @@ rag-eval-observability/
 - `make format` - Format code
 
 **Backend:**
+
 - `make api-dev` - Start development server
 - `make api` - Start production server
 - `make api-test` - Run backend tests
 
 **Database:**
+
 - `make db` - Start PostgreSQL
 - `make migrate` - Run migrations
 - `make seed` - Seed sample data
 
 **Evaluation:**
+
 - `make eval` - Run evaluation harness
 
 ## Documentation

@@ -12,9 +12,10 @@ export function formatApiErrorDetail(detail: unknown): string {
     return detail
       .map(item => {
         if (item && typeof item === 'object' && 'msg' in item) {
-          const loc = 'loc' in item && Array.isArray((item as { loc: unknown }).loc)
-            ? `${(item as { loc: unknown[] }).loc.join('.')}: `
-            : ''
+          const loc =
+            'loc' in item && Array.isArray((item as { loc: unknown }).loc)
+              ? `${(item as { loc: unknown[] }).loc.join('.')}: `
+              : ''
           return `${loc}${String((item as { msg: unknown }).msg)}`
         }
         return JSON.stringify(item)
@@ -112,7 +113,9 @@ export async function ragQueryStream(
   }, RAG_STREAM_TIMEOUT_MS)
 
   const combined =
-    signal !== undefined ? combineAbortSignals(signal, timeoutController.signal) : timeoutController.signal
+    signal !== undefined
+      ? combineAbortSignals(signal, timeoutController.signal)
+      : timeoutController.signal
 
   let res: Response
   try {
