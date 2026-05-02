@@ -139,11 +139,11 @@ export default function DocumentPreviewDialog({
             : 'max-w-5xl w-[min(56rem,calc(100vw-1.5rem))]'
         )}
       >
-        <DialogHeader className="flex-shrink-0 space-y-3 border-b border-slate-200 px-6 pb-4 pt-6">
-          <DialogTitle className="pr-8">{document.title || document.source}</DialogTitle>
+        <DialogHeader className="flex-shrink-0 space-y-3 border-b border-slate-200 pl-6 pr-14 pb-4 pt-6">
+          <DialogTitle className="pr-2">{document.title || document.source}</DialogTitle>
           <DialogDescription asChild>
             <div className="flex flex-col gap-3 text-left">
-              <div className="flex w-full min-w-0 max-w-full flex-wrap gap-2 pr-1">
+              <div className="flex w-full min-w-0 max-w-full flex-wrap gap-2">
                 {originalAvailable ? (
                   <Button
                     type="button"

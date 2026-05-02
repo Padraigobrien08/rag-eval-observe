@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -19,15 +18,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
-import {
-  Plus,
-  FileText,
-  Loader2,
-  Trash2,
-  ChevronLeft,
-  ChevronRight,
-  MoreHorizontal,
-} from 'lucide-react'
+import { Plus, FileText, Loader2, ChevronLeft, ChevronRight, MoreHorizontal } from 'lucide-react'
 import { toast } from 'sonner'
 import IngestDialog from './IngestDialog'
 import DocumentPreviewDialog from './DocumentPreviewDialog'
@@ -139,11 +130,6 @@ export default function Sidebar({
     setDeleteDialogOpen(true)
   }
 
-  const handleDeleteClick = (doc: Document, e: React.MouseEvent) => {
-    e.stopPropagation()
-    openDocumentDeleteDialog(doc)
-  }
-
   const handleRenameSave = async () => {
     if (!renameThread) return
     const title = renameTitle.trim()
@@ -226,8 +212,8 @@ export default function Sidebar({
             <div className="h-8 w-8" />
           )}
         </div>
-        <ScrollArea className="flex-1 min-h-0">
-          <div className="space-y-6 pr-3 pb-1">
+        <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-y-contain [scrollbar-gutter:stable]">
+          <div className="space-y-6 pb-2 pr-2">
             {/* Documents */}
             <div>
               <div
@@ -272,67 +258,95 @@ export default function Sidebar({
                 )
               ) : (
                 <div className={`space-y-0.5 ${navCollapsed ? 'px-1' : 'px-4'}`}>
-                  {documents.map(doc => (
-                    <div
-                      key={doc.id}
-                      className={`min-w-0 rounded-md py-2 text-xs text-slate-700 transition-colors hover:bg-slate-50 group ${navCollapsed ? 'flex justify-center px-1' : 'grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-2 pl-2'}`}
-                      title={navCollapsed ? doc.title || doc.source : undefined}
-                    >
-                      {navCollapsed ? (
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
+                  {documents.map(doc => {
+                    const docLabel = doc.title || doc.source
+                    return (
+                      <div
+                        key={doc.id}
+                        className={`group flex min-w-0 items-center gap-1 rounded-md py-1.5 text-xs text-slate-700 transition-colors hover:bg-slate-50 ${navCollapsed ? 'justify-center px-1' : 'pl-2 pr-1'}`}
+                        title={navCollapsed ? docLabel : undefined}
+                      >
+                        {navCollapsed ? (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button
+                                type="button"
+                                className="flex h-9 w-9 items-center justify-center rounded-md text-slate-700 hover:bg-slate-100 hover:text-slate-900"
+                                aria-label={`Document menu: ${docLabel}`}
+                                title={docLabel}
+                              >
+                                <FileText className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="center" side="right" className="w-44">
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  handleDocumentClick(doc)
+                                }}
+                              >
+                                Preview
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                className="text-red-600 focus:bg-red-50 focus:text-red-600"
+                                onClick={() => openDocumentDeleteDialog(doc)}
+                              >
+                                Delete document…
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        ) : (
+                          <>
                             <button
                               type="button"
-                              className="flex h-9 w-9 items-center justify-center rounded-md text-slate-700 hover:bg-slate-100 hover:text-slate-900"
-                              aria-label={`Document menu: ${doc.title || doc.source}`}
-                              title={doc.title || doc.source}
+                              onClick={() => handleDocumentClick(doc)}
+                              className="min-w-0 flex-1 truncate px-1 py-1.5 text-left hover:text-slate-900"
+                              title={`View ${docLabel}`}
                             >
-                              <FileText className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+                              <span className="flex items-center gap-2">
+                                <FileText className="h-3.5 w-3.5 shrink-0 text-slate-400 group-hover:text-slate-600" />
+                                <span className="min-w-0 flex-1 truncate">{docLabel}</span>
+                              </span>
                             </button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="center" side="right" className="w-44">
-                            <DropdownMenuItem
-                              onClick={() => {
-                                handleDocumentClick(doc)
-                              }}
-                            >
-                              Preview
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              className="text-red-600 focus:bg-red-50 focus:text-red-600"
-                              onClick={() => openDocumentDeleteDialog(doc)}
-                            >
-                              Delete document…
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      ) : (
-                        <>
-                          <button
-                            type="button"
-                            onClick={() => handleDocumentClick(doc)}
-                            className="flex min-w-0 flex-1 items-center gap-2 truncate text-left hover:text-slate-900"
-                            title={`View ${doc.title || doc.source}`}
-                          >
-                            <FileText className="h-3.5 w-3.5 shrink-0 text-slate-400 group-hover:text-slate-600" />
-                            <span className="min-w-0 flex-1 truncate">
-                              {doc.title || doc.source}
-                            </span>
-                          </button>
-                          <button
-                            type="button"
-                            onClick={e => handleDeleteClick(doc, e)}
-                            className="shrink-0 rounded-md p-1.5 text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600"
-                            aria-label={`Delete ${doc.title || doc.source}`}
-                            title="Delete document"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  ))}
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 shrink-0 text-slate-500 hover:bg-slate-100 hover:text-slate-800"
+                                  aria-label={`More actions for ${docLabel}`}
+                                  onClick={e => e.stopPropagation()}
+                                >
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="w-44">
+                                <DropdownMenuItem
+                                  onClick={e => {
+                                    e.preventDefault()
+                                    handleDocumentClick(doc)
+                                  }}
+                                >
+                                  Preview
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  className="text-red-600 focus:bg-red-50 focus:text-red-600"
+                                  onClick={e => {
+                                    e.preventDefault()
+                                    openDocumentDeleteDialog(doc)
+                                  }}
+                                >
+                                  Delete document…
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </>
+                        )}
+                      </div>
+                    )
+                  })}
                 </div>
               )}
             </div>
@@ -437,7 +451,7 @@ export default function Sidebar({
               </div>
             )}
           </div>
-        </ScrollArea>
+        </div>
 
         <div
           className={`flex border-t border-slate-200 ${navCollapsed ? 'justify-center px-2' : 'px-2'} py-2`}
