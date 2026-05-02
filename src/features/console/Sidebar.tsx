@@ -464,14 +464,13 @@ export default function Sidebar({
                       tabIndex={0}
                       title="Arrow keys navigate threads; Enter opens"
                       onKeyDown={handleThreadsListKeyDown}
-                      className="space-y-1 rounded-md px-5 pb-3 outline-none focus-visible:ring-2 focus-visible:ring-slate-300/90 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+                      className="space-y-1 rounded-md px-5 pb-3 outline-none focus-visible:outline-none"
                     >
                       {chatThreads.map((thread, idx) => {
                         const label =
                           thread.title?.trim() ||
                           `Chat · ${thread.updated_at?.slice(0, 10) ?? thread.id.slice(0, 8)}`
                         const selected = activeChatThreadId === thread.id
-                        const kbHere = threadsFocusIdx === idx
                         return (
                           <div
                             key={thread.id}
@@ -486,7 +485,7 @@ export default function Sidebar({
                               selected
                                 ? 'border-l-blue-600 bg-slate-100'
                                 : 'border-l-transparent hover:bg-slate-50'
-                            } ${kbHere ? 'ring-2 ring-blue-500/20 ring-inset' : ''}`}
+                            }`}
                           >
                             <button
                               type="button"
