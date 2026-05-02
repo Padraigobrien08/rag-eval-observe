@@ -397,12 +397,12 @@ export default function ChatPanel({
 
         {/* Input bar - always visible at bottom */}
         <div
-          className="shrink-0 border-t border-slate-200 bg-white/80 backdrop-blur"
+          className="shrink-0 border-t border-slate-200/70 bg-slate-50"
           style={{ flexShrink: 0 }}
         >
           <div className="mx-auto w-full max-w-4xl px-[clamp(12px,3vw,28px)] py-[clamp(0.625rem,1.8vw,0.875rem)]">
             <form onSubmit={handleSubmit} className="w-full min-w-0">
-              <InputGroup className="rounded-2xl border-slate-300 bg-white shadow-sm">
+              <InputGroup className="h-auto min-h-0 rounded-none border-0 bg-transparent shadow-none ring-0 [&:has([data-slot=input-group-control]:focus-visible)]:ring-0">
                 <InputGroupTextarea
                   ref={textareaRef}
                   value={input}
@@ -410,19 +410,19 @@ export default function ChatPanel({
                   onKeyDown={handleKeyDown}
                   placeholder="Message RAG Eval..."
                   rows={1}
-                  className="max-h-40 min-h-[44px] text-sm text-slate-900 placeholder:text-slate-400"
+                  className="max-h-40 min-h-[44px] px-0 text-sm text-slate-900 placeholder:text-slate-400"
                   disabled={isLoading}
                 />
                 <InputGroupAddon
                   align="inline-end"
-                  className="items-end gap-1 border-0 bg-transparent py-2 pr-2"
+                  className="items-end gap-1.5 border-0 bg-transparent py-2 pl-2 pr-0"
                 >
                   {isLoading && streamResponses ? (
                     <InputGroupButton
                       type="button"
                       variant="outline"
                       size="icon-sm"
-                      className="shrink-0 rounded-full"
+                      className="shrink-0 rounded-full border-slate-200 bg-white text-slate-900 hover:bg-slate-50"
                       title="Stop generation"
                       onClick={() => stopStreaming()}
                     >
@@ -431,15 +431,15 @@ export default function ChatPanel({
                   ) : null}
                   <InputGroupButton
                     type="submit"
-                    variant="default"
+                    variant="outline"
                     size="icon-sm"
-                    className="shrink-0 rounded-full bg-blue-600 text-white hover:bg-blue-700"
+                    className="shrink-0 rounded-full border-slate-200 bg-white text-slate-900 hover:bg-slate-50 hover:text-slate-900 disabled:opacity-40"
                     disabled={isLoading || !input.trim()}
                   >
                     {isLoading ? (
-                      <Loader2 className="h-5 w-5 animate-spin" />
+                      <Loader2 className="h-5 w-5 animate-spin text-slate-900" />
                     ) : (
-                      <Send className="h-5 w-5" />
+                      <Send className="h-5 w-5 text-slate-900" />
                     )}
                   </InputGroupButton>
                 </InputGroupAddon>
