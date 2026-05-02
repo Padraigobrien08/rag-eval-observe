@@ -12,6 +12,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import { Plus, FileText, Loader2, Trash2, ChevronLeft, ChevronRight } from 'lucide-react'
+import { toast } from 'sonner'
 import IngestDialog from './IngestDialog'
 import DocumentPreviewDialog from './DocumentPreviewDialog'
 import RagSettingsDialog from './RagSettingsDialog'
@@ -22,6 +23,8 @@ interface Document {
   source: string
   title?: string
   created_at: string
+  /** True when ingest stored binary PDF bytes for inline preview */
+  original_available?: boolean
 }
 
 interface SidebarProps {
@@ -81,8 +84,7 @@ export default function Sidebar({ collapsed = false, onToggleCollapse }: Sidebar
       // Reload documents list
       await loadDocuments()
     } catch (error) {
-      // You could add a toast notification here
-      alert(
+      toast.error(
         `Failed to delete document: ${error instanceof Error ? error.message : 'Unknown error'}`
       )
     } finally {

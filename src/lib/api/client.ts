@@ -241,12 +241,49 @@ export async function ragQueryStream(
   }
 }
 
+export interface IngestPreprocessingSummary {
+  original_character_count: number
+  normalized_character_count: number
+  character_delta: number
+  steps_applied: string[]
+  warnings: string[]
+}
+
+export interface IngestChunkingSummary {
+  chunks_before_merge: number
+  chunks_created: number
+  undersized_chunk_merges: number
+  chunk_target_size: number
+  chunk_overlap: number
+  adaptive_chunking: boolean
+  config_chunk_size: number
+  config_chunk_overlap: number
+  estimated_target_chunks: number
+  min_chunk_characters_applied: number
+  merged_chunk_soft_cap_chars: number
+  chunk_length_min: number
+  chunk_length_max: number
+  chunk_length_mean: number
+  chunk_length_median: number
+}
+
+export interface IngestResponsePayload {
+  document_id: string
+  chunks_created: number
+  replaced_existing: boolean
+  preprocessing: IngestPreprocessingSummary
+  chunking: IngestChunkingSummary
+}
+
 export async function ingestDocument(body: {
   source: string
   title?: string
   text: string
   is_markdown?: boolean
-}) {
+  /** Optional PDF bytes as standard base64 (enables original preview in the UI). */
+  original_file_base64?: string
+  original_media_type?: 'application/pdf'
+}): Promise<IngestResponsePayload> {
   ensureBrowser()
   const res = await fetch(`${API_BASE_URL}/api/v1/ingest`, {
     method: 'POST',
@@ -259,7 +296,7 @@ export async function ingestDocument(body: {
     throw new Error(messageFromErrorResponse(text, res.status))
   }
 
-  return res.json()
+  return res.json() as Promise<IngestResponsePayload>
 }
 
 export async function listDocuments(limit = 100, offset = 0) {
@@ -302,16 +339,54 @@ export async function listDocuments(limit = 100, offset = 0) {
   }
 }
 
-export async function deleteDocument(documentId: string) {
+function encodeDocumentPathSegment(documentId: string): string {
+  return encodeURIComponent(documentId)
+}
+
+/** Single-document metadata from GET /documents/{id} (used for accurate PDF preview flag). */
+export interface DocumentDetailPayload {
+  id: string
+  source: string
+  title?: string | null
+  created_at?: string | null
+  original_available: boolean
+}
+
+export async function getDocument(documentId: string): Promise<DocumentDetailPayload> {
   ensureBrowser()
-  const res = await fetch(`${API_BASE_URL}/api/v1/documents/${documentId}`, {
-    method: 'DELETE',
+  const id = encodeDocumentPathSegment(documentId)
+  const res = await fetch(`${API_BASE_URL}/api/v1/documents/${id}`, {
+    method: 'GET',
     headers: { 'Content-Type': 'application/json' },
   })
 
   if (!res.ok) {
     const text = await res.text().catch(() => '')
-    throw new Error(text || `Delete document failed with status ${res.status}`)
+    throw new Error(messageFromErrorResponse(text, res.status))
+  }
+
+  const raw = (await res.json()) as Record<string, unknown>
+  const originalAvailableFlag = raw.original_available === true || raw.originalAvailable === true
+
+  return {
+    id: String(raw.id ?? ''),
+    source: String(raw.source ?? ''),
+    title: raw.title != null ? String(raw.title) : null,
+    created_at: raw.created_at != null ? String(raw.created_at) : null,
+    original_available: originalAvailableFlag,
+  }
+}
+
+export async function deleteDocument(documentId: string) {
+  ensureBrowser()
+  const id = encodeDocumentPathSegment(documentId)
+  const res = await fetch(`${API_BASE_URL}/api/v1/documents/${id}`, {
+    method: 'DELETE',
+  })
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => '')
+    throw new Error(messageFromErrorResponse(text, res.status))
   }
 
   return res.json()
@@ -334,7 +409,8 @@ export async function getMetrics() {
 
 export async function getDocumentChunks(documentId: string) {
   ensureBrowser()
-  const res = await fetch(`${API_BASE_URL}/api/v1/documents/${documentId}/chunks`, {
+  const id = encodeDocumentPathSegment(documentId)
+  const res = await fetch(`${API_BASE_URL}/api/v1/documents/${id}/chunks`, {
     method: 'GET',
     headers: { 'Content-Type': 'application/json' },
   })
@@ -345,6 +421,27 @@ export async function getDocumentChunks(documentId: string) {
   }
 
   return res.json()
+}
+
+/** Base64 payload without data URL prefix (for ingest original_file_base64). */
+export function fileToBase64(file: File): Promise<string> {
+  ensureBrowser()
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => {
+      const dataUrl = reader.result as string
+      const comma = dataUrl.indexOf(',')
+      resolve(comma >= 0 ? dataUrl.slice(comma + 1) : dataUrl)
+    }
+    reader.onerror = () => reject(reader.error ?? new Error('Failed to read file'))
+    reader.readAsDataURL(file)
+  })
+}
+
+/** Proxied URL for inline PDF preview (`<iframe src={...} />`). */
+export function documentOriginalUrl(documentId: string): string {
+  const id = encodeURIComponent(documentId)
+  return `${API_BASE_URL}/api/v1/documents/${id}/original`
 }
 
 export async function extractTextFromFile(file: File): Promise<string> {

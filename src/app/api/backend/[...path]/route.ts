@@ -66,16 +66,22 @@ async function proxyRequest(request: NextRequest, pathSegments: string[]) {
       headers['x-api-key'] = backendApiKey
     }
 
-    // Only set content-type if it's not FormData
+    const bodyEmpty =
+      body === undefined || body === '' || (typeof body === 'string' && body.trim() === '')
+    const omitDeletePayload = method === 'DELETE' && bodyEmpty
+
+    // Only set content-type if it's not FormData; omit JSON CT on DELETE with no body (cleaner upstream).
     if (!contentType.includes('multipart/form-data')) {
-      headers['content-type'] = contentType || 'application/json'
+      if (!omitDeletePayload) {
+        headers['content-type'] = contentType || 'application/json'
+      }
     }
 
     // Make request to backend
     const upstream = await fetch(fullUrl, {
       method,
       headers,
-      body: method === 'GET' || method === 'HEAD' ? undefined : body,
+      body: method === 'GET' || method === 'HEAD' || omitDeletePayload ? undefined : body,
     })
 
     const responseContentType = upstream.headers.get('content-type') ?? ''
@@ -91,6 +97,17 @@ async function proxyRequest(request: NextRequest, pathSegments: string[]) {
         status: upstream.status,
         headers: outHeaders,
       })
+    }
+
+    // Binary bodies (PDF etc.) must not go through `.text()` or the stream is corrupted.
+    const lcCt = responseContentType.toLowerCase()
+    if (lcCt.includes('application/pdf')) {
+      const buf = await upstream.arrayBuffer()
+      const response = new NextResponse(buf, { status: upstream.status })
+      response.headers.set('content-type', responseContentType)
+      const cd = upstream.headers.get('content-disposition')
+      if (cd) response.headers.set('content-disposition', cd)
+      return response
     }
 
     const text = await upstream.text()
