@@ -108,6 +108,16 @@ async def delete_chat_thread(thread_id: str) -> bool:
         return row is not None
 
 
+async def delete_all_chat_threads() -> int:
+    """Delete every thread; messages cascade. Returns number of threads removed."""
+    pool = await get_db_pool()
+    async with pool.acquire() as conn:
+        n = await conn.fetchval(
+            "WITH d AS (DELETE FROM chat_threads RETURNING 1) SELECT COUNT(*)::int FROM d"
+        )
+    return int(n or 0)
+
+
 async def append_chat_message(
     thread_id: str,
     *,

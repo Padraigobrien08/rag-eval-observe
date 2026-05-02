@@ -45,7 +45,7 @@ interface SidebarProps {
   collapsed?: boolean
   onToggleCollapse?: () => void
   activeChatThreadId?: string | null
-  onSelectChatThread?: (threadId: string) => void
+  onSelectChatThread?: (threadId: string | null) => void
   onNewChat?: () => void
   chatThreadsRefreshToken?: number
   onChatThreadDeleted?: (threadId: string) => void
@@ -567,7 +567,13 @@ export default function Sidebar({
         <div
           className={`flex border-t border-slate-100 py-2 ${navCollapsed ? 'justify-center px-2' : 'justify-start px-5'}`}
         >
-          <RagSettingsDialog collapsed={navCollapsed} />
+          <RagSettingsDialog
+            collapsed={navCollapsed}
+            onAllChatsDeleted={() => {
+              onSelectChatThread?.(null)
+              onThreadsRefreshRequest?.()
+            }}
+          />
         </div>
       </aside>
 

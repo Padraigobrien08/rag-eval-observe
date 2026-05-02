@@ -525,6 +525,18 @@ export async function deleteChatThread(threadId: string): Promise<void> {
   }
 }
 
+export async function deleteAllChatThreads(): Promise<{ deleted_count: number }> {
+  ensureBrowser()
+  const res = await fetch(`${API_BASE_URL}/api/v1/chat/threads`, {
+    method: 'DELETE',
+  })
+  if (!res.ok) {
+    const text = await res.text().catch(() => '')
+    throw new Error(messageFromErrorResponse(text, res.status))
+  }
+  return res.json() as Promise<{ deleted_count: number }>
+}
+
 export async function getMetrics() {
   ensureBrowser()
   const res = await fetch(`${API_BASE_URL}/api/v1/metrics`, {

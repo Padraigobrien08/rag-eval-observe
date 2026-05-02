@@ -14,6 +14,7 @@ from app.db.analytics_queries import list_chat_query_links
 from app.db.chat_queries import (
     append_chat_message,
     create_chat_thread,
+    delete_all_chat_threads,
     delete_chat_thread,
     get_chat_thread,
     list_chat_messages,
@@ -526,6 +527,16 @@ async def list_chat_threads_endpoint(limit: int = Query(50, ge=1, le=200)):
             )
             for r in rows
         ]
+    )
+
+
+@router.delete("/chat/threads")
+async def delete_all_chat_threads_endpoint():
+    """Delete all chat threads and their messages."""
+    n = await delete_all_chat_threads()
+    return JSONResponse(
+        status_code=200,
+        content={"message": "All chat threads deleted", "deleted_count": n},
     )
 
 

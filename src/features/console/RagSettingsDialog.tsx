@@ -1,6 +1,8 @@
 'use client'
 
+import { useState } from 'react'
 import { Settings } from 'lucide-react'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -23,6 +25,7 @@ import {
 } from '@/components/ui/select'
 import { useRagSettings, type RagModel } from '@/features/settings/useRagSettings'
 import { useLocalStorage } from '@/features/settings/useLocalStorage'
+import { deleteAllChatThreads } from '@/lib/api/client'
 import { cn } from '@/lib/utils'
 
 const RAG_MODEL_OPTIONS: { value: RagModel; label: string }[] = [
@@ -34,9 +37,14 @@ const RAG_MODEL_OPTIONS: { value: RagModel; label: string }[] = [
 
 interface RagSettingsDialogProps {
   collapsed?: boolean
+  /** Called after all threads are removed from the server (refresh sidebar / clear active thread). */
+  onAllChatsDeleted?: () => void
 }
 
-export default function RagSettingsDialog({ collapsed = false }: RagSettingsDialogProps) {
+export default function RagSettingsDialog({
+  collapsed = false,
+  onAllChatsDeleted,
+}: RagSettingsDialogProps) {
   const {
     topK,
     debug,
@@ -52,6 +60,22 @@ export default function RagSettingsDialog({ collapsed = false }: RagSettingsDial
     false
   )
   const currentTopK = topK ?? 8
+  const [confirmDeleteAllChats, setConfirmDeleteAllChats] = useState(false)
+  const [deletingAllChats, setDeletingAllChats] = useState(false)
+
+  const handleDeleteAllChats = async () => {
+    setDeletingAllChats(true)
+    try {
+      const { deleted_count: n } = await deleteAllChatThreads()
+      toast.success(n > 0 ? `Deleted ${n} chat${n === 1 ? '' : 's'}` : 'No chats to delete')
+      onAllChatsDeleted?.()
+      setConfirmDeleteAllChats(false)
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to delete chats')
+    } finally {
+      setDeletingAllChats(false)
+    }
+  }
 
   return (
     <Dialog>
@@ -261,6 +285,59 @@ export default function RagSettingsDialog({ collapsed = false }: RagSettingsDial
                 </div>
               </div>
             </div>
+
+            {onAllChatsDeleted ? (
+              <div className="space-y-4" aria-labelledby="rag-settings-data-heading">
+                <h2
+                  id="rag-settings-data-heading"
+                  className="text-xs font-medium uppercase tracking-wide text-muted-foreground"
+                >
+                  Chat history
+                </h2>
+                <article className="rounded-xl border border-destructive/20 bg-card shadow-sm">
+                  <div className="p-5">
+                    <p className="text-sm font-medium text-foreground">Delete all chats</p>
+                    <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                      Permanently remove every thread and message. This cannot be undone.
+                    </p>
+                    {confirmDeleteAllChats ? (
+                      <div className="mt-4 flex flex-wrap items-center justify-end gap-2 border-t border-destructive/10 pt-4">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="h-9"
+                          disabled={deletingAllChats}
+                          onClick={() => setConfirmDeleteAllChats(false)}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="sm"
+                          className="h-9"
+                          disabled={deletingAllChats}
+                          onClick={() => void handleDeleteAllChats()}
+                        >
+                          {deletingAllChats ? 'Deleting…' : 'Delete all chats'}
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="mt-4 h-9 border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                        onClick={() => setConfirmDeleteAllChats(true)}
+                      >
+                        Delete all chats…
+                      </Button>
+                    )}
+                  </div>
+                </article>
+              </div>
+            ) : null}
           </div>
         </div>
 

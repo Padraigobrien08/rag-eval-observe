@@ -219,3 +219,27 @@ async def test_assistant_message_sets_empty_thread_title():
             row = next(t for t in threads if t["id"] == tid)
             assert row["title"]
             assert "First assistant" in row["title"]
+
+
+@pytest.mark.asyncio
+async def test_delete_all_chat_threads():
+    async with app.router.lifespan_context(app):
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            await client.post("/api/v1/chat/threads", json={"title": "a"})
+            await client.post("/api/v1/chat/threads", json={"title": "b"})
+            before = await client.get("/api/v1/chat/threads")
+            assert len(before.json()["threads"]) >= 2
+
+            r = await client.delete("/api/v1/chat/threads")
+            assert r.status_code == 200
+            body = r.json()
+            assert body["deleted_count"] >= 2
+            assert "message" in body
+
+            after = await client.get("/api/v1/chat/threads")
+            assert after.json()["threads"] == []
+
+            empty = await client.delete("/api/v1/chat/threads")
+            assert empty.status_code == 200
+            assert empty.json()["deleted_count"] == 0
