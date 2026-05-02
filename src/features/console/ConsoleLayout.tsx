@@ -41,7 +41,7 @@ export default function ConsoleLayout() {
 
   const mdGridCols = sidebarCollapsed
     ? 'md:grid-cols-[64px_minmax(0,1fr)]'
-    : 'md:grid-cols-[minmax(240px,280px)_minmax(0,1fr)]'
+    : 'md:grid-cols-[minmax(220px,260px)_minmax(0,1fr)]'
 
   return (
     <div
@@ -55,7 +55,7 @@ export default function ConsoleLayout() {
       <div
         className={cn(
           'min-h-0 bg-white',
-          'z-50 max-md:fixed max-md:inset-y-0 max-md:left-0 max-md:w-[min(280px,92vw)] max-md:shadow-lg',
+          'z-50 max-md:fixed max-md:inset-y-0 max-md:left-0 max-md:w-[min(260px,92vw)] max-md:shadow-lg',
           'max-md:transition-transform max-md:duration-200 max-md:ease-out',
           sidebarOpen ? 'max-md:translate-x-0' : 'max-md:-translate-x-full',
           'md:relative md:z-0 md:flex md:h-full md:w-full md:translate-x-0 md:shadow-none'

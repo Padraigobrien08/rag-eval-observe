@@ -171,61 +171,30 @@ export default function ChatPanel({
         style={{ flex: '1 1 0%', minHeight: 0, height: '100%' }}
       >
         {/* Content area - scrollable */}
-        <div
-          className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden"
-          style={{
-            paddingTop: 'clamp(1rem, 2vw, 2rem)',
-            paddingBottom: 'clamp(1rem, 2vw, 2rem)',
-          }}
-        >
+        <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden py-[clamp(0.75rem,1.8vw,1.5rem)]">
           {messages.length === 0 ? (
             /* Home screen when no messages */
-            <div
-              className="mx-auto w-full"
-              style={{
-                maxWidth: '1100px',
-                paddingLeft: 'clamp(12px, 3vw, 32px)',
-                paddingRight: 'clamp(12px, 3vw, 32px)',
-                paddingTop: 'clamp(1rem, 3vw, 2rem)',
-                paddingBottom: 'clamp(0.5rem, 2vw, 1rem)',
-              }}
-            >
+            <div className="mx-auto w-full max-w-4xl px-[clamp(12px,3vw,28px)] pb-[clamp(0.5rem,1.5vw,0.875rem)] pt-[clamp(0.75rem,2vw,1.25rem)]">
               {/* Title + subtitle */}
-              <div className="text-center" style={{ marginBottom: 'clamp(1rem, 3vw, 1.5rem)' }}>
-                <h2
-                  className="font-semibold text-slate-900"
-                  style={{
-                    fontSize: 'clamp(18px, 2vw, 24px)',
-                    lineHeight: '1.2',
-                    marginBottom: 'clamp(0.5rem, 1.5vw, 0.75rem)',
-                  }}
-                >
+              <div className="mb-[clamp(0.75rem,2vw,1.125rem)] text-center">
+                <h2 className="mb-[clamp(0.375rem,1.2vw,0.625rem)] text-balance font-semibold leading-tight text-slate-900 text-[clamp(17px,1.85vw,22px)]">
                   What can I help with?
                 </h2>
-                <p className="text-xs text-slate-600">
+                <p className="text-xs leading-snug text-slate-600">
                   Ask questions about your ingested documents.
                 </p>
               </div>
 
               {/* Centered pill buttons */}
-              <div
-                className="flex flex-col items-center"
-                style={{ gap: 'clamp(1rem, 2vw, 1.5rem)' }}
-              >
+              <div className="flex flex-col items-center gap-[clamp(0.75rem,1.6vw,1.125rem)]">
                 {/* Info text */}
-                <p
-                  className="text-center text-xs text-slate-600"
-                  style={{ marginBottom: 'clamp(0.75rem, 1.5vw, 1rem)' }}
-                >
+                <p className="mb-[clamp(0.5rem,1.2vw,0.75rem)] max-w-prose text-center text-xs leading-relaxed text-slate-600">
                   We have added some documents about RAG, so you can see functionality by just
                   clicking one of the example queries
                 </p>
 
                 {/* Example Queries Section */}
-                <div
-                  className="flex flex-col items-center"
-                  style={{ gap: 'clamp(0.75rem, 1.5vw, 1rem)' }}
-                >
+                <div className="flex w-full max-w-3xl flex-col items-center gap-[clamp(0.625rem,1.4vw,0.875rem)]">
                   <div className="flex items-center gap-2 text-slate-900">
                     <SunMedium className="h-4 w-4" />
                     <span
@@ -238,21 +207,13 @@ export default function ChatPanel({
                       Example Queries
                     </span>
                   </div>
-                  <div
-                    className="flex flex-col"
-                    style={{
-                      maxWidth: '900px',
-                      margin: '0 auto',
-                      width: '100%',
-                      gap: 'clamp(0.75rem, 1.5vw, 1rem)',
-                    }}
-                  >
+                  <div className="flex w-full flex-col gap-[clamp(0.625rem,1.4vw,0.875rem)]">
                     {/* Top row - 3 pills */}
-                    <div className="flex justify-center gap-3 flex-wrap">
+                    <div className="flex flex-wrap justify-center gap-2 sm:gap-3">
                       <Button
                         type="button"
                         variant="outline"
-                        className="rounded-full px-4 py-2 h-auto text-xs font-normal hover:bg-slate-50 whitespace-normal flex-1 min-w-0 max-w-[calc(33.333%-0.5rem)]"
+                        className="h-auto min-h-[44px] min-w-0 max-w-full flex-1 basis-[min(100%,17rem)] rounded-full px-4 py-2 text-xs font-normal whitespace-normal hover:bg-slate-50 sm:max-w-[calc(33.333%-0.5rem)]"
                         onClick={() =>
                           handleExampleClick('Explain vector similarity search in simple terms')
                         }
@@ -263,7 +224,7 @@ export default function ChatPanel({
                       <Button
                         type="button"
                         variant="outline"
-                        className="rounded-full px-4 py-2 h-auto text-xs font-normal hover:bg-slate-50 whitespace-normal flex-1 min-w-0 max-w-[calc(33.333%-0.5rem)]"
+                        className="h-auto min-h-[44px] min-w-0 max-w-full flex-1 basis-[min(100%,17rem)] rounded-full px-4 py-2 text-xs font-normal whitespace-normal hover:bg-slate-50 sm:max-w-[calc(33.333%-0.5rem)]"
                         onClick={() =>
                           handleExampleClick('Summarize the main topics in my knowledge base')
                         }
@@ -274,7 +235,7 @@ export default function ChatPanel({
                       <Button
                         type="button"
                         variant="outline"
-                        className="rounded-full px-4 py-2 h-auto text-xs font-normal hover:bg-slate-50 whitespace-normal flex-1 min-w-0 max-w-[calc(33.333%-0.5rem)]"
+                        className="h-auto min-h-[44px] min-w-0 max-w-full flex-1 basis-[min(100%,17rem)] rounded-full px-4 py-2 text-xs font-normal whitespace-normal hover:bg-slate-50 sm:max-w-[calc(33.333%-0.5rem)]"
                         onClick={() => handleExampleClick('What documents have been ingested?')}
                         disabled={isLoading}
                       >
@@ -282,11 +243,11 @@ export default function ChatPanel({
                       </Button>
                     </div>
                     {/* Bottom row - 3 pills */}
-                    <div className="flex justify-center gap-3 flex-wrap">
+                    <div className="flex flex-wrap justify-center gap-2 sm:gap-3">
                       <Button
                         type="button"
                         variant="outline"
-                        className="rounded-full px-4 py-2 h-auto text-xs font-normal hover:bg-slate-50 whitespace-normal flex-1 min-w-0 max-w-[calc(33.333%-0.5rem)]"
+                        className="h-auto min-h-[44px] min-w-0 max-w-full flex-1 basis-[min(100%,17rem)] rounded-full px-4 py-2 text-xs font-normal whitespace-normal hover:bg-slate-50 sm:max-w-[calc(33.333%-0.5rem)]"
                         onClick={() =>
                           handleExampleClick('How does RAG improve language model responses?')
                         }
@@ -297,7 +258,7 @@ export default function ChatPanel({
                       <Button
                         type="button"
                         variant="outline"
-                        className="rounded-full px-4 py-2 h-auto text-xs font-normal hover:bg-slate-50 whitespace-normal flex-1 min-w-0 max-w-[calc(33.333%-0.5rem)]"
+                        className="h-auto min-h-[44px] min-w-0 max-w-full flex-1 basis-[min(100%,17rem)] rounded-full px-4 py-2 text-xs font-normal whitespace-normal hover:bg-slate-50 sm:max-w-[calc(33.333%-0.5rem)]"
                         onClick={() =>
                           handleExampleClick('What are the key components of a RAG system?')
                         }
@@ -308,7 +269,7 @@ export default function ChatPanel({
                       <Button
                         type="button"
                         variant="outline"
-                        className="rounded-full px-4 py-2 h-auto text-xs font-normal hover:bg-slate-50 whitespace-normal flex-1 min-w-0 max-w-[calc(33.333%-0.5rem)]"
+                        className="h-auto min-h-[44px] min-w-0 max-w-full flex-1 basis-[min(100%,17rem)] rounded-full px-4 py-2 text-xs font-normal whitespace-normal hover:bg-slate-50 sm:max-w-[calc(33.333%-0.5rem)]"
                         onClick={() =>
                           handleExampleClick('Compare keyword search vs semantic search')
                         }
@@ -321,10 +282,7 @@ export default function ChatPanel({
                 </div>
 
                 {/* Capabilities Section */}
-                <div
-                  className="flex flex-col items-center"
-                  style={{ gap: 'clamp(0.75rem, 1.5vw, 1rem)' }}
-                >
+                <div className="flex w-full max-w-3xl flex-col items-center gap-[clamp(0.625rem,1.4vw,0.875rem)]">
                   <div className="flex items-center gap-2 text-slate-900">
                     <Zap className="h-4 w-4" />
                     <span
@@ -337,14 +295,11 @@ export default function ChatPanel({
                       Capabilities
                     </span>
                   </div>
-                  <div
-                    className="flex flex-wrap justify-center gap-3"
-                    style={{ maxWidth: '900px', margin: '0 auto' }}
-                  >
+                  <div className="flex flex-wrap justify-center gap-2 sm:gap-3">
                     <Button
                       type="button"
                       variant="outline"
-                      className="rounded-full px-4 py-2 h-auto text-xs font-normal hover:bg-slate-50 whitespace-normal max-w-full"
+                      className="h-auto max-w-md rounded-full px-4 py-2 text-xs font-normal whitespace-normal hover:bg-slate-50"
                       disabled
                     >
                       Query your ingested documents using natural language
@@ -352,7 +307,7 @@ export default function ChatPanel({
                     <Button
                       type="button"
                       variant="outline"
-                      className="rounded-full px-4 py-2 h-auto text-xs font-normal hover:bg-slate-50 whitespace-normal max-w-full"
+                      className="h-auto max-w-md rounded-full px-4 py-2 text-xs font-normal whitespace-normal hover:bg-slate-50"
                       disabled
                     >
                       Retrieve relevant context using semantic search
@@ -360,7 +315,7 @@ export default function ChatPanel({
                     <Button
                       type="button"
                       variant="outline"
-                      className="rounded-full px-4 py-2 h-auto text-xs font-normal hover:bg-slate-50 whitespace-normal max-w-full"
+                      className="h-auto max-w-md rounded-full px-4 py-2 text-xs font-normal whitespace-normal hover:bg-slate-50"
                       disabled
                     >
                       Generate answers augmented with retrieved knowledge
@@ -368,7 +323,7 @@ export default function ChatPanel({
                     <Button
                       type="button"
                       variant="outline"
-                      className="rounded-full px-4 py-2 h-auto text-xs font-normal hover:bg-slate-50 whitespace-normal max-w-full"
+                      className="h-auto max-w-md rounded-full px-4 py-2 text-xs font-normal whitespace-normal hover:bg-slate-50"
                       disabled
                     >
                       View citations and metadata for transparency
@@ -377,10 +332,7 @@ export default function ChatPanel({
                 </div>
 
                 {/* Limitations Section */}
-                <div
-                  className="flex flex-col items-center"
-                  style={{ gap: 'clamp(0.75rem, 1.5vw, 1rem)' }}
-                >
+                <div className="flex w-full max-w-3xl flex-col items-center gap-[clamp(0.625rem,1.4vw,0.875rem)]">
                   <div className="flex items-center gap-2 text-slate-900">
                     <AlertTriangle className="h-4 w-4" />
                     <span
@@ -393,14 +345,11 @@ export default function ChatPanel({
                       Limitations
                     </span>
                   </div>
-                  <div
-                    className="flex flex-wrap justify-center gap-3"
-                    style={{ maxWidth: '900px', margin: '0 auto' }}
-                  >
+                  <div className="flex flex-wrap justify-center gap-2 sm:gap-3">
                     <Button
                       type="button"
                       variant="outline"
-                      className="rounded-full px-4 py-2 h-auto text-xs font-normal hover:bg-slate-50 whitespace-normal max-w-full"
+                      className="h-auto max-w-md rounded-full px-4 py-2 text-xs font-normal whitespace-normal hover:bg-slate-50"
                       disabled
                     >
                       May occasionally generate incorrect information
@@ -408,7 +357,7 @@ export default function ChatPanel({
                     <Button
                       type="button"
                       variant="outline"
-                      className="rounded-full px-4 py-2 h-auto text-xs font-normal hover:bg-slate-50 whitespace-normal max-w-full"
+                      className="h-auto max-w-md rounded-full px-4 py-2 text-xs font-normal whitespace-normal hover:bg-slate-50"
                       disabled
                     >
                       Quality depends on ingested document accuracy
@@ -416,7 +365,7 @@ export default function ChatPanel({
                     <Button
                       type="button"
                       variant="outline"
-                      className="rounded-full px-4 py-2 h-auto text-xs font-normal hover:bg-slate-50 whitespace-normal max-w-full"
+                      className="h-auto max-w-md rounded-full px-4 py-2 text-xs font-normal whitespace-normal hover:bg-slate-50"
                       disabled
                     >
                       Retrieval accuracy depends on embedding quality
@@ -424,7 +373,7 @@ export default function ChatPanel({
                     <Button
                       type="button"
                       variant="outline"
-                      className="rounded-full px-4 py-2 h-auto text-xs font-normal hover:bg-slate-50 whitespace-normal max-w-full"
+                      className="h-auto max-w-md rounded-full px-4 py-2 text-xs font-normal whitespace-normal hover:bg-slate-50"
                       disabled
                     >
                       Costs may vary based on query complexity
@@ -451,16 +400,7 @@ export default function ChatPanel({
           className="shrink-0 border-t border-slate-200 bg-white/80 backdrop-blur"
           style={{ flexShrink: 0 }}
         >
-          <div
-            className="mx-auto w-full"
-            style={{
-              maxWidth: '1100px',
-              paddingLeft: 'clamp(12px, 3vw, 32px)',
-              paddingRight: 'clamp(12px, 3vw, 32px)',
-              paddingTop: 'clamp(0.75rem, 2vw, 1rem)',
-              paddingBottom: 'clamp(0.75rem, 2vw, 1rem)',
-            }}
-          >
+          <div className="mx-auto w-full max-w-4xl px-[clamp(12px,3vw,28px)] py-[clamp(0.625rem,1.8vw,0.875rem)]">
             <form onSubmit={handleSubmit} className="w-full min-w-0">
               <InputGroup className="rounded-2xl border-slate-300 bg-white shadow-sm">
                 <InputGroupTextarea
