@@ -4,6 +4,9 @@ import type { Metadata, Viewport } from 'next'
 import { Analytics } from '@vercel/analytics/react'
 import { Toaster } from '@/components/ui/sonner'
 
+/** Only load Vercel Web Analytics when deployed on Vercel (avoids localhost 404 + console noise). */
+const enableVercelAnalytics = process.env.VERCEL === '1'
+
 export const metadata: Metadata = {
   title: 'RAG Eval',
   description: 'RAG evaluation console',
@@ -24,7 +27,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="h-full bg-slate-50 text-gray-900">
         {children}
         <Toaster richColors closeButton position="top-center" />
-        <Analytics />
+        {enableVercelAnalytics ? <Analytics /> : null}
       </body>
     </html>
   )

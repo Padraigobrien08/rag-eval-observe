@@ -29,6 +29,12 @@ interface ChunkContent {
   metadata?: Record<string, unknown>
 }
 
+/** Stable DOM id per message + index so multiple bubbles do not collide. */
+function citationCardElementId(messageId: string, index: number): string {
+  const safe = messageId.replace(/[^a-zA-Z0-9_-]/g, '-')
+  return `rag-citation-${safe}-${index}`
+}
+
 export default function CitationsDrawer({
   open,
   onOpenChange,
@@ -51,10 +57,16 @@ export default function CitationsDrawer({
   useEffect(() => {
     if (!open || citations.length === 0) return
 
+    let cancelled = false
+    setChunkContents({})
+    setError(null)
+
     const fetchChunkContents = async () => {
       const documentIds = [...new Set(citations.map(c => c.document_id))]
 
       for (const documentId of documentIds) {
+        if (cancelled) return
+
         const documentCitations = citations.filter(c => c.document_id === documentId)
 
         setLoadingChunks(prev => {
@@ -65,6 +77,7 @@ export default function CitationsDrawer({
 
         try {
           const chunks = await getDocumentChunks(documentId)
+          if (cancelled) return
           const chunksMap: Record<string, ChunkContent> = {}
           chunks.forEach((chunk: ChunkContent) => {
             chunksMap[chunk.id] = chunk
@@ -74,21 +87,26 @@ export default function CitationsDrawer({
             ...chunksMap,
           }))
         } catch (err: unknown) {
+          if (cancelled) return
           console.error(`Failed to fetch chunks for document ${documentId}:`, err)
           setError(err instanceof Error ? err.message : 'Failed to load chunk content')
         } finally {
-          setLoadingChunks(prev => {
-            const next = new Set(prev)
-            documentCitations.forEach(c => next.delete(c.chunk_id))
-            return next
-          })
+          if (!cancelled) {
+            setLoadingChunks(prev => {
+              const next = new Set(prev)
+              documentCitations.forEach(c => next.delete(c.chunk_id))
+              return next
+            })
+          }
         }
       }
     }
 
     void fetchChunkContents()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, messageId])
+    return () => {
+      cancelled = true
+    }
+  }, [open, messageId, citations])
 
   useEffect(() => {
     if (!open) return
@@ -102,6 +120,30 @@ export default function CitationsDrawer({
     window.addEventListener('keydown', handleEscape)
     return () => window.removeEventListener('keydown', handleEscape)
   }, [open, onOpenChange])
+
+  const highlightChunkId =
+    highlightedIndex != null && highlightedIndex >= 0 && highlightedIndex < citations.length
+      ? citations[highlightedIndex]?.chunk_id
+      : undefined
+
+  const highlightFetchDone =
+    highlightChunkId !== undefined &&
+    highlightChunkId !== '' &&
+    !loadingChunks.has(highlightChunkId)
+
+  useEffect(() => {
+    if (!open || highlightedIndex == null || !highlightFetchDone) return
+
+    const id = citationCardElementId(messageId, highlightedIndex)
+    const el = document.getElementById(id)
+    if (!el) return
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      })
+    })
+  }, [open, highlightedIndex, highlightFetchDone, messageId])
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -123,7 +165,7 @@ export default function CitationsDrawer({
 
                 return (
                   <Card
-                    id={`citation-${idx}`}
+                    id={citationCardElementId(messageId, idx)}
                     key={`${citation.chunk_id}-${idx}`}
                     className={cn(
                       'transition-all duration-300',

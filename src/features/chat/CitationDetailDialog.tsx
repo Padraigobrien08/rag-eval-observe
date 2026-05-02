@@ -52,15 +52,20 @@ export default function CitationDetailDialog({
   }, [open])
 
   useEffect(() => {
-    if (!open || !citation || !citation.document_id || !citation.chunk_id) return
+    const documentId = citation?.document_id
+    const chunkId = citation?.chunk_id
+    if (!open || !documentId || !chunkId) return
+
+    let cancelled = false
 
     const fetchChunkContent = async () => {
       setIsLoading(true)
       setError(null)
 
       try {
-        const chunks = await getDocumentChunks(citation.document_id)
-        const chunk = chunks.find((c: ChunkContent) => c.id === citation.chunk_id)
+        const chunks = await getDocumentChunks(documentId)
+        if (cancelled) return
+        const chunk = chunks.find((c: ChunkContent) => c.id === chunkId)
 
         if (chunk) {
           setChunkContent(chunk)
@@ -68,15 +73,21 @@ export default function CitationDetailDialog({
           setError('Chunk not found')
         }
       } catch (err: unknown) {
+        if (cancelled) return
         console.error(`Failed to fetch chunk content:`, err)
         setError(err instanceof Error ? err.message : 'Failed to load chunk content')
       } finally {
-        setIsLoading(false)
+        if (!cancelled) {
+          setIsLoading(false)
+        }
       }
     }
 
     void fetchChunkContent()
-  }, [open, citation])
+    return () => {
+      cancelled = true
+    }
+  }, [open, citation?.document_id, citation?.chunk_id])
 
   if (!citation) return null
 

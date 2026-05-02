@@ -39,7 +39,7 @@ export default function InlineCitation({ match, onClick }: InlineCitationProps) 
       onKeyDown={handleKeyDown}
       role="button"
       tabIndex={0}
-      aria-label={`View citation${match.citationNumbers.length > 1 ? 's' : ''} ${match.citationNumbers.join(', ')}`}
+      aria-label={`Open sources panel for citation${match.citationNumbers.length > 1 ? 's' : ''} ${match.citationNumbers.join(', ')}`}
     >
       {match.text}
     </span>

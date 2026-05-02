@@ -1,18 +1,16 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import ReactMarkdown from 'react-markdown'
-import { ChevronDown, ChevronUp, Loader2 } from 'lucide-react'
+import { ChevronDown, ChevronUp, Library, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import type { ChatMessage } from './types'
+import CitationsDrawer from './CitationsDrawer'
 import CitationsDropdown from './CitationsDropdown'
 import InlineCitation from './InlineCitation'
-import CitationDetailDialog from './CitationDetailDialog'
 import { splitTextWithCitations } from './citationParser'
 import { useLocalStorage } from '@/features/settings/useLocalStorage'
-import type { Citation } from './types'
-
 interface MessageBubbleProps {
   message: ChatMessage
   previousMessage?: ChatMessage | null
@@ -109,9 +107,12 @@ export default function MessageBubble({ message, previousMessage }: MessageBubbl
   const [defaultExpanded] = useLocalStorage<boolean>('rag-eval-default-expanded-answers', false)
   // Always start with false to avoid hydration mismatch, then update in useEffect
   const [isExpanded, setIsExpanded] = useState(false)
-  const [selectedCitation, setSelectedCitation] = useState<Citation | null>(null)
-  const [selectedCitationNumber, setSelectedCitationNumber] = useState<number>(1)
-  const [citationDialogOpen, setCitationDialogOpen] = useState(false)
+  const [sourcesDrawerOpen, setSourcesDrawerOpen] = useState(false)
+  const [sourcesDrawerHighlightIndex, setSourcesDrawerHighlightIndex] = useState<number | null>(
+    null
+  )
+
+  const citationsForDrawer = useMemo(() => message.citations ?? [], [message.citations])
 
   // Reset expansion state when message changes or after hydration
   useEffect(() => {
@@ -170,20 +171,24 @@ export default function MessageBubble({ message, previousMessage }: MessageBubbl
     hasInlineCitations = citationMatches.some(segment => typeof segment !== 'string')
   }
 
-  // Handle citation chip click - opens dialog with the selected citation
+  // Inline citation chips: open the sources drawer scrolled to the matching card.
   const handleCitationClick = (citationNumbers: number[]) => {
-    if (!message.citations || message.citations.length === 0) return
+    if (citationsForDrawer.length === 0) return
 
-    // Map citation numbers (1-indexed) to citation indices (0-indexed)
-    // Find the first citation that matches any of the clicked numbers
     const citationIndex = citationNumbers
-      .map(num => num - 1) // Convert to 0-indexed
-      .find(idx => idx >= 0 && idx < (message.citations?.length || 0))
+      .map(num => num - 1)
+      .find(idx => idx >= 0 && idx < citationsForDrawer.length)
 
-    if (citationIndex !== undefined && citationIndex >= 0 && message.citations) {
-      setSelectedCitation(message.citations[citationIndex])
-      setSelectedCitationNumber(citationIndex + 1) // Store 1-indexed number for display
-      setCitationDialogOpen(true)
+    if (citationIndex !== undefined && citationIndex >= 0) {
+      setSourcesDrawerHighlightIndex(citationIndex)
+      setSourcesDrawerOpen(true)
+    }
+  }
+
+  const handleSourcesDrawerOpenChange = (nextOpen: boolean) => {
+    setSourcesDrawerOpen(nextOpen)
+    if (!nextOpen) {
+      setSourcesDrawerHighlightIndex(null)
     }
   }
 
@@ -392,7 +397,7 @@ export default function MessageBubble({ message, previousMessage }: MessageBubbl
           {(message.latencyMs != null ||
             message.costUsd != null ||
             message.ragModel != null ||
-            (message.citations && message.citations.length > 0)) && (
+            citationsForDrawer.length > 0) && (
             <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-slate-500">
               {message.ragModel != null && (
                 <span className="whitespace-nowrap">
@@ -421,12 +426,28 @@ export default function MessageBubble({ message, previousMessage }: MessageBubbl
               {message.costUsd != null && (
                 <span className="whitespace-nowrap">Cost: ${message.costUsd.toFixed(4)}</span>
               )}
-              {message.citations && message.citations.length > 0 && (
+              {citationsForDrawer.length > 0 && (
                 <>
                   {(message.ragModel != null ||
                     message.latencyMs != null ||
                     message.costUsd != null) && <span className="text-slate-300">·</span>}
-                  <CitationsDropdown citations={message.citations} />
+                  <span className="inline-flex flex-wrap items-center gap-1.5">
+                    <CitationsDropdown citations={citationsForDrawer} />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-7 gap-1.5 border-slate-300 bg-white text-xs text-slate-700 hover:bg-slate-50"
+                      onClick={() => {
+                        setSourcesDrawerHighlightIndex(null)
+                        setSourcesDrawerOpen(true)
+                      }}
+                      aria-label="Open sources panel with full chunk previews"
+                    >
+                      <Library className="h-3 w-3 shrink-0" />
+                      All sources
+                    </Button>
+                  </span>
                 </>
               )}
             </div>
@@ -434,13 +455,14 @@ export default function MessageBubble({ message, previousMessage }: MessageBubbl
         </div>
       )}
 
-      {/* Citation Detail Dialog - opened from inline citations */}
-      {!isUser && (
-        <CitationDetailDialog
-          open={citationDialogOpen}
-          onOpenChange={setCitationDialogOpen}
-          citation={selectedCitation}
-          citationNumber={selectedCitationNumber}
+      {/* Sources drawer — inline chips open with highlight; dropdown still uses detail dialog */}
+      {!isUser && citationsForDrawer.length > 0 && (
+        <CitationsDrawer
+          open={sourcesDrawerOpen}
+          onOpenChange={handleSourcesDrawerOpenChange}
+          citations={citationsForDrawer}
+          messageId={message.id}
+          highlightedIndex={sourcesDrawerHighlightIndex}
         />
       )}
     </div>
