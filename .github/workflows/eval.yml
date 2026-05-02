@@ -60,6 +60,7 @@ jobs:
             sleep 1
           done
           uv run python scripts/apply_init_sql.py
+          uv run alembic upgrade head
 
       - name: Seed eval corpus
         run: uv run python scripts/seed_eval_corpus.py

@@ -175,6 +175,12 @@ class ChatThreadCreate(BaseModel):
     )
 
 
+class ChatThreadUpdate(BaseModel):
+    """Partial update for a chat thread."""
+
+    title: str = Field(..., min_length=1, max_length=200, description="New thread title")
+
+
 class ChatThreadResponse(BaseModel):
     """Chat thread summary."""
 

@@ -134,6 +134,7 @@ OTEL_SERVICE_NAME=rag-eval-backend
 
 - `EVAL_MAX_CASES` — optional positive integer; truncate the eval dataset for cheaper runs (e.g. in CI smoke jobs).
 - `EVAL_USE_LLM_JUDGE` — `true` / `false` for extra LLM judging in `eval/run_eval.py`.
+- `EVAL_RECORD_CHAT` — when `true` / `1` / `yes`, `eval/run_eval.py` appends each case as user + assistant rows into **one** Postgres chat thread (same DB pool as retrieval), tagged with `eval_run_id` and `eval_case_id` (`case-{n}`). Requires current chat schema migrations applied.
 
 ---
 

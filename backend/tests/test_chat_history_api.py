@@ -153,3 +153,39 @@ async def test_non_stream_query_includes_request_and_query_log_ids():
                 assert data["answer"] == "ok"
                 assert data.get("request_id")
                 assert data.get("query_log_id")
+
+
+@pytest.mark.asyncio
+async def test_patch_chat_thread_title():
+    async with app.router.lifespan_context(app):
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            tid = (await client.post("/api/v1/chat/threads", json={"title": "old"})).json()[
+                "id"
+            ]
+            r = await client.patch(
+                "/api/v1/chat/threads/" + tid,
+                json={"title": "Renamed thread"},
+            )
+            assert r.status_code == 200
+            assert r.json()["title"] == "Renamed thread"
+
+
+@pytest.mark.asyncio
+async def test_assistant_message_sets_empty_thread_title():
+    async with app.router.lifespan_context(app):
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            tid = (await client.post("/api/v1/chat/threads", json={"title": None})).json()["id"]
+            await client.post(
+                f"/api/v1/chat/threads/{tid}/messages",
+                json={"role": "user", "content": "hello"},
+            )
+            await client.post(
+                f"/api/v1/chat/threads/{tid}/messages",
+                json={"role": "assistant", "content": "First assistant reply here"},
+            )
+            threads = (await client.get("/api/v1/chat/threads")).json()["threads"]
+            row = next(t for t in threads if t["id"] == tid)
+            assert row["title"]
+            assert "First assistant" in row["title"]

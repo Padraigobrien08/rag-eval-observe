@@ -11,7 +11,16 @@ import {
   InputGroupButton,
   InputGroupTextarea,
 } from '@/components/ui/input-group'
-import { BarChart3, SunMedium, Zap, AlertTriangle, Send, Loader2, Square } from 'lucide-react'
+import {
+  BarChart3,
+  SunMedium,
+  Zap,
+  AlertTriangle,
+  Send,
+  Loader2,
+  Square,
+  PanelLeft,
+} from 'lucide-react'
 import { useChat } from '@/features/chat/useChat'
 import ChatLayout from '@/features/chat/ChatLayout'
 import { useRagSettings } from '@/features/settings/useRagSettings'
@@ -20,7 +29,6 @@ import { checkHealth } from '@/lib/api/client'
 type ConnectionState = 'unknown' | 'ok' | 'error'
 
 interface ChatPanelProps {
-  sidebarOpen?: boolean
   setSidebarOpen?: (open: boolean) => void
   activeThreadId: string | null
   setActiveThreadId: (id: string | null) => void
@@ -28,8 +36,7 @@ interface ChatPanelProps {
 }
 
 export default function ChatPanel({
-  sidebarOpen: _sidebarOpen,
-  setSidebarOpen: _setSidebarOpen,
+  setSidebarOpen,
   activeThreadId,
   setActiveThreadId,
   onThreadsChanged,
@@ -112,8 +119,18 @@ export default function ChatPanel({
         className="shrink-0 border-b border-slate-200 bg-white px-4 py-2 flex items-center justify-between"
         style={{ flexShrink: 0 }}
       >
-        {/* Left side - Logo */}
+        {/* Left side — mobile drawer + logo */}
         <div className="flex items-center gap-3">
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="shrink-0 md:hidden"
+            aria-label="Open documents and chats"
+            onClick={() => setSidebarOpen?.(true)}
+          >
+            <PanelLeft className="h-4 w-4" />
+          </Button>
           <Image
             src="/RAGEvalLogo.png"
             alt="RAG Eval Logo"

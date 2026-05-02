@@ -41,6 +41,8 @@ interface SidebarProps {
   onNewChat?: () => void
   chatThreadsRefreshToken?: number
   onChatThreadDeleted?: (threadId: string) => void
+  /** Close mobile overlay drawer after navigating (no-op on desktop). */
+  onMobileSidebarClose?: () => void
 }
 
 export default function Sidebar({
@@ -51,6 +53,7 @@ export default function Sidebar({
   onNewChat,
   chatThreadsRefreshToken = 0,
   onChatThreadDeleted,
+  onMobileSidebarClose,
 }: SidebarProps) {
   const [ingestOpen, setIngestOpen] = useState(false)
   const [documents, setDocuments] = useState<Document[]>([])
@@ -256,7 +259,10 @@ export default function Sidebar({
                   variant="ghost"
                   size="icon"
                   aria-label="New chat"
-                  onClick={() => onNewChat?.()}
+                  onClick={() => {
+                    onNewChat?.()
+                    onMobileSidebarClose?.()
+                  }}
                   className="h-8 w-8"
                 >
                   <Plus className="h-4 w-4" />
@@ -284,7 +290,11 @@ export default function Sidebar({
                       >
                         <button
                           type="button"
-                          onClick={() => onSelectChatThread?.(thread.id)}
+                          data-testid={`chat-thread-${thread.id}`}
+                          onClick={() => {
+                            onSelectChatThread?.(thread.id)
+                            onMobileSidebarClose?.()
+                          }}
                           className="min-w-0 flex-1 truncate px-2 py-2 text-left text-xs text-slate-700"
                           title={label}
                         >

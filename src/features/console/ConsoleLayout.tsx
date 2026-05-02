@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import Sidebar from './Sidebar'
 import ChatPanel from './ChatPanel'
 import { useLocalStorage } from '@/features/settings/useLocalStorage'
+import { cn } from '@/lib/utils'
 
 export default function ConsoleLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -38,19 +39,28 @@ export default function ConsoleLayout() {
     [activeChatThreadId, bumpChatThreads]
   )
 
+  const mdGridCols = sidebarCollapsed
+    ? 'md:grid-cols-[64px_minmax(0,1fr)]'
+    : 'md:grid-cols-[minmax(240px,280px)_minmax(0,1fr)]'
+
   return (
     <div
-      className="grid h-full w-full bg-slate-50"
-      style={{
-        gridTemplateColumns: sidebarCollapsed ? '64px 1fr' : 'minmax(240px, 280px) 1fr',
-        height: '100%',
-        maxHeight: '100vh',
-        transition: 'grid-template-columns 0.2s ease-in-out',
-        overflow: 'hidden',
-      }}
+      className={cn(
+        'relative h-full max-h-screen w-full overflow-hidden bg-slate-50',
+        'flex flex-col md:grid md:min-h-0 md:overflow-hidden',
+        mdGridCols
+      )}
+      style={{ height: '100%' }}
     >
-      {/* Left: sidebar - collapsible */}
-      <div className="relative" style={{ overflow: 'visible' }}>
+      <div
+        className={cn(
+          'min-h-0 border-r border-slate-200 bg-white',
+          'z-50 max-md:fixed max-md:inset-y-0 max-md:left-0 max-md:w-[min(280px,92vw)] max-md:shadow-lg',
+          'max-md:transition-transform max-md:duration-200 max-md:ease-out',
+          sidebarOpen ? 'max-md:translate-x-0' : 'max-md:-translate-x-full',
+          'md:relative md:z-0 md:flex md:h-full md:w-full md:translate-x-0 md:shadow-none'
+        )}
+      >
         <Sidebar
           collapsed={sidebarCollapsed}
           onToggleCollapse={handleToggleCollapse}
@@ -59,13 +69,21 @@ export default function ConsoleLayout() {
           onNewChat={() => setActiveChatThreadId(null)}
           chatThreadsRefreshToken={chatThreadsRefreshToken}
           onChatThreadDeleted={handleChatThreadDeleted}
+          onMobileSidebarClose={() => setSidebarOpen(false)}
         />
       </div>
 
-      {/* Right: main panel - fills remaining space */}
-      <div className="flex min-w-0 overflow-hidden" style={{ minHeight: 0 }}>
+      {sidebarOpen ? (
+        <button
+          type="button"
+          aria-label="Close navigation"
+          className="fixed inset-0 z-40 bg-black/40 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      ) : null}
+
+      <div className="relative z-10 flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden md:min-h-0">
         <ChatPanel
-          sidebarOpen={sidebarOpen}
           setSidebarOpen={setSidebarOpen}
           activeThreadId={activeChatThreadId}
           setActiveThreadId={setActiveChatThreadId}

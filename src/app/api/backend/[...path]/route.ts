@@ -15,6 +15,10 @@ export async function DELETE(request: NextRequest, { params }: { params: { path:
   return proxyRequest(request, params.path)
 }
 
+export async function PATCH(request: NextRequest, { params }: { params: { path: string[] } }) {
+  return proxyRequest(request, params.path)
+}
+
 async function proxyRequest(request: NextRequest, pathSegments: string[]) {
   try {
     // Reconstruct the backend path

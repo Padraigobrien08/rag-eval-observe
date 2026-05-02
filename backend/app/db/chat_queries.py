@@ -80,6 +80,24 @@ async def get_chat_thread(thread_id: str) -> dict[str, Any] | None:
         return _thread_row(row) | {"message_count": row["message_count"]}
 
 
+async def update_chat_thread_title(thread_id: str, *, title: str) -> dict[str, Any] | None:
+    """Set thread title; returns updated row or None if thread missing."""
+    pool = await get_db_pool()
+    async with pool.acquire() as conn:
+        row = await conn.fetchrow(
+            """
+            UPDATE chat_threads SET title = $2, updated_at = NOW()
+            WHERE id = $1
+            RETURNING id, title, created_at, updated_at
+            """,
+            thread_id,
+            title.strip(),
+        )
+        if not row:
+            return None
+        return _thread_row(row)
+
+
 async def delete_chat_thread(thread_id: str) -> bool:
     pool = await get_db_pool()
     async with pool.acquire() as conn:
@@ -144,6 +162,23 @@ async def append_chat_message(
                 "UPDATE chat_threads SET updated_at = NOW() WHERE id = $1",
                 thread_id,
             )
+            if role == "assistant":
+                trow = await conn.fetchrow(
+                    "SELECT title FROM chat_threads WHERE id = $1 FOR UPDATE",
+                    thread_id,
+                )
+                cur_title = ((trow["title"] or "") if trow else "").strip()
+                if not cur_title:
+                    snippet = " ".join(content.split()).strip()
+                    if len(snippet) > 72:
+                        snippet = snippet[:72].rstrip() + "…"
+                    if not snippet:
+                        snippet = "Chat"
+                    await conn.execute(
+                        "UPDATE chat_threads SET title = $2, updated_at = NOW() WHERE id = $1",
+                        thread_id,
+                        snippet,
+                    )
         assert row is not None
         return _message_row(row)
 

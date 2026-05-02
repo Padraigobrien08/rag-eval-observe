@@ -16,6 +16,7 @@ from app.db.chat_queries import (
     get_chat_thread,
     list_chat_messages,
     list_chat_threads,
+    update_chat_thread_title,
 )
 from app.db.queries import (
     count_documents,
@@ -38,6 +39,7 @@ from app.schemas import (
     ChatThreadCreate,
     ChatThreadListResponse,
     ChatThreadResponse,
+    ChatThreadUpdate,
     ChunkResponse,
     CitationResponse,
     DocumentListResponse,
@@ -520,6 +522,26 @@ async def list_chat_threads_endpoint(limit: int = Query(50, ge=1, le=200)):
             )
             for r in rows
         ]
+    )
+
+
+@router.patch("/chat/threads/{thread_id}", response_model=ChatThreadResponse)
+async def patch_chat_thread_endpoint(thread_id: str, body: ChatThreadUpdate):
+    """Rename a chat thread."""
+    existing = await get_chat_thread(thread_id)
+    if not existing:
+        raise HTTPException(status_code=404, detail="Thread not found")
+    updated = await update_chat_thread_title(thread_id, title=body.title)
+    if not updated:
+        raise HTTPException(status_code=404, detail="Thread not found")
+    full = await get_chat_thread(thread_id)
+    assert full is not None
+    return ChatThreadResponse(
+        id=full["id"],
+        title=full["title"],
+        created_at=full["created_at"],
+        updated_at=full["updated_at"],
+        message_count=full.get("message_count", 0),
     )
 
 

@@ -10,6 +10,7 @@ import json
 import os
 import sys
 import time
+import uuid
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -59,6 +60,7 @@ class EvaluationResult:
     llm_judge_faithfulness: bool | None = None
     llm_judge_reasoning: str | None = None
     error: str | None = None
+    citations: list[dict[str, Any]] = field(default_factory=list)
 
 
 @dataclass
@@ -239,6 +241,7 @@ async def evaluate_case(case: EvaluationCase, use_llm_judge: bool = False) -> Ev
             llm_judge_correctness=llm_judge_correctness,
             llm_judge_faithfulness=llm_judge_faithfulness,
             llm_judge_reasoning=llm_judge_reasoning,
+            citations=list(answer_response.citations),
         )
 
     except Exception as e:
@@ -254,6 +257,7 @@ async def evaluate_case(case: EvaluationCase, use_llm_judge: bool = False) -> Ev
             hit_at_8=False,
             mrr=0.0,
             error=str(e),
+            citations=[],
         )
 
 
@@ -301,6 +305,52 @@ Generated: {time.strftime("%Y-%m-%d %H:%M:%S")}
     return report
 
 
+def _eval_record_chat_enabled() -> bool:
+    return os.getenv("EVAL_RECORD_CHAT", "").strip().lower() in ("1", "true", "yes")
+
+
+async def _persist_eval_turn_to_db(
+    *,
+    eval_run_id: str,
+    case_index: int,
+    case: EvaluationCase,
+    result: EvaluationResult,
+    thread_slot: dict[str, str | None],
+) -> None:
+    """Append eval user/assistant turns to one Postgres chat thread (same DB pool as retrieval)."""
+    from app.db.chat_queries import append_chat_message, create_chat_thread
+
+    case_key = f"case-{case_index}"
+    if thread_slot.get("id") is None:
+        row = await create_chat_thread(title=f"Eval {eval_run_id[:8]}")
+        thread_slot["id"] = row["id"]
+
+    tid = thread_slot["id"]
+    assert tid is not None
+
+    await append_chat_message(
+        tid,
+        role="user",
+        content=case.query,
+        metadata={"source": "eval"},
+        eval_run_id=eval_run_id,
+        eval_case_id=case_key,
+    )
+    assistant_body = result.answer if not result.error else f"[error] {result.error}"
+    meta: dict[str, Any] = {"source": "eval", "hit_at_5": result.hit_at_5}
+    if result.error:
+        meta["error"] = result.error
+    await append_chat_message(
+        tid,
+        role="assistant",
+        content=assistant_body or "",
+        citations=result.citations or [],
+        metadata=meta,
+        eval_run_id=eval_run_id,
+        eval_case_id=case_key,
+    )
+
+
 async def run_evaluation():
     """Run the evaluation harness."""
     # Load configuration
@@ -321,12 +371,38 @@ async def run_evaluation():
             logger.info("Truncated dataset via EVAL_MAX_CASES", max_cases=n)
     logger.info("Loaded cases", count=len(cases))
 
+    record_chat = _eval_record_chat_enabled()
+    eval_run_id = str(uuid.uuid4()) if record_chat else ""
+    thread_slot: dict[str, str | None] = {"id": None}
+    if record_chat:
+        logger.info(
+            "EVAL_RECORD_CHAT enabled — persisting turns to chat_threads/chat_messages",
+            eval_run_id=eval_run_id,
+        )
+
     # Run evaluation
     results = []
     for i, case in enumerate(cases, 1):
         logger.info("Evaluating case", case_num=i, total=len(cases), query=case.query)
         result = await evaluate_case(case, use_llm_judge=use_llm_judge)
         results.append(result)
+
+        if record_chat:
+            try:
+                await _persist_eval_turn_to_db(
+                    eval_run_id=eval_run_id,
+                    case_index=i,
+                    case=case,
+                    result=result,
+                    thread_slot=thread_slot,
+                )
+            except Exception as rec_err:
+                logger.warning(
+                    "EVAL_RECORD_CHAT persist failed",
+                    case_num=i,
+                    error=str(rec_err),
+                    exc_info=True,
+                )
 
         # Small delay to avoid rate limits
         if i < len(cases):

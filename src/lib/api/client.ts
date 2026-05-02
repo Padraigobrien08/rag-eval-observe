@@ -436,6 +436,24 @@ export async function createChatThread(body?: {
   return res.json() as Promise<ChatThreadSummary>
 }
 
+export async function updateChatThread(
+  threadId: string,
+  body: { title: string }
+): Promise<ChatThreadSummary> {
+  ensureBrowser()
+  const id = encodeDocumentPathSegment(threadId)
+  const res = await fetch(`${API_BASE_URL}/api/v1/chat/threads/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+  if (!res.ok) {
+    const text = await res.text().catch(() => '')
+    throw new Error(messageFromErrorResponse(text, res.status))
+  }
+  return res.json() as Promise<ChatThreadSummary>
+}
+
 export async function listChatThreads(limit = 50): Promise<ChatThreadSummary[]> {
   ensureBrowser()
   const res = await fetch(`${API_BASE_URL}/api/v1/chat/threads?limit=${limit}`, {
