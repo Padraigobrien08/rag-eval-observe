@@ -213,11 +213,11 @@ export default function Sidebar({
           )}
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-y-contain [scrollbar-gutter:stable]">
-          <div className="space-y-6 pb-2 pr-2">
+          <div className="space-y-6 pb-3">
             {/* Documents */}
             <div>
               <div
-                className={`flex items-center ${navCollapsed ? 'justify-center px-2' : 'justify-between px-4'} py-2`}
+                className={`flex items-center ${navCollapsed ? 'justify-center px-2' : 'justify-between pl-4 pr-5'} py-2`}
               >
                 {!navCollapsed && (
                   <div className="text-xs font-semibold tracking-wide text-slate-500">
@@ -242,14 +242,14 @@ export default function Sidebar({
               </div>
               {isLoadingDocs ? (
                 <div
-                  className={`flex items-center gap-2 ${navCollapsed ? 'justify-center px-2' : 'px-4'} py-3`}
+                  className={`flex items-center gap-2 ${navCollapsed ? 'justify-center px-2' : 'pl-4 pr-5'} py-3`}
                 >
                   <Loader2 className="h-3 w-3 animate-spin text-slate-400" />
                   {!navCollapsed && <p className="text-xs text-slate-500">Loading documents...</p>}
                 </div>
               ) : documents.length === 0 ? (
                 !navCollapsed && (
-                  <div className="px-4 py-3">
+                  <div className="py-3 pl-4 pr-5">
                     <p className="text-xs text-slate-500">No documents yet.</p>
                     <p className="text-xs text-slate-400 mt-1">
                       Click + to add your first document.
@@ -257,13 +257,13 @@ export default function Sidebar({
                   </div>
                 )
               ) : (
-                <div className={`space-y-0.5 ${navCollapsed ? 'px-1' : 'px-4'}`}>
+                <div className={`space-y-0.5 ${navCollapsed ? 'px-1' : 'pl-4 pr-5'}`}>
                   {documents.map(doc => {
                     const docLabel = doc.title || doc.source
                     return (
                       <div
                         key={doc.id}
-                        className={`group flex min-w-0 items-center gap-1 rounded-md py-1.5 text-xs text-slate-700 transition-colors hover:bg-slate-50 ${navCollapsed ? 'justify-center px-1' : 'pl-2 pr-1'}`}
+                        className={`group flex min-w-0 items-center gap-1.5 rounded-md py-1.5 text-xs text-slate-700 transition-colors hover:bg-slate-50 ${navCollapsed ? 'justify-center px-1' : 'pl-2 pr-2'}`}
                         title={navCollapsed ? docLabel : undefined}
                       >
                         {navCollapsed ? (
@@ -314,7 +314,7 @@ export default function Sidebar({
                                   type="button"
                                   variant="ghost"
                                   size="icon"
-                                  className="h-8 w-8 shrink-0 text-slate-500 hover:bg-slate-100 hover:text-slate-800"
+                                  className="h-8 w-8 shrink-0 text-slate-500 hover:bg-slate-100 hover:text-slate-800 focus-visible:ring-2 focus-visible:ring-slate-400/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
                                   aria-label={`More actions for ${docLabel}`}
                                   onClick={e => e.stopPropagation()}
                                 >
@@ -354,7 +354,7 @@ export default function Sidebar({
             {/* Chats */}
             {!navCollapsed && (
               <div className="border-t border-slate-100 pt-2">
-                <div className="flex items-center justify-between px-4 py-2">
+                <div className="flex items-center justify-between py-2 pl-4 pr-5">
                   <div className="text-xs font-semibold tracking-wide text-slate-500">CHATS</div>
                   <Button
                     variant="ghost"
@@ -370,15 +370,15 @@ export default function Sidebar({
                   </Button>
                 </div>
                 {chatThreadsLoading ? (
-                  <div className="flex justify-center px-4 py-6">
+                  <div className="flex justify-center py-6 pl-4 pr-5">
                     <Loader2 className="h-5 w-5 animate-spin text-slate-400" aria-hidden />
                   </div>
                 ) : chatThreads.length === 0 ? (
-                  <p className="px-4 pb-4 text-xs text-slate-500">
+                  <p className="pb-4 pl-4 pr-5 text-xs text-slate-500">
                     No chats yet. Send a message to start one.
                   </p>
                 ) : (
-                  <div className="max-h-[40vh] space-y-1 overflow-y-auto px-4 pb-4">
+                  <div className="space-y-1 pb-3 pl-4 pr-5">
                     {chatThreads.map(thread => {
                       const label =
                         thread.title?.trim() ||
@@ -387,7 +387,7 @@ export default function Sidebar({
                       return (
                         <div
                           key={thread.id}
-                          className={`group flex min-w-0 items-center gap-0.5 rounded-md py-0.5 pl-2 pr-3 ${selected ? 'bg-slate-100' : 'hover:bg-slate-50'}`}
+                          className={`group flex min-w-0 items-center gap-1 rounded-md py-0.5 pl-2 pr-2 ${selected ? 'bg-slate-100' : 'hover:bg-slate-50'}`}
                         >
                           <button
                             type="button"
@@ -414,7 +414,7 @@ export default function Sidebar({
                                 type="button"
                                 variant="ghost"
                                 size="icon"
-                                className="h-8 w-8 shrink-0 text-slate-500 hover:bg-slate-100 hover:text-slate-800"
+                                className="h-8 w-8 shrink-0 text-slate-500 hover:bg-slate-100 hover:text-slate-800 focus-visible:ring-2 focus-visible:ring-slate-400/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
                                 aria-label={`More actions for ${label}`}
                                 onClick={e => e.stopPropagation()}
                               >
@@ -454,7 +454,7 @@ export default function Sidebar({
         </div>
 
         <div
-          className={`flex border-t border-slate-200 ${navCollapsed ? 'justify-center px-2' : 'px-2'} py-2`}
+          className={`flex border-t border-slate-200 py-2 ${navCollapsed ? 'justify-center px-2' : 'justify-start px-4'}`}
         >
           <RagSettingsDialog collapsed={navCollapsed} />
         </div>
