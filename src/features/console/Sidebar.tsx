@@ -266,11 +266,11 @@ export default function Sidebar({
                 </div>
               )
             ) : (
-              <div className={`space-y-0.5 ${navCollapsed ? 'px-1' : 'px-2'}`}>
+              <div className={`space-y-0.5 ${navCollapsed ? 'px-1' : 'px-4'}`}>
                 {documents.map(doc => (
                   <div
                     key={doc.id}
-                    className={`flex w-full items-center rounded-md px-3 py-2 text-xs text-slate-700 transition-colors hover:bg-slate-50 ${navCollapsed ? 'justify-center' : 'gap-2'} group`}
+                    className={`flex w-full min-w-0 items-center rounded-md py-2 text-xs text-slate-700 transition-colors hover:bg-slate-50 ${navCollapsed ? 'justify-center px-1' : 'gap-2 pl-2 pr-3'} group`}
                     title={navCollapsed ? doc.title || doc.source : undefined}
                   >
                     {navCollapsed ? (
@@ -316,7 +316,7 @@ export default function Sidebar({
                         <button
                           type="button"
                           onClick={e => handleDeleteClick(doc, e)}
-                          className="shrink-0 rounded p-1 text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600"
+                          className="shrink-0 rounded-md p-1.5 text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600"
                           aria-label={`Delete ${doc.title || doc.source}`}
                           title="Delete document"
                         >
@@ -357,7 +357,7 @@ export default function Sidebar({
                   No chats yet. Send a message to start one.
                 </p>
               ) : (
-                <div className="max-h-[40vh] space-y-1 overflow-y-auto px-2 pb-4">
+                <div className="max-h-[40vh] space-y-1 overflow-y-auto px-4 pb-4">
                   {chatThreads.map(thread => {
                     const label =
                       thread.title?.trim() ||
@@ -366,7 +366,7 @@ export default function Sidebar({
                     return (
                       <div
                         key={thread.id}
-                        className={`group flex items-center gap-1 rounded-md px-2 ${selected ? 'bg-slate-100' : 'hover:bg-slate-50'}`}
+                        className={`group flex min-w-0 items-center gap-0.5 rounded-md py-0.5 pl-2 pr-3 ${selected ? 'bg-slate-100' : 'hover:bg-slate-50'}`}
                       >
                         <button
                           type="button"
@@ -375,7 +375,7 @@ export default function Sidebar({
                             onSelectChatThread?.(thread.id)
                             onMobileSidebarClose?.()
                           }}
-                          className="min-w-0 flex-1 truncate px-2 py-2 text-left text-xs text-slate-700"
+                          className="min-w-0 flex-1 truncate px-1 py-2 text-left text-xs text-slate-700"
                           title={label}
                         >
                           <span className="block truncate font-medium">{label}</span>
