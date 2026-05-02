@@ -1,16 +1,19 @@
 import asyncio
+import base64
 import json
+import re
 from collections.abc import AsyncIterator
 
 import structlog
 from fastapi import APIRouter, File, HTTPException, Query, Request, UploadFile
-from fastapi.responses import JSONResponse, PlainTextResponse, StreamingResponse
+from fastapi.responses import JSONResponse, PlainTextResponse, Response, StreamingResponse
 
 from app.core.config import settings
 from app.core.metrics import get_metrics
 from app.db.queries import (
     count_documents,
     delete_document,
+    fetch_document_original,
     get_chunks_by_document_id,
     get_document_by_id,
     list_documents,
@@ -37,6 +40,39 @@ from app.schemas import (
 
 logger = structlog.get_logger()
 router = APIRouter()
+
+
+def _decode_optional_ingest_original(req: IngestRequest) -> tuple[bytes | None, str | None]:
+    """Validate optional base64 PDF payload from ingest."""
+    if not req.original_file_base64:
+        return None, None
+    if req.original_media_type != "application/pdf":
+        raise HTTPException(
+            status_code=400,
+            detail="original_media_type must be application/pdf when original_file_base64 is set",
+        )
+    try:
+        raw = base64.b64decode(req.original_file_base64, validate=True)
+    except Exception:
+        raise HTTPException(status_code=400, detail="original_file_base64 is not valid base64")
+    if len(raw) > settings.MAX_INGEST_ORIGINAL_FILE_BYTES:
+        raise HTTPException(
+            status_code=413,
+            detail=(
+                "Original file exceeds maximum size "
+                f"({settings.MAX_INGEST_ORIGINAL_FILE_BYTES} bytes after decoding)"
+            ),
+        )
+    if not raw.startswith(b"%PDF"):
+        raise HTTPException(status_code=400, detail="Original file must be a PDF")
+    return raw, "application/pdf"
+
+
+def _safe_inline_filename(title: str | None, doc_id: str, media_type: str) -> str:
+    base = (title or doc_id).strip() or "document"
+    safe = re.sub(r"[^a-zA-Z0-9._\- ]+", "-", base).strip(".- ")[:120] or "document"
+    ext = ".pdf" if "pdf" in media_type.lower() else ""
+    return f"{safe}{ext}"
 
 
 async def _prepare_rag_retrieval(
@@ -267,6 +303,7 @@ async def list_documents_endpoint(
                     source=doc["source"],
                     title=doc["title"],
                     created_at=doc["created_at"],
+                    original_available=doc.get("original_available", False),
                 )
                 for doc in documents
             ],
@@ -320,6 +357,35 @@ async def get_document_endpoint(
         source=document["source"],
         title=document["title"],
         created_at=document["created_at"].isoformat() if document["created_at"] else None,
+        original_available=bool(document.get("original_available", False)),
+    )
+
+
+@router.get("/documents/{document_id}/original")
+async def get_document_original_endpoint(
+    document_id: str,
+):
+    """Serve stored original binary (e.g. PDF) for inline preview."""
+    document = await get_document_by_id(document_id)
+    if not document:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Document {document_id} not found",
+        )
+
+    blob = await fetch_document_original(document_id)
+    if not blob:
+        raise HTTPException(
+            status_code=404,
+            detail="No original file is stored for this document (re-ingest from PDF to enable preview)",
+        )
+
+    data, media_type = blob
+    filename = _safe_inline_filename(document.get("title"), document_id, media_type)
+    return Response(
+        content=data,
+        media_type=media_type,
+        headers={"Content-Disposition": f'inline; filename="{filename}"'},
     )
 
 
@@ -453,6 +519,8 @@ async def ingest_document_endpoint(
             detail="Text content cannot be empty",
         )
 
+    original_bytes, original_media_type = _decode_optional_ingest_original(ingest_request)
+
     try:
         from app.rag.ingest import (
             DocumentTooLargeError,
@@ -465,6 +533,8 @@ async def ingest_document_endpoint(
             title=ingest_request.title,
             text=ingest_request.text,
             is_markdown=ingest_request.is_markdown,
+            original_bytes=original_bytes,
+            original_media_type=original_media_type,
         )
 
         logger.info(
@@ -472,12 +542,12 @@ async def ingest_document_endpoint(
             request_id=request_id,
             document_id=result["document_id"],
             chunks_created=result["chunks_created"],
+            replaced_existing=result.get("replaced_existing", False),
+            preprocess_delta=result["preprocessing"]["character_delta"],
+            undersized_merges=result["chunking"]["undersized_chunk_merges"],
         )
 
-        return IngestResponse(
-            document_id=result["document_id"],
-            chunks_created=result["chunks_created"],
-        )
+        return IngestResponse(**result)
 
     except DocumentTooLargeError as e:
         logger.warning(

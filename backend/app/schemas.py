@@ -1,6 +1,6 @@
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class HealthResponse(BaseModel):
@@ -30,6 +30,7 @@ class DocumentResponse(BaseModel):
     source: str
     title: str | None = None
     created_at: str | None = None
+    original_available: bool = False
 
 
 class DocumentListResponse(BaseModel):
@@ -64,6 +65,52 @@ class IngestRequest(BaseModel):
     title: str | None = Field(None, description="Document title")
     text: str = Field(..., description="Document text content")
     is_markdown: bool = Field(False, description="Whether text is markdown")
+    original_file_base64: str | None = Field(
+        None,
+        description="Optional base64-encoded original PDF bytes for preview (must pair with media type)",
+    )
+    original_media_type: str | None = Field(
+        None,
+        description="MIME type for original_file_base64 (supported: application/pdf)",
+    )
+
+    @model_validator(mode="after")
+    def original_pair(self):
+        has_b64 = bool(self.original_file_base64)
+        has_type = bool(self.original_media_type)
+        if has_b64 ^ has_type:
+            raise ValueError("original_file_base64 and original_media_type must both be set or both omitted")
+        return self
+
+
+class IngestPreprocessingSummary(BaseModel):
+    """Text normalization stats applied before chunking."""
+
+    original_character_count: int
+    normalized_character_count: int
+    character_delta: int
+    steps_applied: list[str] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
+
+
+class IngestChunkingSummary(BaseModel):
+    """Chunking configuration and resulting shard statistics."""
+
+    chunks_before_merge: int
+    chunks_created: int
+    undersized_chunk_merges: int
+    chunk_target_size: int
+    chunk_overlap: int
+    adaptive_chunking: bool
+    config_chunk_size: int
+    config_chunk_overlap: int
+    estimated_target_chunks: int
+    min_chunk_characters_applied: int
+    merged_chunk_soft_cap_chars: int
+    chunk_length_min: int
+    chunk_length_max: int
+    chunk_length_mean: float
+    chunk_length_median: float
 
 
 class IngestResponse(BaseModel):
@@ -71,6 +118,9 @@ class IngestResponse(BaseModel):
 
     document_id: str
     chunks_created: int
+    replaced_existing: bool = False
+    preprocessing: IngestPreprocessingSummary
+    chunking: IngestChunkingSummary
 
 
 class QueryRequest(BaseModel):

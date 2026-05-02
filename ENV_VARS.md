@@ -72,8 +72,26 @@ REDIS_ENABLED=false
 CHUNK_SIZE=1000
 CHUNK_OVERLAP=200
 
+# Ingest preprocessing (cleaner chunks from noisy PDF/DOCX extraction)
+# Collapse runs of more than N newlines down to N (2 keeps a single blank line between blocks).
+INGEST_COLLAPSE_BLANK_LINES_TO=2
+# Drop consecutive duplicate paragraphs (same trimmed text).
+INGEST_DEDUPE_CONSECUTIVE_PARAGRAPHS=true
+# Merge chunks shorter than this into neighbors when combined size stays under soft cap.
+INGEST_MIN_CHUNK_CHARS=80
+# Max merged chunk size ≈ CHUNK_SIZE × this ratio (then embeddings).
+INGEST_MERGED_CHUNK_SOFT_CAP_RATIO=1.35
+
+# Adaptive chunk size (per ingest, from preprocessed length). Uses CHUNK_SIZE / CHUNK_OVERLAP as defaults when off.
+INGEST_ADAPTIVE_CHUNKING=true
+INGEST_ADAPTIVE_CHUNK_MIN=400
+INGEST_ADAPTIVE_CHUNK_MAX=2000
+INGEST_ADAPTIVE_OVERLAP_RATIO=0.2
+
 # Request Limits
 MAX_INGEST_PAYLOAD_SIZE=10485760
+# Max decoded size for optional PDF attached at ingest (`original_file_base64`), for UI preview
+MAX_INGEST_ORIGINAL_FILE_BYTES=26214400
 MAX_QUERY_LENGTH=5000
 MAX_CONTEXT_CHARS=50000
 MAX_CONTEXT_TOKENS=12000

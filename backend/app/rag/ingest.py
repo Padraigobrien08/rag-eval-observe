@@ -1,4 +1,5 @@
 import json
+import statistics
 from typing import Any
 
 import structlog
@@ -6,7 +7,9 @@ import structlog
 from app.core.config import settings
 from app.db.session import get_db_pool
 from app.llm.openai_client import OpenAIError, get_openai_client
-from app.rag.chunking import TextChunker
+from app.rag.adaptive_chunking import resolve_ingest_chunk_params
+from app.rag.chunking import TextChunker, merge_undersized_chunks
+from app.rag.preprocess import preprocess_ingest_text
 
 logger = structlog.get_logger()
 
@@ -114,6 +117,8 @@ async def ingest_document(
     title: str | None,
     text: str,
     is_markdown: bool = False,
+    original_bytes: bytes | None = None,
+    original_media_type: str | None = None,
 ) -> dict[str, Any]:
     """
     Ingest a document into the database.
@@ -194,20 +199,71 @@ async def ingest_document(
         document_id = generate_document_id(source, title, 1)
         versioned_source = generate_versioned_source(source, 1)
 
-    # Chunk the text
+    preprocess_report = preprocess_ingest_text(text)
+    if preprocess_report.warnings:
+        logger.info(
+            "ingest_preprocess_warnings",
+            document_id=document_id,
+            warnings=preprocess_report.warnings,
+            steps=preprocess_report.steps_applied,
+        )
+
+    normalized_text = preprocess_report.text
+    if not normalized_text.strip():
+        raise IngestError(
+            "No usable text after preprocessing (empty or whitespace-only). "
+            "Check extraction quality or disable aggressive cleaners upstream."
+        )
+
+    chunk_params = resolve_ingest_chunk_params(len(normalized_text))
     chunker = TextChunker(
-        chunk_size=settings.CHUNK_SIZE,
-        chunk_overlap=settings.CHUNK_OVERLAP,
+        chunk_size=chunk_params.chunk_size,
+        chunk_overlap=chunk_params.chunk_overlap,
     )
-    chunks = chunker.chunk(text, is_markdown=is_markdown)
+    chunks = chunker.chunk(normalized_text, is_markdown=is_markdown)
 
     if not chunks:
         raise IngestError("No chunks generated from document")
 
+    raw_chunk_count = len(chunks)
+    soft_cap = max(
+        chunk_params.chunk_size,
+        int(chunk_params.chunk_size * settings.INGEST_MERGED_CHUNK_SOFT_CAP_RATIO),
+    )
+    chunks, undersized_merges = merge_undersized_chunks(
+        chunks,
+        settings.INGEST_MIN_CHUNK_CHARS,
+        soft_cap,
+    )
+
+    lengths = [len(c.content) for c in chunks]
+    chunk_summary = {
+        "chunks_before_merge": raw_chunk_count,
+        "chunks_created": len(chunks),
+        "undersized_chunk_merges": undersized_merges,
+        "chunk_target_size": chunk_params.chunk_size,
+        "chunk_overlap": chunk_params.chunk_overlap,
+        "adaptive_chunking": chunk_params.adaptive,
+        "config_chunk_size": chunk_params.config_chunk_size,
+        "config_chunk_overlap": chunk_params.config_chunk_overlap,
+        "estimated_target_chunks": chunk_params.estimated_target_chunks,
+        "min_chunk_characters_applied": settings.INGEST_MIN_CHUNK_CHARS,
+        "merged_chunk_soft_cap_chars": soft_cap,
+        "chunk_length_min": min(lengths) if lengths else 0,
+        "chunk_length_max": max(lengths) if lengths else 0,
+        "chunk_length_mean": round(statistics.mean(lengths), 1) if lengths else 0.0,
+        "chunk_length_median": float(statistics.median(lengths)) if lengths else 0.0,
+    }
+
     logger.info(
-        "Chunked document",
+        "ingest_chunked",
         document_id=document_id,
         chunks_count=len(chunks),
+        undersized_merges=undersized_merges,
+        preprocess_steps=len(preprocess_report.steps_applied),
+        adaptive_chunking=chunk_params.adaptive,
+        resolved_chunk_size=chunk_params.chunk_size,
+        resolved_chunk_overlap=chunk_params.chunk_overlap,
     )
 
     # Get embeddings for all chunks (batched)
@@ -235,28 +291,57 @@ async def ingest_document(
                         "DELETE FROM chunks WHERE document_id = $1",
                         document_id,
                     )
-                    await conn.execute(
-                        """
-                        UPDATE documents
-                        SET source = $2, title = $3
-                        WHERE id = $1
-                        """,
-                        document_id,
-                        versioned_source,
-                        title,
-                    )
+                    if original_bytes is not None:
+                        await conn.execute(
+                            """
+                            UPDATE documents
+                            SET source = $2,
+                                title = $3,
+                                original_file = $4,
+                                original_media_type = $5
+                            WHERE id = $1
+                            """,
+                            document_id,
+                            versioned_source,
+                            title,
+                            original_bytes,
+                            original_media_type,
+                        )
+                    else:
+                        await conn.execute(
+                            """
+                            UPDATE documents
+                            SET source = $2, title = $3
+                            WHERE id = $1
+                            """,
+                            document_id,
+                            versioned_source,
+                            title,
+                        )
                 else:
                     await conn.execute(
                         """
-                        INSERT INTO documents (id, source, title)
-                        VALUES ($1, $2, $3)
+                        INSERT INTO documents (
+                            id, source, title, original_file, original_media_type
+                        )
+                        VALUES ($1, $2, $3, $4, $5)
                         ON CONFLICT (id) DO UPDATE
                         SET source = EXCLUDED.source,
-                            title = EXCLUDED.title
+                            title = EXCLUDED.title,
+                            original_file = COALESCE(
+                                EXCLUDED.original_file,
+                                documents.original_file
+                            ),
+                            original_media_type = COALESCE(
+                                EXCLUDED.original_media_type,
+                                documents.original_media_type
+                            )
                         """,
                         document_id,
                         versioned_source,
                         title,
+                        original_bytes,
+                        original_media_type,
                     )
 
                 # Insert chunks
@@ -292,11 +377,22 @@ async def ingest_document(
                     "Successfully ingested document",
                     document_id=document_id,
                     chunks_created=len(chunks),
+                    replaced_existing=replace_existing,
+                    preprocess_character_delta=preprocess_report.character_delta,
                 )
 
                 return {
                     "document_id": document_id,
                     "chunks_created": len(chunks),
+                    "replaced_existing": replace_existing,
+                    "preprocessing": {
+                        "original_character_count": preprocess_report.original_character_count,
+                        "normalized_character_count": preprocess_report.normalized_character_count,
+                        "character_delta": preprocess_report.character_delta,
+                        "steps_applied": preprocess_report.steps_applied,
+                        "warnings": preprocess_report.warnings,
+                    },
+                    "chunking": chunk_summary,
                 }
 
             except Exception as e:

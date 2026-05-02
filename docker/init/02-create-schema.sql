@@ -6,6 +6,8 @@ CREATE TABLE IF NOT EXISTS documents (
   id TEXT PRIMARY KEY,
   source TEXT NOT NULL,
   title TEXT,
+  original_file BYTEA,
+  original_media_type TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
 );
 

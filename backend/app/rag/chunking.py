@@ -293,6 +293,75 @@ class TextChunker:
         return overlap.strip()
 
 
+def merge_two_chunks(left: Chunk, right: Chunk) -> Chunk:
+    meta = {**left.metadata, **right.metadata}
+    return Chunk(
+        chunk_index=left.chunk_index,
+        content=left.content + "\n\n" + right.content,
+        metadata=meta,
+    )
+
+
+def merge_undersized_chunks(
+    chunks: list[Chunk],
+    min_chars: int,
+    soft_max_chars: int,
+) -> tuple[list[Chunk], int]:
+    """
+    Merge uncomfortably small chunks into neighbors when under soft_max_chars.
+
+    Returns (reindexed_chunks, merge_operations_count).
+    """
+    if not chunks or min_chars <= 0:
+        reindexed = [
+            Chunk(chunk_index=i, content=c.content, metadata=dict(c.metadata)) for i, c in enumerate(chunks)
+        ]
+        return reindexed, 0
+
+    out: list[Chunk] = [
+        Chunk(chunk_index=chunks[0].chunk_index, content=chunks[0].content, metadata=dict(chunks[0].metadata))
+    ]
+    merges = 0
+
+    for cur in chunks[1:]:
+        prev = out[-1]
+        prev_small = len(prev.content.strip()) < min_chars
+        cur_small = len(cur.content.strip()) < min_chars
+
+        merged = merge_two_chunks(prev, cur)
+        if (cur_small or prev_small) and len(merged.content) <= soft_max_chars:
+            out[-1] = Chunk(
+                chunk_index=prev.chunk_index,
+                content=merged.content,
+                metadata=merged.metadata,
+            )
+            merges += 1
+        else:
+            out.append(
+                Chunk(chunk_index=cur.chunk_index, content=cur.content, metadata=dict(cur.metadata))
+            )
+
+    while len(out) >= 2 and len(out[-1].content.strip()) < min_chars:
+        last = out.pop()
+        prev = out[-1]
+        merged = merge_two_chunks(prev, last)
+        if len(merged.content) <= soft_max_chars:
+            out[-1] = Chunk(
+                chunk_index=prev.chunk_index,
+                content=merged.content,
+                metadata=merged.metadata,
+            )
+            merges += 1
+        else:
+            out.append(last)
+            break
+
+    for i, ch in enumerate(out):
+        ch.chunk_index = i
+
+    return out, merges
+
+
 def chunk_text(
     text: str,
     is_markdown: bool = False,

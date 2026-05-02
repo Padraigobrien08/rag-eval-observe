@@ -54,6 +54,8 @@ class Settings(BaseSettings):
 
     # Request limits
     MAX_INGEST_PAYLOAD_SIZE: int = 10 * 1024 * 1024  # 10MB
+    # Optional PDF bytes (decoded size) attached at ingest for UI preview; base64 JSON is larger.
+    MAX_INGEST_ORIGINAL_FILE_BYTES: int = 25 * 1024 * 1024  # 25MB
     MAX_QUERY_LENGTH: int = 5000  # characters
     MAX_CONTEXT_CHARS: int = 50000  # characters for retrieved context
     MAX_CONTEXT_TOKENS: int = 12000  # tokens for context (approximate)
@@ -80,6 +82,21 @@ class Settings(BaseSettings):
     # Chunking
     CHUNK_SIZE: int = 1000
     CHUNK_OVERLAP: int = 200
+
+    # Ingest preprocessing / chunk hygiene (production defaults)
+    # Collapse runs longer than N newlines down to exactly N (e.g. 2 keeps one blank line between blocks).
+    INGEST_COLLAPSE_BLANK_LINES_TO: int = 2
+    INGEST_DEDUPE_CONSECUTIVE_PARAGRAPHS: bool = True
+    # Merge chunks shorter than this into neighbors when combined size stays under soft cap.
+    INGEST_MIN_CHUNK_CHARS: int = 80
+    INGEST_MERGED_CHUNK_SOFT_CAP_RATIO: float = 1.35
+
+    # Adaptive chunk size per ingest (from preprocessed character count)
+    INGEST_ADAPTIVE_CHUNKING: bool = True
+    INGEST_ADAPTIVE_CHUNK_MIN: int = 400
+    INGEST_ADAPTIVE_CHUNK_MAX: int = 2000
+    # Overlap as a fraction of resolved chunk_size, capped by CHUNK_OVERLAP.
+    INGEST_ADAPTIVE_OVERLAP_RATIO: float = 0.2
 
     # CORS (comma-separated string, will be parsed to list)
     # Supports both CORS_ORIGINS (legacy) and CORS_ALLOW_ORIGINS

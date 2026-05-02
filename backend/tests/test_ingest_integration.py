@@ -310,7 +310,7 @@ async def test_ingest_empty_text():
     mock_conn.fetchrow = AsyncMock(return_value=None)
 
     with patch("app.rag.ingest.get_db_pool", new=AsyncMock(return_value=mock_pool)):
-        with pytest.raises(IngestError, match="No chunks generated"):
+        with pytest.raises(IngestError, match="No usable text after preprocessing"):
             await ingest_document(
                 source="test-source",
                 title="Empty Document",

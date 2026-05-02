@@ -1,5 +1,6 @@
 import json
 
+import asyncpg
 import structlog
 
 from app.db.session import get_db_pool
@@ -11,13 +12,61 @@ async def get_document_by_id(document_id: str) -> dict | None:
     """Get a document by ID."""
     pool = await get_db_pool()
     async with pool.acquire() as conn:
-        row = await conn.fetchrow(
-            "SELECT id, source, title, created_at FROM documents WHERE id = $1",
-            document_id,
-        )
+        try:
+            row = await conn.fetchrow(
+                """
+                SELECT
+                    id,
+                    source,
+                    title,
+                    created_at,
+                    (original_file IS NOT NULL AND octet_length(original_file) > 0)
+                        AS original_available
+                FROM documents
+                WHERE id = $1
+                """,
+                document_id,
+            )
+        except asyncpg.exceptions.UndefinedColumnError:
+            row = await conn.fetchrow(
+                """
+                SELECT id, source, title, created_at
+                FROM documents
+                WHERE id = $1
+                """,
+                document_id,
+            )
+            if not row:
+                return None
+            legacy = dict(row)
+            legacy["original_available"] = False
+            return legacy
         if row:
             return dict(row)
         return None
+
+
+async def fetch_document_original(document_id: str) -> tuple[bytes, str] | None:
+    """Return stored binary and media type if present."""
+    pool = await get_db_pool()
+    async with pool.acquire() as conn:
+        try:
+            row = await conn.fetchrow(
+                """
+                SELECT original_file, original_media_type
+                FROM documents
+                WHERE id = $1 AND original_file IS NOT NULL AND octet_length(original_file) > 0
+                """,
+                document_id,
+            )
+        except asyncpg.exceptions.UndefinedColumnError:
+            return None
+    if not row or row["original_file"] is None:
+        return None
+    blob = row["original_file"]
+    data = bytes(blob) if not isinstance(blob, bytes) else blob
+    media_type = row["original_media_type"] or "application/octet-stream"
+    return data, media_type
 
 
 async def search_chunks(
@@ -122,18 +171,40 @@ async def list_documents(limit: int = 100, offset: int = 0) -> list[dict]:
             )
 
             # Add timeout for query execution (10 seconds)
-            rows = await asyncio.wait_for(
-                conn.fetch(
-                    """
-                    SELECT id, source, title, created_at
-                    FROM documents
-                    LIMIT $1 OFFSET $2
-                    """,
-                    limit,
-                    offset,
-                ),
-                timeout=10.0,
-            )
+            try:
+                rows = await asyncio.wait_for(
+                    conn.fetch(
+                        """
+                        SELECT
+                            id,
+                            source,
+                            title,
+                            created_at,
+                            (original_file IS NOT NULL AND octet_length(original_file) > 0)
+                                AS original_available
+                        FROM documents
+                        LIMIT $1 OFFSET $2
+                        """,
+                        limit,
+                        offset,
+                    ),
+                    timeout=10.0,
+                )
+                include_original_col = True
+            except asyncpg.exceptions.UndefinedColumnError:
+                rows = await asyncio.wait_for(
+                    conn.fetch(
+                        """
+                        SELECT id, source, title, created_at
+                        FROM documents
+                        LIMIT $1 OFFSET $2
+                        """,
+                        limit,
+                        offset,
+                    ),
+                    timeout=10.0,
+                )
+                include_original_col = False
             query_time = time.time()
             logger.info(
                 "Query executed",
@@ -147,6 +218,9 @@ async def list_documents(limit: int = 100, offset: int = 0) -> list[dict]:
                     "source": row["source"],
                     "title": row["title"],
                     "created_at": row["created_at"].isoformat() if row["created_at"] else None,
+                    "original_available": (
+                        bool(row["original_available"]) if include_original_col else False
+                    ),
                 }
                 for row in rows
             ]
@@ -183,13 +257,12 @@ async def delete_document(document_id: str) -> bool:
     """Delete a document and all its chunks (chunks are deleted via CASCADE)."""
     pool = await get_db_pool()
     async with pool.acquire() as conn:
-        # Delete the document (chunks will be automatically deleted via CASCADE)
-        result = await conn.execute(
-            "DELETE FROM documents WHERE id = $1",
+        # Use RETURNING so success does not depend on asyncpg command-tag string formatting.
+        row = await conn.fetchrow(
+            "DELETE FROM documents WHERE id = $1 RETURNING id",
             document_id,
         )
-        # Check if any rows were deleted
-        return result == "DELETE 1"
+        return row is not None
 
 
 async def log_query(
