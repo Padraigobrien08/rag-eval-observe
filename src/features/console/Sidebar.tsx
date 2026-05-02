@@ -451,106 +451,101 @@ export default function Sidebar({
                       No chats yet. Send a message to start one.
                     </p>
                   ) : (
-                    <div className="px-5 pb-1">
-                      <p className="mb-2 hidden text-[10px] leading-tight text-slate-400 sm:block">
-                        Focus list, then ↑ ↓ · Enter to open · Home/End for ends
-                      </p>
-                      <div
-                        role="listbox"
-                        aria-label="Chat threads"
-                        aria-activedescendant={
-                          threadsFocusIdx >= 0 &&
-                          threadsFocusIdx < chatThreads.length &&
-                          chatThreads[threadsFocusIdx]
-                            ? `thread-option-${chatThreads[threadsFocusIdx].id}`
-                            : undefined
-                        }
-                        tabIndex={0}
-                        title="Arrow keys navigate threads; Enter opens"
-                        onKeyDown={handleThreadsListKeyDown}
-                        className="space-y-1 rounded-md pb-2 outline-none focus-visible:ring-2 focus-visible:ring-slate-300/90 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
-                      >
-                        {chatThreads.map((thread, idx) => {
-                          const label =
-                            thread.title?.trim() ||
-                            `Chat · ${thread.updated_at?.slice(0, 10) ?? thread.id.slice(0, 8)}`
-                          const selected = activeChatThreadId === thread.id
-                          const kbHere = threadsFocusIdx === idx
-                          return (
-                            <div
-                              key={thread.id}
-                              id={`thread-option-${thread.id}`}
-                              role="option"
-                              aria-selected={selected}
-                              ref={el => {
-                                if (el) threadRowRefs.current.set(thread.id, el)
-                                else threadRowRefs.current.delete(thread.id)
+                    <div
+                      role="listbox"
+                      aria-label="Chat threads"
+                      aria-activedescendant={
+                        threadsFocusIdx >= 0 &&
+                        threadsFocusIdx < chatThreads.length &&
+                        chatThreads[threadsFocusIdx]
+                          ? `thread-option-${chatThreads[threadsFocusIdx].id}`
+                          : undefined
+                      }
+                      tabIndex={0}
+                      title="Arrow keys navigate threads; Enter opens"
+                      onKeyDown={handleThreadsListKeyDown}
+                      className="space-y-1 rounded-md px-5 pb-3 outline-none focus-visible:ring-2 focus-visible:ring-slate-300/90 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+                    >
+                      {chatThreads.map((thread, idx) => {
+                        const label =
+                          thread.title?.trim() ||
+                          `Chat · ${thread.updated_at?.slice(0, 10) ?? thread.id.slice(0, 8)}`
+                        const selected = activeChatThreadId === thread.id
+                        const kbHere = threadsFocusIdx === idx
+                        return (
+                          <div
+                            key={thread.id}
+                            id={`thread-option-${thread.id}`}
+                            role="option"
+                            aria-selected={selected}
+                            ref={el => {
+                              if (el) threadRowRefs.current.set(thread.id, el)
+                              else threadRowRefs.current.delete(thread.id)
+                            }}
+                            className={`group flex min-w-0 items-center gap-1 rounded-md border-l-[3px] py-0.5 pl-2 pr-2 transition-colors ${
+                              selected
+                                ? 'border-l-blue-600 bg-slate-100'
+                                : 'border-l-transparent hover:bg-slate-50'
+                            } ${kbHere ? 'ring-2 ring-blue-500/20 ring-inset' : ''}`}
+                          >
+                            <button
+                              type="button"
+                              data-testid={`chat-thread-${thread.id}`}
+                              onClick={() => {
+                                setThreadsFocusIdx(idx)
+                                onSelectChatThread?.(thread.id)
+                                onMobileSidebarClose?.()
                               }}
-                              className={`group flex min-w-0 items-center gap-1 rounded-md border-l-[3px] py-0.5 pl-2 pr-2 transition-colors ${
-                                selected
-                                  ? 'border-l-blue-600 bg-slate-100'
-                                  : 'border-l-transparent hover:bg-slate-50'
-                              } ${kbHere ? 'ring-2 ring-blue-500/20 ring-inset' : ''}`}
+                              className="min-w-0 flex-1 truncate px-1 py-2 text-left text-xs text-slate-700"
+                              title={label}
                             >
-                              <button
-                                type="button"
-                                data-testid={`chat-thread-${thread.id}`}
-                                onClick={() => {
-                                  setThreadsFocusIdx(idx)
-                                  onSelectChatThread?.(thread.id)
-                                  onMobileSidebarClose?.()
-                                }}
-                                className="min-w-0 flex-1 truncate px-1 py-2 text-left text-xs text-slate-700"
-                                title={label}
-                              >
-                                <span className="block truncate font-medium">{label}</span>
-                                {typeof thread.message_count === 'number' &&
-                                thread.message_count > 0 ? (
-                                  <span className="text-[10px] text-slate-400">
-                                    {thread.message_count} message
-                                    {thread.message_count === 1 ? '' : 's'}
-                                  </span>
-                                ) : null}
-                              </button>
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-8 w-8 shrink-0 text-slate-500 hover:bg-slate-100 hover:text-slate-800 focus-visible:ring-2 focus-visible:ring-slate-400/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
-                                    aria-label={`More actions for ${label}`}
-                                    onClick={e => e.stopPropagation()}
-                                  >
-                                    <MoreHorizontal className="h-4 w-4" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="w-44">
-                                  <DropdownMenuItem
-                                    onClick={e => {
-                                      e.preventDefault()
-                                      setRenameThread(thread)
-                                      setRenameTitle(thread.title?.trim() || label)
-                                    }}
-                                  >
-                                    Rename thread
-                                  </DropdownMenuItem>
-                                  <DropdownMenuSeparator />
-                                  <DropdownMenuItem
-                                    className="text-red-600 focus:bg-red-50 focus:text-red-600"
-                                    onClick={e => {
-                                      e.preventDefault()
-                                      void handleDeleteChatThread(thread)
-                                    }}
-                                  >
-                                    Delete chat
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </div>
-                          )
-                        })}
-                      </div>
+                              <span className="block truncate font-medium">{label}</span>
+                              {typeof thread.message_count === 'number' &&
+                              thread.message_count > 0 ? (
+                                <span className="text-[10px] text-slate-400">
+                                  {thread.message_count} message
+                                  {thread.message_count === 1 ? '' : 's'}
+                                </span>
+                              ) : null}
+                            </button>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 shrink-0 text-slate-500 hover:bg-slate-100 hover:text-slate-800 focus-visible:ring-2 focus-visible:ring-slate-400/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+                                  aria-label={`More actions for ${label}`}
+                                  onClick={e => e.stopPropagation()}
+                                >
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="w-44">
+                                <DropdownMenuItem
+                                  onClick={e => {
+                                    e.preventDefault()
+                                    setRenameThread(thread)
+                                    setRenameTitle(thread.title?.trim() || label)
+                                  }}
+                                >
+                                  Rename thread
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  className="text-red-600 focus:bg-red-50 focus:text-red-600"
+                                  onClick={e => {
+                                    e.preventDefault()
+                                    void handleDeleteChatThread(thread)
+                                  }}
+                                >
+                                  Delete chat
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        )
+                      })}
                     </div>
                   )}
                 </div>
