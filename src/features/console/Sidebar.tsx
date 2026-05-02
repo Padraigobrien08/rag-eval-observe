@@ -7,6 +7,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import {
@@ -133,10 +134,14 @@ export default function Sidebar({
     setPreviewDialogOpen(true)
   }
 
-  const handleDeleteClick = (doc: Document, e: React.MouseEvent) => {
-    e.stopPropagation() // Prevent triggering any parent click handlers
+  const openDocumentDeleteDialog = (doc: Document) => {
     setDocumentToDelete(doc)
     setDeleteDialogOpen(true)
+  }
+
+  const handleDeleteClick = (doc: Document, e: React.MouseEvent) => {
+    e.stopPropagation()
+    openDocumentDeleteDialog(doc)
   }
 
   const handleRenameSave = async () => {
@@ -160,8 +165,7 @@ export default function Sidebar({
     }
   }
 
-  const handleDeleteChatThread = async (thread: ChatThreadSummary, e: React.MouseEvent) => {
-    e.stopPropagation()
+  const handleDeleteChatThread = async (thread: ChatThreadSummary) => {
     try {
       await deleteChatThread(thread.id)
       onChatThreadDeleted?.(thread.id)
@@ -266,30 +270,59 @@ export default function Sidebar({
                 {documents.map(doc => (
                   <div
                     key={doc.id}
-                    className={`w-full flex items-center ${navCollapsed ? 'justify-center' : 'gap-2'} px-3 py-2 text-xs text-slate-700 hover:bg-slate-50 rounded-md transition-colors group`}
+                    className={`flex w-full items-center rounded-md px-3 py-2 text-xs text-slate-700 transition-colors hover:bg-slate-50 ${navCollapsed ? 'justify-center' : 'gap-2'} group`}
                     title={navCollapsed ? doc.title || doc.source : undefined}
                   >
-                    <button
-                      type="button"
-                      onClick={() => handleDocumentClick(doc)}
-                      className={`flex-1 flex items-center ${navCollapsed ? 'justify-center' : 'gap-2 text-left'} truncate hover:text-slate-900`}
-                      title={navCollapsed ? `View ${doc.title || doc.source}` : undefined}
-                    >
-                      <FileText className="h-3.5 w-3.5 text-slate-400 group-hover:text-slate-600 flex-shrink-0" />
-                      {!navCollapsed && (
-                        <span className="flex-1 truncate">{doc.title || doc.source}</span>
-                      )}
-                    </button>
-                    {!navCollapsed && (
-                      <button
-                        type="button"
-                        onClick={e => handleDeleteClick(doc, e)}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-red-50 rounded text-red-600 hover:text-red-700"
-                        aria-label={`Delete ${doc.title || doc.source}`}
-                        title="Delete document"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
+                    {navCollapsed ? (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button
+                            type="button"
+                            className="flex h-9 w-9 items-center justify-center rounded-md text-slate-700 hover:bg-slate-100 hover:text-slate-900"
+                            aria-label={`Document menu: ${doc.title || doc.source}`}
+                            title={doc.title || doc.source}
+                          >
+                            <FileText className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="center" side="right" className="w-44">
+                          <DropdownMenuItem
+                            onClick={() => {
+                              handleDocumentClick(doc)
+                            }}
+                          >
+                            Preview
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            className="text-red-600 focus:bg-red-50 focus:text-red-600"
+                            onClick={() => openDocumentDeleteDialog(doc)}
+                          >
+                            Delete document…
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    ) : (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => handleDocumentClick(doc)}
+                          className="flex min-w-0 flex-1 items-center gap-2 truncate text-left hover:text-slate-900"
+                          title={`View ${doc.title || doc.source}`}
+                        >
+                          <FileText className="h-3.5 w-3.5 shrink-0 text-slate-400 group-hover:text-slate-600" />
+                          <span className="min-w-0 flex-1 truncate">{doc.title || doc.source}</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={e => handleDeleteClick(doc, e)}
+                          className="shrink-0 rounded p-1 text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600"
+                          aria-label={`Delete ${doc.title || doc.source}`}
+                          title="Delete document"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </>
                     )}
                   </div>
                 ))}
@@ -359,7 +392,7 @@ export default function Sidebar({
                               type="button"
                               variant="ghost"
                               size="icon"
-                              className="h-8 w-8 shrink-0 text-slate-500 opacity-0 transition-opacity group-hover:opacity-100"
+                              className="h-8 w-8 shrink-0 text-slate-500 hover:bg-slate-100 hover:text-slate-800"
                               aria-label={`More actions for ${label}`}
                               onClick={e => e.stopPropagation()}
                             >
@@ -376,17 +409,18 @@ export default function Sidebar({
                             >
                               Rename thread
                             </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              className="text-red-600 focus:bg-red-50 focus:text-red-600"
+                              onClick={e => {
+                                e.preventDefault()
+                                void handleDeleteChatThread(thread)
+                              }}
+                            >
+                              Delete chat
+                            </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
-                        <button
-                          type="button"
-                          onClick={e => void handleDeleteChatThread(thread, e)}
-                          className="rounded p-1.5 text-slate-400 opacity-0 transition-opacity hover:bg-red-50 hover:text-red-600 group-hover:opacity-100"
-                          aria-label={`Delete chat "${label}"`}
-                          title="Delete chat"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
                       </div>
                     )
                   })}
