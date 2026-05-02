@@ -143,7 +143,7 @@ export default function DocumentPreviewDialog({
           <DialogTitle className="pr-8">{document.title || document.source}</DialogTitle>
           <DialogDescription asChild>
             <div className="flex flex-col gap-3 text-left">
-              <div className="flex flex-wrap gap-2">
+              <div className="flex w-full min-w-0 max-w-full flex-wrap gap-2 pr-1">
                 {originalAvailable ? (
                   <Button
                     type="button"

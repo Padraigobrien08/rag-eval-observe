@@ -226,208 +226,217 @@ export default function Sidebar({
             <div className="h-8 w-8" />
           )}
         </div>
-        <ScrollArea className="flex-1 min-h-0 space-y-6">
-          {/* Documents */}
-          <div>
-            <div
-              className={`flex items-center ${navCollapsed ? 'justify-center px-2' : 'justify-between px-4'} py-2`}
-            >
-              {!navCollapsed && (
-                <div className="text-xs font-semibold tracking-wide text-slate-500">
-                  DOCUMENTS
-                  {!isLoadingDocs && documents.length > 0 && (
-                    <span className="ml-1.5 text-slate-400 font-normal">({documents.length})</span>
-                  )}
-                </div>
-              )}
-              <Button
-                variant="ghost"
-                size="icon"
-                aria-label="Ingest document"
-                onClick={() => setIngestOpen(true)}
-                className="h-8 w-8"
-                title={navCollapsed ? 'Ingest document' : undefined}
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
-            </div>
-            {isLoadingDocs ? (
+        <ScrollArea className="flex-1 min-h-0">
+          <div className="space-y-6 pr-3 pb-1">
+            {/* Documents */}
+            <div>
               <div
-                className={`flex items-center gap-2 ${navCollapsed ? 'justify-center px-2' : 'px-4'} py-3`}
+                className={`flex items-center ${navCollapsed ? 'justify-center px-2' : 'justify-between px-4'} py-2`}
               >
-                <Loader2 className="h-3 w-3 animate-spin text-slate-400" />
-                {!navCollapsed && <p className="text-xs text-slate-500">Loading documents...</p>}
-              </div>
-            ) : documents.length === 0 ? (
-              !navCollapsed && (
-                <div className="px-4 py-3">
-                  <p className="text-xs text-slate-500">No documents yet.</p>
-                  <p className="text-xs text-slate-400 mt-1">Click + to add your first document.</p>
-                </div>
-              )
-            ) : (
-              <div className={`space-y-0.5 ${navCollapsed ? 'px-1' : 'px-4'}`}>
-                {documents.map(doc => (
-                  <div
-                    key={doc.id}
-                    className={`flex w-full min-w-0 items-center rounded-md py-2 text-xs text-slate-700 transition-colors hover:bg-slate-50 ${navCollapsed ? 'justify-center px-1' : 'gap-2 pl-2 pr-3'} group`}
-                    title={navCollapsed ? doc.title || doc.source : undefined}
-                  >
-                    {navCollapsed ? (
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <button
-                            type="button"
-                            className="flex h-9 w-9 items-center justify-center rounded-md text-slate-700 hover:bg-slate-100 hover:text-slate-900"
-                            aria-label={`Document menu: ${doc.title || doc.source}`}
-                            title={doc.title || doc.source}
-                          >
-                            <FileText className="h-3.5 w-3.5 shrink-0 text-slate-400" />
-                          </button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="center" side="right" className="w-44">
-                          <DropdownMenuItem
-                            onClick={() => {
-                              handleDocumentClick(doc)
-                            }}
-                          >
-                            Preview
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            className="text-red-600 focus:bg-red-50 focus:text-red-600"
-                            onClick={() => openDocumentDeleteDialog(doc)}
-                          >
-                            Delete document…
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    ) : (
-                      <>
-                        <button
-                          type="button"
-                          onClick={() => handleDocumentClick(doc)}
-                          className="flex min-w-0 flex-1 items-center gap-2 truncate text-left hover:text-slate-900"
-                          title={`View ${doc.title || doc.source}`}
-                        >
-                          <FileText className="h-3.5 w-3.5 shrink-0 text-slate-400 group-hover:text-slate-600" />
-                          <span className="min-w-0 flex-1 truncate">{doc.title || doc.source}</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={e => handleDeleteClick(doc, e)}
-                          className="shrink-0 rounded-md p-1.5 text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600"
-                          aria-label={`Delete ${doc.title || doc.source}`}
-                          title="Delete document"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
-                      </>
+                {!navCollapsed && (
+                  <div className="text-xs font-semibold tracking-wide text-slate-500">
+                    DOCUMENTS
+                    {!isLoadingDocs && documents.length > 0 && (
+                      <span className="ml-1.5 text-slate-400 font-normal">
+                        ({documents.length})
+                      </span>
                     )}
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Chats */}
-          {!navCollapsed && (
-            <div className="border-t border-slate-100 pt-2">
-              <div className="flex items-center justify-between px-4 py-2">
-                <div className="text-xs font-semibold tracking-wide text-slate-500">CHATS</div>
+                )}
                 <Button
                   variant="ghost"
                   size="icon"
-                  aria-label="New chat"
-                  onClick={() => {
-                    onNewChat?.()
-                    onMobileSidebarClose?.()
-                  }}
+                  aria-label="Ingest document"
+                  onClick={() => setIngestOpen(true)}
                   className="h-8 w-8"
+                  title={navCollapsed ? 'Ingest document' : undefined}
                 >
                   <Plus className="h-4 w-4" />
                 </Button>
               </div>
-              {chatThreadsLoading ? (
-                <div className="flex justify-center px-4 py-6">
-                  <Loader2 className="h-5 w-5 animate-spin text-slate-400" aria-hidden />
+              {isLoadingDocs ? (
+                <div
+                  className={`flex items-center gap-2 ${navCollapsed ? 'justify-center px-2' : 'px-4'} py-3`}
+                >
+                  <Loader2 className="h-3 w-3 animate-spin text-slate-400" />
+                  {!navCollapsed && <p className="text-xs text-slate-500">Loading documents...</p>}
                 </div>
-              ) : chatThreads.length === 0 ? (
-                <p className="px-4 pb-4 text-xs text-slate-500">
-                  No chats yet. Send a message to start one.
-                </p>
+              ) : documents.length === 0 ? (
+                !navCollapsed && (
+                  <div className="px-4 py-3">
+                    <p className="text-xs text-slate-500">No documents yet.</p>
+                    <p className="text-xs text-slate-400 mt-1">
+                      Click + to add your first document.
+                    </p>
+                  </div>
+                )
               ) : (
-                <div className="max-h-[40vh] space-y-1 overflow-y-auto px-4 pb-4">
-                  {chatThreads.map(thread => {
-                    const label =
-                      thread.title?.trim() ||
-                      `Chat · ${thread.updated_at?.slice(0, 10) ?? thread.id.slice(0, 8)}`
-                    const selected = activeChatThreadId === thread.id
-                    return (
-                      <div
-                        key={thread.id}
-                        className={`group flex min-w-0 items-center gap-0.5 rounded-md py-0.5 pl-2 pr-3 ${selected ? 'bg-slate-100' : 'hover:bg-slate-50'}`}
-                      >
-                        <button
-                          type="button"
-                          data-testid={`chat-thread-${thread.id}`}
-                          onClick={() => {
-                            onSelectChatThread?.(thread.id)
-                            onMobileSidebarClose?.()
-                          }}
-                          className="min-w-0 flex-1 truncate px-1 py-2 text-left text-xs text-slate-700"
-                          title={label}
-                        >
-                          <span className="block truncate font-medium">{label}</span>
-                          {typeof thread.message_count === 'number' && thread.message_count > 0 ? (
-                            <span className="text-[10px] text-slate-400">
-                              {thread.message_count} message
-                              {thread.message_count === 1 ? '' : 's'}
-                            </span>
-                          ) : null}
-                        </button>
+                <div className={`space-y-0.5 ${navCollapsed ? 'px-1' : 'px-4'}`}>
+                  {documents.map(doc => (
+                    <div
+                      key={doc.id}
+                      className={`min-w-0 rounded-md py-2 text-xs text-slate-700 transition-colors hover:bg-slate-50 group ${navCollapsed ? 'flex justify-center px-1' : 'grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-2 pl-2'}`}
+                      title={navCollapsed ? doc.title || doc.source : undefined}
+                    >
+                      {navCollapsed ? (
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button
+                            <button
                               type="button"
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 shrink-0 text-slate-500 hover:bg-slate-100 hover:text-slate-800"
-                              aria-label={`More actions for ${label}`}
-                              onClick={e => e.stopPropagation()}
+                              className="flex h-9 w-9 items-center justify-center rounded-md text-slate-700 hover:bg-slate-100 hover:text-slate-900"
+                              aria-label={`Document menu: ${doc.title || doc.source}`}
+                              title={doc.title || doc.source}
                             >
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
+                              <FileText className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+                            </button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-44">
+                          <DropdownMenuContent align="center" side="right" className="w-44">
                             <DropdownMenuItem
-                              onClick={e => {
-                                e.preventDefault()
-                                setRenameThread(thread)
-                                setRenameTitle(thread.title?.trim() || label)
+                              onClick={() => {
+                                handleDocumentClick(doc)
                               }}
                             >
-                              Rename thread
+                              Preview
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem
                               className="text-red-600 focus:bg-red-50 focus:text-red-600"
-                              onClick={e => {
-                                e.preventDefault()
-                                void handleDeleteChatThread(thread)
-                              }}
+                              onClick={() => openDocumentDeleteDialog(doc)}
                             >
-                              Delete chat
+                              Delete document…
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
-                      </div>
-                    )
-                  })}
+                      ) : (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => handleDocumentClick(doc)}
+                            className="flex min-w-0 flex-1 items-center gap-2 truncate text-left hover:text-slate-900"
+                            title={`View ${doc.title || doc.source}`}
+                          >
+                            <FileText className="h-3.5 w-3.5 shrink-0 text-slate-400 group-hover:text-slate-600" />
+                            <span className="min-w-0 flex-1 truncate">
+                              {doc.title || doc.source}
+                            </span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={e => handleDeleteClick(doc, e)}
+                            className="shrink-0 rounded-md p-1.5 text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600"
+                            aria-label={`Delete ${doc.title || doc.source}`}
+                            title="Delete document"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
-          )}
+
+            {/* Chats */}
+            {!navCollapsed && (
+              <div className="border-t border-slate-100 pt-2">
+                <div className="flex items-center justify-between px-4 py-2">
+                  <div className="text-xs font-semibold tracking-wide text-slate-500">CHATS</div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label="New chat"
+                    onClick={() => {
+                      onNewChat?.()
+                      onMobileSidebarClose?.()
+                    }}
+                    className="h-8 w-8"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+                {chatThreadsLoading ? (
+                  <div className="flex justify-center px-4 py-6">
+                    <Loader2 className="h-5 w-5 animate-spin text-slate-400" aria-hidden />
+                  </div>
+                ) : chatThreads.length === 0 ? (
+                  <p className="px-4 pb-4 text-xs text-slate-500">
+                    No chats yet. Send a message to start one.
+                  </p>
+                ) : (
+                  <div className="max-h-[40vh] space-y-1 overflow-y-auto px-4 pb-4">
+                    {chatThreads.map(thread => {
+                      const label =
+                        thread.title?.trim() ||
+                        `Chat · ${thread.updated_at?.slice(0, 10) ?? thread.id.slice(0, 8)}`
+                      const selected = activeChatThreadId === thread.id
+                      return (
+                        <div
+                          key={thread.id}
+                          className={`group flex min-w-0 items-center gap-0.5 rounded-md py-0.5 pl-2 pr-3 ${selected ? 'bg-slate-100' : 'hover:bg-slate-50'}`}
+                        >
+                          <button
+                            type="button"
+                            data-testid={`chat-thread-${thread.id}`}
+                            onClick={() => {
+                              onSelectChatThread?.(thread.id)
+                              onMobileSidebarClose?.()
+                            }}
+                            className="min-w-0 flex-1 truncate px-1 py-2 text-left text-xs text-slate-700"
+                            title={label}
+                          >
+                            <span className="block truncate font-medium">{label}</span>
+                            {typeof thread.message_count === 'number' &&
+                            thread.message_count > 0 ? (
+                              <span className="text-[10px] text-slate-400">
+                                {thread.message_count} message
+                                {thread.message_count === 1 ? '' : 's'}
+                              </span>
+                            ) : null}
+                          </button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 shrink-0 text-slate-500 hover:bg-slate-100 hover:text-slate-800"
+                                aria-label={`More actions for ${label}`}
+                                onClick={e => e.stopPropagation()}
+                              >
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-44">
+                              <DropdownMenuItem
+                                onClick={e => {
+                                  e.preventDefault()
+                                  setRenameThread(thread)
+                                  setRenameTitle(thread.title?.trim() || label)
+                                }}
+                              >
+                                Rename thread
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                className="text-red-600 focus:bg-red-50 focus:text-red-600"
+                                onClick={e => {
+                                  e.preventDefault()
+                                  void handleDeleteChatThread(thread)
+                                }}
+                              >
+                                Delete chat
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </ScrollArea>
 
         <div
