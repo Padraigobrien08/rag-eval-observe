@@ -48,6 +48,10 @@ function apiMsgToChat(m: PersistedChatMessage): ChatMessage {
     ragModel: m.rag_model ?? undefined,
     citations: cites.length > 0 ? cites : undefined,
     metadata: { ...(m.metadata || {}) },
+    requestId: m.request_id ?? undefined,
+    queryLogId: m.query_log_id ?? undefined,
+    evalRunId: m.eval_run_id ?? undefined,
+    evalCaseId: m.eval_case_id ?? undefined,
   }
 }
 
@@ -231,6 +235,9 @@ export function useChat(
                       latency_ms: latencyMs,
                       cost_usd: costUsd,
                       rag_model: ragModel,
+                      request_id: typeof data.request_id === 'string' ? data.request_id : undefined,
+                      query_log_id:
+                        typeof data.query_log_id === 'string' ? data.query_log_id : undefined,
                     })
                     onThreadsChanged?.()
                     const rows = await reloadThreadMessages(currentThreadId)
@@ -314,6 +321,7 @@ export function useChat(
           const latencyMs = resp.latency_ms ?? resp.latencyMs
           const ragModel = resp.rag_model ?? resp.ragModel
           const costUsd = estimateChatMessageCostUsd(resp.token_usage ?? resp.tokenUsage)
+          const obs = resp as { request_id?: string; query_log_id?: string }
 
           await appendChatMessage(currentThreadId, {
             role: 'assistant',
@@ -323,6 +331,8 @@ export function useChat(
             latency_ms: latencyMs,
             cost_usd: costUsd,
             rag_model: ragModel,
+            request_id: typeof obs.request_id === 'string' ? obs.request_id : undefined,
+            query_log_id: typeof obs.query_log_id === 'string' ? obs.query_log_id : undefined,
           })
           onThreadsChanged?.()
           const rows = await reloadThreadMessages(currentThreadId)

@@ -17,4 +17,10 @@ export interface ChatMessage {
   ragModel?: string
   citations?: Citation[]
   metadata?: Record<string, unknown>
+  /** Mirrors HTTP ``X-Request-ID`` / ``queries.request_id`` when persisted */
+  requestId?: string | null
+  /** ``queries.id`` for the RAG audit row tied to this assistant turn */
+  queryLogId?: string | null
+  evalRunId?: string | null
+  evalCaseId?: string | null
 }

@@ -79,7 +79,9 @@ class IngestRequest(BaseModel):
         has_b64 = bool(self.original_file_base64)
         has_type = bool(self.original_media_type)
         if has_b64 ^ has_type:
-            raise ValueError("original_file_base64 and original_media_type must both be set or both omitted")
+            raise ValueError(
+                "original_file_base64 and original_media_type must both be set or both omitted"
+            )
         return self
 
 
@@ -159,12 +161,18 @@ class QueryResponse(BaseModel):
     debug: dict[str, Any] | None = None
     rag_model: str | None = None
     retrieved_chunk_count: int = 0
+    request_id: str | None = None
+    """HTTP request correlation id (same as ``X-Request-ID`` response header)."""
+    query_log_id: str | None = None
+    """Primary key of the matching row in ``queries`` when audit logging succeeds."""
 
 
 class ChatThreadCreate(BaseModel):
     """Create a persisted chat thread."""
 
-    title: str | None = Field(None, description="Optional title (defaults may be derived client-side)")
+    title: str | None = Field(
+        None, description="Optional title (defaults may be derived client-side)"
+    )
 
 
 class ChatThreadResponse(BaseModel):
@@ -191,6 +199,12 @@ class ChatMessageAppend(BaseModel):
     latency_ms: int | None = None
     cost_usd: float | None = None
     rag_model: str | None = None
+    request_id: str | None = Field(None, description="Correlates with logs and queries.request_id")
+    query_log_id: str | None = Field(
+        None, description="FK to queries.id when this turn used /query"
+    )
+    eval_run_id: str | None = Field(None, description="Opaque batch id from automated eval runs")
+    eval_case_id: str | None = Field(None, description="Case key/slug inside eval_run_id")
 
 
 class ChatMessageResponse(BaseModel):
@@ -207,6 +221,10 @@ class ChatMessageResponse(BaseModel):
     rag_model: str | None = None
     seq: int
     created_at: str | None = None
+    request_id: str | None = None
+    query_log_id: str | None = None
+    eval_run_id: str | None = None
+    eval_case_id: str | None = None
 
 
 class ChatMessagesListResponse(BaseModel):

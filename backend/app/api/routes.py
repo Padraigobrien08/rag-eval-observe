@@ -1,4 +1,3 @@
-import asyncio
 import base64
 import json
 import re
@@ -530,7 +529,9 @@ async def delete_chat_thread_endpoint(thread_id: str):
     deleted = await delete_chat_thread(thread_id)
     if not deleted:
         raise HTTPException(status_code=404, detail="Thread not found")
-    return JSONResponse(status_code=200, content={"message": "Thread deleted", "thread_id": thread_id})
+    return JSONResponse(
+        status_code=200, content={"message": "Thread deleted", "thread_id": thread_id}
+    )
 
 
 @router.get("/chat/threads/{thread_id}/messages", response_model=ChatMessagesListResponse)
@@ -554,6 +555,10 @@ async def list_chat_messages_endpoint(thread_id: str):
                 rag_model=m.get("rag_model"),
                 seq=m["seq"],
                 created_at=m.get("created_at"),
+                request_id=m.get("request_id"),
+                query_log_id=m.get("query_log_id"),
+                eval_run_id=m.get("eval_run_id"),
+                eval_case_id=m.get("eval_case_id"),
             )
             for m in rows
         ]
@@ -575,6 +580,10 @@ async def append_chat_message_endpoint(thread_id: str, body: ChatMessageAppend):
         latency_ms=body.latency_ms,
         cost_usd=body.cost_usd,
         rag_model=body.rag_model,
+        request_id=body.request_id,
+        query_log_id=body.query_log_id,
+        eval_run_id=body.eval_run_id,
+        eval_case_id=body.eval_case_id,
     )
     return ChatMessageResponse(
         id=m["id"],
@@ -588,6 +597,10 @@ async def append_chat_message_endpoint(thread_id: str, body: ChatMessageAppend):
         rag_model=m.get("rag_model"),
         seq=m["seq"],
         created_at=m.get("created_at"),
+        request_id=m.get("request_id"),
+        query_log_id=m.get("query_log_id"),
+        eval_run_id=m.get("eval_run_id"),
+        eval_case_id=m.get("eval_case_id"),
     )
 
 
@@ -881,35 +894,31 @@ async def query_endpoint(
             latency_ms=answer_response.latency_ms,
         )
 
-        # Log query to database (non-blocking - errors are logged but don't affect response)
+        query_log_id: str | None = None
         try:
-            # Get client IP and user agent
             client_ip = request.client.host if request.client else None
             user_agent = request.headers.get("user-agent")
-
-            # Log query asynchronously (fire and forget)
-            # We don't await this to avoid blocking the response
-            asyncio.create_task(
-                log_query(
-                    query_text=query_request.query,
-                    rag_model=rag_model,
-                    top_k=query_request.top_k,
-                    request_id=request_id,
-                    client_ip=client_ip,
-                    user_agent=user_agent,
-                    latency_ms=answer_response.latency_ms,
-                    token_usage=answer_response.token_usage,
-                    citations_count=len(answer_response.citations),
-                    answer_length=len(answer_response.answer) if answer_response.answer else None,
-                )
+            query_log_id = await log_query(
+                query_text=query_request.query,
+                rag_model=rag_model,
+                top_k=query_request.top_k,
+                request_id=request_id,
+                client_ip=client_ip,
+                user_agent=user_agent,
+                latency_ms=answer_response.latency_ms,
+                token_usage=answer_response.token_usage,
+                citations_count=len(answer_response.citations),
+                answer_length=len(answer_response.answer) if answer_response.answer else None,
             )
         except Exception as e:
-            # Log error but don't fail the query response
             logger.warning(
-                "Failed to schedule query logging",
+                "Failed to log query",
                 request_id=request_id,
                 error=str(e),
             )
+
+        response_data["request_id"] = request_id
+        response_data["query_log_id"] = query_log_id
 
         return QueryResponse(**response_data)
 
@@ -1052,7 +1061,6 @@ async def query_stream_endpoint(
         )
 
     async def event_gen() -> AsyncIterator[str]:
-        done_payload = None
         try:
             async for event in generate_answer_stream(
                 query=query_request.query,
@@ -1063,39 +1071,39 @@ async def query_stream_endpoint(
                 include_debug=query_request.debug,
             ):
                 if event.get("type") == "done":
-                    done_payload = event
-                yield f"data: {json.dumps(event)}\n\n"
-        except AnswerError as e:
-            err_body = {"type": "error", "message": str(e)}
-            yield f"data: {json.dumps(err_body)}\n\n"
-            done_payload = None
-        finally:
-            if done_payload:
-                try:
-                    client_ip = request.client.host if request.client else None
-                    user_agent = request.headers.get("user-agent")
-                    ans = done_payload.get("answer") or ""
-                    citations = done_payload.get("citations") or []
-                    asyncio.create_task(
-                        log_query(
+                    query_log_id: str | None = None
+                    try:
+                        client_ip = request.client.host if request.client else None
+                        user_agent = request.headers.get("user-agent")
+                        ans = event.get("answer") or ""
+                        citations = event.get("citations") or []
+                        query_log_id = await log_query(
                             query_text=query_request.query,
                             rag_model=rag_model,
                             top_k=query_request.top_k,
                             request_id=request_id,
                             client_ip=client_ip,
                             user_agent=user_agent,
-                            latency_ms=done_payload.get("latency_ms"),
-                            token_usage=done_payload.get("token_usage"),
+                            latency_ms=event.get("latency_ms"),
+                            token_usage=event.get("token_usage"),
                             citations_count=len(citations),
                             answer_length=len(ans) if ans else None,
                         )
-                    )
-                except Exception as log_err:
-                    logger.warning(
-                        "Failed to schedule query logging",
-                        request_id=request_id,
-                        error=str(log_err),
-                    )
+                    except Exception as log_err:
+                        logger.warning(
+                            "Failed to log streamed query",
+                            request_id=request_id,
+                            error=str(log_err),
+                        )
+                    event = {
+                        **event,
+                        "request_id": request_id,
+                        "query_log_id": query_log_id,
+                    }
+                yield f"data: {json.dumps(event)}\n\n"
+        except AnswerError as e:
+            err_body = {"type": "error", "message": str(e)}
+            yield f"data: {json.dumps(err_body)}\n\n"
 
     return StreamingResponse(
         event_gen(),

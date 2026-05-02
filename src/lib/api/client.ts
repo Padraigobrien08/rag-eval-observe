@@ -414,6 +414,10 @@ export interface PersistedChatMessage {
   rag_model: string | null
   seq: number
   created_at: string | null
+  request_id?: string | null
+  query_log_id?: string | null
+  eval_run_id?: string | null
+  eval_case_id?: string | null
 }
 
 export async function createChatThread(body?: {
@@ -471,6 +475,10 @@ export async function appendChatMessage(
     latency_ms?: number
     cost_usd?: number
     rag_model?: string
+    request_id?: string | null
+    query_log_id?: string | null
+    eval_run_id?: string | null
+    eval_case_id?: string | null
   }
 ): Promise<PersistedChatMessage> {
   ensureBrowser()

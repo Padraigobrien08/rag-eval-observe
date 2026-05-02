@@ -276,11 +276,12 @@ async def log_query(
     token_usage: dict | None = None,
     citations_count: int = 0,
     answer_length: int | None = None,
-) -> None:
+) -> str | None:
     """
     Log a query to the database for monitoring and analytics.
 
-    This is designed to be non-blocking - errors are logged but don't affect the query response.
+    Returns the new ``queries.id`` row primary key, or None if logging failed.
+    Errors are swallowed so callers can still return the HTTP response.
     """
     import uuid
     from decimal import Decimal
@@ -307,12 +308,13 @@ async def log_query(
 
         pool = await get_db_pool()
         async with pool.acquire() as conn:
-            await conn.execute(
+            row = await conn.fetchrow(
                 """
                 INSERT INTO queries (
                     id, query_text, rag_model, top_k, request_id, client_ip, user_agent,
                     latency_ms, token_usage, cost_usd, citations_count, answer_length
                 ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+                RETURNING id
                 """,
                 str(uuid.uuid4()),
                 query_text,
@@ -327,6 +329,7 @@ async def log_query(
                 citations_count,
                 answer_length,
             )
+            return str(row["id"]) if row else None
     except Exception as e:
         # Log error but don't fail the query
         logger.warning(
@@ -335,6 +338,7 @@ async def log_query(
             query_preview=query_text[:100] if query_text else None,
             exc_info=True,
         )
+        return None
 
 
 async def get_query_logs(

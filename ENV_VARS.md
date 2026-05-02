@@ -99,6 +99,9 @@ MAX_CONTEXT_TOKENS=12000
 # Postgres chat threads/messages (`/api/v1/chat/*`). When > 0, threads older than N calendar days are pruned on list/create.
 CHAT_RETENTION_DAYS=0
 
+# Chat messages can store request_id / query_log_id (joins queries.id) plus optional eval_run_id / eval_case_id for harness correlation.
+# Non-stream POST /query and streaming ``done`` events include request_id and query_log_id when audit logging succeeds.
+
 # Server Configuration
 HOST=0.0.0.0
 PORT=8000

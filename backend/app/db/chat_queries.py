@@ -100,6 +100,10 @@ async def append_chat_message(
     latency_ms: int | None = None,
     cost_usd: float | None = None,
     rag_model: str | None = None,
+    request_id: str | None = None,
+    query_log_id: str | None = None,
+    eval_run_id: str | None = None,
+    eval_case_id: str | None = None,
 ) -> dict[str, Any]:
     pool = await get_db_pool()
     cite_json = json.dumps(citations or [])
@@ -114,11 +118,13 @@ async def append_chat_message(
                 """
                 INSERT INTO chat_messages (
                     thread_id, role, content, citations, metadata,
-                    latency_ms, cost_usd, rag_model, seq
+                    latency_ms, cost_usd, rag_model, seq,
+                    request_id, query_log_id, eval_run_id, eval_case_id
                 )
-                VALUES ($1, $2, $3, $4::jsonb, $5::jsonb, $6, $7, $8, $9)
+                VALUES ($1, $2, $3, $4::jsonb, $5::jsonb, $6, $7, $8, $9, $10, $11, $12, $13)
                 RETURNING id, thread_id, role, content, citations, metadata,
-                          latency_ms, cost_usd, rag_model, seq, created_at
+                          latency_ms, cost_usd, rag_model, seq, created_at,
+                          request_id, query_log_id, eval_run_id, eval_case_id
                 """,
                 thread_id,
                 role,
@@ -129,6 +135,10 @@ async def append_chat_message(
                 cost_usd,
                 rag_model,
                 seq,
+                request_id,
+                query_log_id,
+                eval_run_id,
+                eval_case_id,
             )
             await conn.execute(
                 "UPDATE chat_threads SET updated_at = NOW() WHERE id = $1",
@@ -144,7 +154,8 @@ async def list_chat_messages(thread_id: str) -> list[dict[str, Any]]:
         rows = await conn.fetch(
             """
             SELECT id, thread_id, role, content, citations, metadata,
-                   latency_ms, cost_usd, rag_model, seq, created_at
+                   latency_ms, cost_usd, rag_model, seq, created_at,
+                   request_id, query_log_id, eval_run_id, eval_case_id
             FROM chat_messages
             WHERE thread_id = $1
             ORDER BY seq ASC
@@ -183,4 +194,8 @@ def _message_row(row: Any) -> dict[str, Any]:
         "rag_model": row["rag_model"],
         "seq": row["seq"],
         "created_at": row["created_at"].isoformat() if row["created_at"] else None,
+        "request_id": row["request_id"],
+        "query_log_id": row["query_log_id"],
+        "eval_run_id": row["eval_run_id"],
+        "eval_case_id": row["eval_case_id"],
     }
