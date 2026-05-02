@@ -35,7 +35,7 @@ docker compose up -d postgres
 4. Run migrations:
 
 ```bash
-# From project root
+# From project root, or from backend/ (backend/Makefile mirrors this)
 make migrate
 ```
 

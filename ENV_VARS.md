@@ -190,7 +190,7 @@ CORS_ALLOW_ORIGINS=https://rag-eval-observability.vercel.app,https://rag-eval-ob
 
 ### Azure Container Apps:
 
-- [ ] Apply DB migrations after deploy or pulling new revisions: `make migrate` from the repo root (with `DATABASE_URL` set), or `cd backend && uv run alembic upgrade head`
+- [ ] Apply DB migrations after deploy or pulling new revisions: `make migrate` from the **repo root** or from **`backend/`** (with `DATABASE_URL` set), or run `uv run python scripts/apply_init_sql.py && uv run alembic upgrade head` inside `backend/`
 - [ ] Add `DATABASE_URL` (from Neon DB) - **Mark as Secure**
 - [ ] Add `OPENAI_API_KEY` - **Mark as Secure**
 - [ ] Add `ENVIRONMENT=production`
