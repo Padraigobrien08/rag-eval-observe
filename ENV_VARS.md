@@ -119,6 +119,7 @@ OTEL_SERVICE_NAME=rag-eval-backend
 
 ### Metrics and streaming
 
+- `GET /api/v1/analytics/chat-query-links?limit=50` returns recent rows joining **`chat_messages.query_log_id`** → **`queries.id`** (audit ↔ persisted assistant turns). Same **`API_KEY`** rules as other `/api/v1/*` routes when configured.
 - `GET /api/v1/metrics` and `GET /api/v1/metrics/prometheus` expose per-route counters (including `/api/v1/query` and `/api/v1/query/stream`) and token totals. They are in-memory and reset on process restart.
 - Grafana: import `observability/grafana-rag-eval-prometheus.json` or use provisioning files under `observability/grafana/` (see `observability/grafana/README.md`).
 

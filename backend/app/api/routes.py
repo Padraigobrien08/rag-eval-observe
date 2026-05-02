@@ -4,11 +4,13 @@ import re
 from collections.abc import AsyncIterator
 
 import structlog
+from asyncpg.exceptions import ForeignKeyViolationError
 from fastapi import APIRouter, File, HTTPException, Query, Request, UploadFile
 from fastapi.responses import JSONResponse, PlainTextResponse, Response, StreamingResponse
 
 from app.core.config import settings
 from app.core.metrics import get_metrics
+from app.db.analytics_queries import list_chat_query_links
 from app.db.chat_queries import (
     append_chat_message,
     create_chat_thread,
@@ -36,6 +38,8 @@ from app.schemas import (
     ChatMessageAppend,
     ChatMessageResponse,
     ChatMessagesListResponse,
+    ChatQueryLinkItem,
+    ChatQueryLinksResponse,
     ChatThreadCreate,
     ChatThreadListResponse,
     ChatThreadResponse,
@@ -593,20 +597,26 @@ async def append_chat_message_endpoint(thread_id: str, body: ChatMessageAppend):
     thread = await get_chat_thread(thread_id)
     if not thread:
         raise HTTPException(status_code=404, detail="Thread not found")
-    m = await append_chat_message(
-        thread_id,
-        role=body.role,
-        content=body.content,
-        citations=body.citations,
-        metadata=body.metadata,
-        latency_ms=body.latency_ms,
-        cost_usd=body.cost_usd,
-        rag_model=body.rag_model,
-        request_id=body.request_id,
-        query_log_id=body.query_log_id,
-        eval_run_id=body.eval_run_id,
-        eval_case_id=body.eval_case_id,
-    )
+    try:
+        m = await append_chat_message(
+            thread_id,
+            role=body.role,
+            content=body.content,
+            citations=body.citations,
+            metadata=body.metadata,
+            latency_ms=body.latency_ms,
+            cost_usd=body.cost_usd,
+            rag_model=body.rag_model,
+            request_id=body.request_id,
+            query_log_id=body.query_log_id,
+            eval_run_id=body.eval_run_id,
+            eval_case_id=body.eval_case_id,
+        )
+    except ForeignKeyViolationError:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid query_log_id: no matching queries row",
+        )
     return ChatMessageResponse(
         id=m["id"],
         thread_id=m["thread_id"],
@@ -1135,6 +1145,15 @@ async def query_stream_endpoint(
             "Connection": "keep-alive",
             "X-Accel-Buffering": "no",
         },
+    )
+
+
+@router.get("/analytics/chat-query-links", response_model=ChatQueryLinksResponse)
+async def chat_query_links_endpoint(limit: int = Query(50, ge=1, le=200)):
+    """Recent chat messages linked to ``queries`` rows (via ``query_log_id``)."""
+    rows = await list_chat_query_links(limit=limit)
+    return ChatQueryLinksResponse(
+        links=[ChatQueryLinkItem(**row) for row in rows],
     )
 
 

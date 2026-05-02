@@ -156,13 +156,43 @@ async def test_non_stream_query_includes_request_and_query_log_ids():
 
 
 @pytest.mark.asyncio
+async def test_patch_chat_thread_rejects_empty_title():
+    async with app.router.lifespan_context(app):
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            tid = (await client.post("/api/v1/chat/threads", json={"title": "x"})).json()["id"]
+            r = await client.patch(
+                "/api/v1/chat/threads/" + tid,
+                json={"title": ""},
+            )
+            assert r.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_append_message_rejects_unknown_query_log_id():
+    async with app.router.lifespan_context(app):
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            tid = (await client.post("/api/v1/chat/threads", json={})).json()["id"]
+            fake_qid = str(uuid.uuid4())
+            r = await client.post(
+                f"/api/v1/chat/threads/{tid}/messages",
+                json={
+                    "role": "assistant",
+                    "content": "x",
+                    "query_log_id": fake_qid,
+                },
+            )
+            assert r.status_code == 400
+            assert "query_log_id" in r.json().get("detail", "").lower()
+
+
+@pytest.mark.asyncio
 async def test_patch_chat_thread_title():
     async with app.router.lifespan_context(app):
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
-            tid = (await client.post("/api/v1/chat/threads", json={"title": "old"})).json()[
-                "id"
-            ]
+            tid = (await client.post("/api/v1/chat/threads", json={"title": "old"})).json()["id"]
             r = await client.patch(
                 "/api/v1/chat/threads/" + tid,
                 json={"title": "Renamed thread"},

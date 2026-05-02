@@ -4,6 +4,12 @@ import { useState, useEffect } from 'react'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Button } from '@/components/ui/button'
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -11,7 +17,16 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog'
-import { Plus, FileText, Loader2, Trash2, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Input } from '@/components/ui/input'
+import {
+  Plus,
+  FileText,
+  Loader2,
+  Trash2,
+  ChevronLeft,
+  ChevronRight,
+  MoreHorizontal,
+} from 'lucide-react'
 import { toast } from 'sonner'
 import IngestDialog from './IngestDialog'
 import DocumentPreviewDialog from './DocumentPreviewDialog'
@@ -21,6 +36,7 @@ import {
   deleteDocument,
   listChatThreads,
   deleteChatThread,
+  updateChatThread,
   type ChatThreadSummary,
 } from '@/lib/api/client'
 
@@ -43,6 +59,10 @@ interface SidebarProps {
   onChatThreadDeleted?: (threadId: string) => void
   /** Close mobile overlay drawer after navigating (no-op on desktop). */
   onMobileSidebarClose?: () => void
+  /** When true (e.g. mobile drawer open), ignore desktop collapsed width so chats/documents stay readable. */
+  forceExpandedNav?: boolean
+  /** Bump parent refresh token after local thread list mutations (rename, etc.). */
+  onThreadsRefreshRequest?: () => void
 }
 
 export default function Sidebar({
@@ -54,7 +74,10 @@ export default function Sidebar({
   chatThreadsRefreshToken = 0,
   onChatThreadDeleted,
   onMobileSidebarClose,
+  forceExpandedNav = false,
+  onThreadsRefreshRequest,
 }: SidebarProps) {
+  const navCollapsed = forceExpandedNav ? false : collapsed
   const [ingestOpen, setIngestOpen] = useState(false)
   const [documents, setDocuments] = useState<Document[]>([])
   const [isLoadingDocs, setIsLoadingDocs] = useState(true)
@@ -65,6 +88,9 @@ export default function Sidebar({
   const [documentToPreview, setDocumentToPreview] = useState<Document | null>(null)
   const [chatThreads, setChatThreads] = useState<ChatThreadSummary[]>([])
   const [chatThreadsLoading, setChatThreadsLoading] = useState(false)
+  const [renameThread, setRenameThread] = useState<ChatThreadSummary | null>(null)
+  const [renameTitle, setRenameTitle] = useState('')
+  const [renameSaving, setRenameSaving] = useState(false)
 
   const loadDocuments = async () => {
     try {
@@ -113,6 +139,27 @@ export default function Sidebar({
     setDeleteDialogOpen(true)
   }
 
+  const handleRenameSave = async () => {
+    if (!renameThread) return
+    const title = renameTitle.trim()
+    if (title.length < 1) {
+      toast.error('Title cannot be empty')
+      return
+    }
+    setRenameSaving(true)
+    try {
+      await updateChatThread(renameThread.id, { title })
+      setRenameThread(null)
+      await loadChatThreads()
+      onThreadsRefreshRequest?.()
+      toast.success('Chat renamed')
+    } catch (error) {
+      toast.error(`Failed to rename: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    } finally {
+      setRenameSaving(false)
+    }
+  }
+
   const handleDeleteChatThread = async (thread: ChatThreadSummary, e: React.MouseEvent) => {
     e.stopPropagation()
     try {
@@ -148,7 +195,7 @@ export default function Sidebar({
     <>
       <aside
         className={`relative flex h-full flex-col border-r border-slate-200 bg-white transition-all duration-200 ${
-          collapsed ? 'w-16 min-w-[64px] max-w-[64px]' : 'w-full min-w-[240px] max-w-[280px]'
+          navCollapsed ? 'w-16 min-w-[64px] max-w-[64px]' : 'w-full min-w-[240px] max-w-[280px]'
         }`}
       >
         {/* Collapse/Expand Toggle Button - at the top */}
@@ -163,9 +210,9 @@ export default function Sidebar({
                 onToggleCollapse()
               }}
               className="h-8 w-8"
-              aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+              aria-label={navCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
             >
-              {collapsed ? (
+              {navCollapsed ? (
                 <ChevronRight className="h-4 w-4" />
               ) : (
                 <ChevronLeft className="h-4 w-4" />
@@ -179,9 +226,9 @@ export default function Sidebar({
           {/* Documents */}
           <div>
             <div
-              className={`flex items-center ${collapsed ? 'justify-center px-2' : 'justify-between px-4'} py-2`}
+              className={`flex items-center ${navCollapsed ? 'justify-center px-2' : 'justify-between px-4'} py-2`}
             >
-              {!collapsed && (
+              {!navCollapsed && (
                 <div className="text-xs font-semibold tracking-wide text-slate-500">
                   DOCUMENTS
                   {!isLoadingDocs && documents.length > 0 && (
@@ -195,45 +242,45 @@ export default function Sidebar({
                 aria-label="Ingest document"
                 onClick={() => setIngestOpen(true)}
                 className="h-8 w-8"
-                title={collapsed ? 'Ingest document' : undefined}
+                title={navCollapsed ? 'Ingest document' : undefined}
               >
                 <Plus className="h-4 w-4" />
               </Button>
             </div>
             {isLoadingDocs ? (
               <div
-                className={`flex items-center gap-2 ${collapsed ? 'justify-center px-2' : 'px-4'} py-3`}
+                className={`flex items-center gap-2 ${navCollapsed ? 'justify-center px-2' : 'px-4'} py-3`}
               >
                 <Loader2 className="h-3 w-3 animate-spin text-slate-400" />
-                {!collapsed && <p className="text-xs text-slate-500">Loading documents...</p>}
+                {!navCollapsed && <p className="text-xs text-slate-500">Loading documents...</p>}
               </div>
             ) : documents.length === 0 ? (
-              !collapsed && (
+              !navCollapsed && (
                 <div className="px-4 py-3">
                   <p className="text-xs text-slate-500">No documents yet.</p>
                   <p className="text-xs text-slate-400 mt-1">Click + to add your first document.</p>
                 </div>
               )
             ) : (
-              <div className={`space-y-0.5 ${collapsed ? 'px-1' : 'px-2'}`}>
+              <div className={`space-y-0.5 ${navCollapsed ? 'px-1' : 'px-2'}`}>
                 {documents.map(doc => (
                   <div
                     key={doc.id}
-                    className={`w-full flex items-center ${collapsed ? 'justify-center' : 'gap-2'} px-3 py-2 text-xs text-slate-700 hover:bg-slate-50 rounded-md transition-colors group`}
-                    title={collapsed ? doc.title || doc.source : undefined}
+                    className={`w-full flex items-center ${navCollapsed ? 'justify-center' : 'gap-2'} px-3 py-2 text-xs text-slate-700 hover:bg-slate-50 rounded-md transition-colors group`}
+                    title={navCollapsed ? doc.title || doc.source : undefined}
                   >
                     <button
                       type="button"
                       onClick={() => handleDocumentClick(doc)}
-                      className={`flex-1 flex items-center ${collapsed ? 'justify-center' : 'gap-2 text-left'} truncate hover:text-slate-900`}
-                      title={collapsed ? `View ${doc.title || doc.source}` : undefined}
+                      className={`flex-1 flex items-center ${navCollapsed ? 'justify-center' : 'gap-2 text-left'} truncate hover:text-slate-900`}
+                      title={navCollapsed ? `View ${doc.title || doc.source}` : undefined}
                     >
                       <FileText className="h-3.5 w-3.5 text-slate-400 group-hover:text-slate-600 flex-shrink-0" />
-                      {!collapsed && (
+                      {!navCollapsed && (
                         <span className="flex-1 truncate">{doc.title || doc.source}</span>
                       )}
                     </button>
-                    {!collapsed && (
+                    {!navCollapsed && (
                       <button
                         type="button"
                         onClick={e => handleDeleteClick(doc, e)}
@@ -251,7 +298,7 @@ export default function Sidebar({
           </div>
 
           {/* Chats */}
-          {!collapsed && (
+          {!navCollapsed && (
             <div className="border-t border-slate-100 pt-2">
               <div className="flex items-center justify-between px-4 py-2">
                 <div className="text-xs font-semibold tracking-wide text-slate-500">CHATS</div>
@@ -306,6 +353,31 @@ export default function Sidebar({
                             </span>
                           ) : null}
                         </button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 shrink-0 text-slate-500 opacity-0 transition-opacity group-hover:opacity-100"
+                              aria-label={`More actions for ${label}`}
+                              onClick={e => e.stopPropagation()}
+                            >
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-44">
+                            <DropdownMenuItem
+                              onClick={e => {
+                                e.preventDefault()
+                                setRenameThread(thread)
+                                setRenameTitle(thread.title?.trim() || label)
+                              }}
+                            >
+                              Rename thread
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                         <button
                           type="button"
                           onClick={e => void handleDeleteChatThread(thread, e)}
@@ -325,9 +397,9 @@ export default function Sidebar({
         </ScrollArea>
 
         <div
-          className={`flex border-t border-slate-200 ${collapsed ? 'justify-center px-2' : 'px-2'} py-2`}
+          className={`flex border-t border-slate-200 ${navCollapsed ? 'justify-center px-2' : 'px-2'} py-2`}
         >
-          <RagSettingsDialog collapsed={collapsed} />
+          <RagSettingsDialog collapsed={navCollapsed} />
         </div>
       </aside>
 
@@ -374,6 +446,51 @@ export default function Sidebar({
                 </>
               ) : (
                 'Delete'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={renameThread !== null}
+        onOpenChange={open => {
+          if (!open) setRenameThread(null)
+        }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Rename chat</DialogTitle>
+            <DialogDescription>Updates the title shown in the sidebar list.</DialogDescription>
+          </DialogHeader>
+          <Input
+            value={renameTitle}
+            onChange={e => setRenameTitle(e.target.value)}
+            placeholder="Thread title"
+            maxLength={200}
+            aria-label="New chat title"
+            className="mt-2"
+            onKeyDown={e => {
+              if (e.key === 'Enter') void handleRenameSave()
+            }}
+          />
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              type="button"
+              onClick={() => setRenameThread(null)}
+              disabled={renameSaving}
+            >
+              Cancel
+            </Button>
+            <Button type="button" onClick={() => void handleRenameSave()} disabled={renameSaving}>
+              {renameSaving ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Saving…
+                </>
+              ) : (
+                'Save'
               )}
             </Button>
           </DialogFooter>

@@ -235,3 +235,22 @@ class ChatMessageResponse(BaseModel):
 
 class ChatMessagesListResponse(BaseModel):
     messages: list[ChatMessageResponse]
+
+
+class ChatQueryLinkItem(BaseModel):
+    """Join of ``chat_messages`` and ``queries`` on ``query_log_id``."""
+
+    message_id: str
+    thread_id: str
+    role: str
+    query_log_id: str
+    message_request_id: str | None = None
+    message_created_at: str | None = None
+    query_text: str
+    query_rag_model: str
+    query_request_id: str | None = None
+    query_logged_at: str | None = None
+
+
+class ChatQueryLinksResponse(BaseModel):
+    links: list[ChatQueryLinkItem]

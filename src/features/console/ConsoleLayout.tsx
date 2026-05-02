@@ -70,6 +70,8 @@ export default function ConsoleLayout() {
           chatThreadsRefreshToken={chatThreadsRefreshToken}
           onChatThreadDeleted={handleChatThreadDeleted}
           onMobileSidebarClose={() => setSidebarOpen(false)}
+          forceExpandedNav={sidebarOpen}
+          onThreadsRefreshRequest={bumpChatThreads}
         />
       </div>
 

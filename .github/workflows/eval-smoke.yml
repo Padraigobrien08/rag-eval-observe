@@ -36,6 +36,8 @@ jobs:
       EMBEDDING_DIMENSION: 1536
       EVAL_USE_LLM_JUDGE: 'false'
       EVAL_MAX_CASES: '5'
+      # Persist eval turns into chat_messages (requires Alembic chat schema above).
+      EVAL_RECORD_CHAT: 'true'
 
     steps:
       - uses: actions/checkout@v4
