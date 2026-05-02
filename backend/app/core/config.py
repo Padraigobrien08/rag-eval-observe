@@ -56,6 +56,9 @@ class Settings(BaseSettings):
     MAX_INGEST_PAYLOAD_SIZE: int = 10 * 1024 * 1024  # 10MB
     # Optional PDF bytes (decoded size) attached at ingest for UI preview; base64 JSON is larger.
     MAX_INGEST_ORIGINAL_FILE_BYTES: int = 25 * 1024 * 1024  # 25MB
+
+    # Chat history (Postgres). When CHAT_RETENTION_DAYS > 0, stale threads are deleted on list/create.
+    CHAT_RETENTION_DAYS: int = 0  # 0 = disable pruning
     MAX_QUERY_LENGTH: int = 5000  # characters
     MAX_CONTEXT_CHARS: int = 50000  # characters for retrieved context
     MAX_CONTEXT_TOKENS: int = 12000  # tokens for context (approximate)

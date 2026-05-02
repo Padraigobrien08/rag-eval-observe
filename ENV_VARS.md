@@ -96,6 +96,9 @@ MAX_QUERY_LENGTH=5000
 MAX_CONTEXT_CHARS=50000
 MAX_CONTEXT_TOKENS=12000
 
+# Postgres chat threads/messages (`/api/v1/chat/*`). When > 0, threads older than N calendar days are pruned on list/create.
+CHAT_RETENTION_DAYS=0
+
 # Server Configuration
 HOST=0.0.0.0
 PORT=8000
@@ -184,6 +187,7 @@ CORS_ALLOW_ORIGINS=https://rag-eval-observability.vercel.app,https://rag-eval-ob
 
 ### Azure Container Apps:
 
+- [ ] Apply DB migrations after deploy or pulling new revisions: `make migrate` from the repo root (with `DATABASE_URL` set), or `cd backend && uv run alembic upgrade head`
 - [ ] Add `DATABASE_URL` (from Neon DB) - **Mark as Secure**
 - [ ] Add `OPENAI_API_KEY` - **Mark as Secure**
 - [ ] Add `ENVIRONMENT=production`

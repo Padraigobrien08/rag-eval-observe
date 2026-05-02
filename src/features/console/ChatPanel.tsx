@@ -22,12 +22,21 @@ type ConnectionState = 'unknown' | 'ok' | 'error'
 interface ChatPanelProps {
   sidebarOpen?: boolean
   setSidebarOpen?: (open: boolean) => void
+  activeThreadId: string | null
+  setActiveThreadId: (id: string | null) => void
+  onThreadsChanged?: () => void
 }
 
-export default function ChatPanel(_props: ChatPanelProps = {}) {
+export default function ChatPanel({
+  sidebarOpen: _sidebarOpen,
+  setSidebarOpen: _setSidebarOpen,
+  activeThreadId,
+  setActiveThreadId,
+  onThreadsChanged,
+}: ChatPanelProps) {
   const router = useRouter()
   const { messages, isLoading, error, sendMessage, resetChat, stopStreaming, streamPhase } =
-    useChat()
+    useChat(activeThreadId, setActiveThreadId, onThreadsChanged)
   const { topK, debug, ragModel, streamResponses } = useRagSettings()
   const [connection, setConnection] = useState<ConnectionState>('unknown')
   const [input, setInput] = useState('')

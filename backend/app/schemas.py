@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -159,3 +159,55 @@ class QueryResponse(BaseModel):
     debug: dict[str, Any] | None = None
     rag_model: str | None = None
     retrieved_chunk_count: int = 0
+
+
+class ChatThreadCreate(BaseModel):
+    """Create a persisted chat thread."""
+
+    title: str | None = Field(None, description="Optional title (defaults may be derived client-side)")
+
+
+class ChatThreadResponse(BaseModel):
+    """Chat thread summary."""
+
+    id: str
+    title: str | None = None
+    created_at: str | None = None
+    updated_at: str | None = None
+    message_count: int = 0
+
+
+class ChatThreadListResponse(BaseModel):
+    threads: list[ChatThreadResponse]
+
+
+class ChatMessageAppend(BaseModel):
+    """Append one message to a thread."""
+
+    role: Literal["user", "assistant", "system"]
+    content: str = Field(..., min_length=1)
+    citations: list[dict[str, Any]] = Field(default_factory=list)
+    metadata: dict[str, Any] = Field(default_factory=dict)
+    latency_ms: int | None = None
+    cost_usd: float | None = None
+    rag_model: str | None = None
+
+
+class ChatMessageResponse(BaseModel):
+    """Stored chat message."""
+
+    id: str
+    thread_id: str
+    role: str
+    content: str
+    citations: list[dict[str, Any]] = Field(default_factory=list)
+    metadata: dict[str, Any] = Field(default_factory=dict)
+    latency_ms: int | None = None
+    cost_usd: float | None = None
+    rag_model: str | None = None
+    seq: int
+    created_at: str | None = None
+
+
+class ChatMessagesListResponse(BaseModel):
+    messages: list[ChatMessageResponse]

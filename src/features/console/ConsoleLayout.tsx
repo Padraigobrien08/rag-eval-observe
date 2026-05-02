@@ -1,12 +1,15 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Sidebar from './Sidebar'
 import ChatPanel from './ChatPanel'
 import { useLocalStorage } from '@/features/settings/useLocalStorage'
 
 export default function ConsoleLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [activeChatThreadId, setActiveChatThreadId] = useState<string | null>(null)
+  const [chatThreadsRefreshToken, setChatThreadsRefreshToken] = useState(0)
+  const bumpChatThreads = useCallback(() => setChatThreadsRefreshToken(t => t + 1), [])
   const [sidebarCollapsedStorage, setSidebarCollapsedStorage] = useLocalStorage<boolean>(
     'rag-eval-sidebar-collapsed',
     false
@@ -25,6 +28,16 @@ export default function ConsoleLayout() {
     setSidebarCollapsedStorage(newValue)
   }
 
+  const handleChatThreadDeleted = useCallback(
+    (threadId: string) => {
+      if (activeChatThreadId === threadId) {
+        setActiveChatThreadId(null)
+      }
+      bumpChatThreads()
+    },
+    [activeChatThreadId, bumpChatThreads]
+  )
+
   return (
     <div
       className="grid h-full w-full bg-slate-50"
@@ -38,12 +51,26 @@ export default function ConsoleLayout() {
     >
       {/* Left: sidebar - collapsible */}
       <div className="relative" style={{ overflow: 'visible' }}>
-        <Sidebar collapsed={sidebarCollapsed} onToggleCollapse={handleToggleCollapse} />
+        <Sidebar
+          collapsed={sidebarCollapsed}
+          onToggleCollapse={handleToggleCollapse}
+          activeChatThreadId={activeChatThreadId}
+          onSelectChatThread={setActiveChatThreadId}
+          onNewChat={() => setActiveChatThreadId(null)}
+          chatThreadsRefreshToken={chatThreadsRefreshToken}
+          onChatThreadDeleted={handleChatThreadDeleted}
+        />
       </div>
 
       {/* Right: main panel - fills remaining space */}
       <div className="flex min-w-0 overflow-hidden" style={{ minHeight: 0 }}>
-        <ChatPanel sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+        <ChatPanel
+          sidebarOpen={sidebarOpen}
+          setSidebarOpen={setSidebarOpen}
+          activeThreadId={activeChatThreadId}
+          setActiveThreadId={setActiveChatThreadId}
+          onThreadsChanged={bumpChatThreads}
+        />
       </div>
     </div>
   )

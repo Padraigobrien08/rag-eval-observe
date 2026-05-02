@@ -1,10 +1,17 @@
 'use client'
 
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import { v4 as uuid } from 'uuid'
 import type { ChatMessage, Citation } from './types'
 import { toast } from 'sonner'
-import { ragQuery, ragQueryStream } from '@/lib/api/client'
+import {
+  ragQuery,
+  ragQueryStream,
+  createChatThread,
+  listChatMessages,
+  appendChatMessage,
+  type PersistedChatMessage,
+} from '@/lib/api/client'
 import { estimateChatMessageCostUsd } from '@/lib/openai-pricing'
 
 function mapCitations(raw: unknown): Citation[] {
@@ -13,14 +20,47 @@ function mapCitations(raw: unknown): Citation[] {
     return {
       chunk_id: (citation.chunk_id || citation.chunkId || '') as string,
       document_id: (citation.document_id || citation.documentId || '') as string,
-      title: (citation.title || null) as string | null,
+      title: (citation.title ?? null) as string | null,
       source: (citation.source || '') as string,
       chunk_index: (citation.chunk_index || citation.chunkIndex || 0) as number,
     }
   })
 }
 
-export function useChat() {
+function citationsForApi(citations: Citation[]): Record<string, unknown>[] {
+  return citations.map(c => ({
+    chunk_id: c.chunk_id,
+    document_id: c.document_id,
+    title: c.title,
+    source: c.source,
+    chunk_index: c.chunk_index,
+  }))
+}
+
+function apiMsgToChat(m: PersistedChatMessage): ChatMessage {
+  const cites = mapCitations(m.citations)
+  return {
+    id: m.id,
+    role: m.role as ChatMessage['role'],
+    content: m.content,
+    latencyMs: m.latency_ms ?? undefined,
+    costUsd: m.cost_usd ?? undefined,
+    ragModel: m.rag_model ?? undefined,
+    citations: cites.length > 0 ? cites : undefined,
+    metadata: { ...(m.metadata || {}) },
+  }
+}
+
+async function reloadThreadMessages(threadId: string): Promise<ChatMessage[]> {
+  const rows = await listChatMessages(threadId)
+  return rows.map(apiMsgToChat)
+}
+
+export function useChat(
+  activeThreadId: string | null,
+  setActiveThreadId: (id: string | null) => void,
+  onThreadsChanged?: () => void
+) {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -29,14 +69,38 @@ export function useChat() {
     setError(message)
     toast.error(message)
   }, [])
-  /** While streaming: retrieval UI until first token, then generating UI */
+
   const [streamPhase, setStreamPhase] = useState<'idle' | 'retrieval' | 'generating'>('idle')
   const streamDeltaStartedRef = useRef(false)
   const streamAbortRef = useRef<AbortController | null>(null)
+  /** Accumulates assistant tokens when streaming; used if done payload omits full answer. */
+  const streamAssistantBufferRef = useRef('')
 
   const stopStreaming = useCallback(() => {
     streamAbortRef.current?.abort()
   }, [])
+
+  useEffect(() => {
+    if (!activeThreadId) {
+      setMessages([])
+      return
+    }
+    let cancelled = false
+    ;(async () => {
+      try {
+        const next = await reloadThreadMessages(activeThreadId)
+        if (!cancelled) setMessages(next)
+      } catch (err) {
+        if (!cancelled) {
+          console.error(err)
+          toast.error('Could not load chat history')
+        }
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [activeThreadId])
 
   const sendMessage = useCallback(
     async (
@@ -52,15 +116,22 @@ export function useChat() {
       setError(null)
       streamAbortRef.current?.abort()
 
-      const userMessage: ChatMessage = {
-        id: uuid(),
-        role: 'user',
-        content: text,
-      }
-      setMessages(prev => [...prev, userMessage])
-
       setIsLoading(true)
       try {
+        let tid = activeThreadId
+        if (!tid) {
+          const thread = await createChatThread({
+            title: text.trim().slice(0, 72) || null,
+          })
+          tid = thread.id
+          setActiveThreadId(tid)
+        }
+
+        await appendChatMessage(tid, { role: 'user', content: text })
+        onThreadsChanged?.()
+        const synced = await reloadThreadMessages(tid)
+        setMessages(synced)
+
         const requestBody = {
           query: text,
           topK: options?.topK,
@@ -70,12 +141,14 @@ export function useChat() {
         }
 
         const useStream = options?.stream !== false
+        const currentThreadId = tid
 
         if (useStream) {
           const assistantId = uuid()
           const ac = new AbortController()
           streamAbortRef.current = ac
           streamDeltaStartedRef.current = false
+          streamAssistantBufferRef.current = ''
           setStreamPhase('retrieval')
 
           setMessages(prev => [
@@ -96,6 +169,7 @@ export function useChat() {
                   streamDeltaStartedRef.current = true
                   setStreamPhase('generating')
                 }
+                streamAssistantBufferRef.current += fragment
                 setMessages(prev => {
                   const i = prev.findIndex(m => m.id === assistantId)
                   if (i === -1) return prev
@@ -120,6 +194,15 @@ export function useChat() {
                 if (dbg?.retrieved) {
                   metadata.debug = { retrieved: dbg.retrieved }
                 }
+                const answer = typeof data.answer === 'string' ? data.answer.trim() : ''
+                const streamed = streamAssistantBufferRef.current.trim()
+                const finalContent = answer || streamed || 'No answer returned.'
+
+                const latencyMs = data.latency_ms as number | undefined
+                const tokenUsage = data.token_usage as Record<string, number> | undefined
+                const ragModel = data.rag_model as string | undefined
+                const costUsd = estimateChatMessageCostUsd(tokenUsage)
+
                 setMessages(prev => {
                   const i = prev.findIndex(m => m.id === assistantId)
                   if (i === -1) return prev
@@ -128,20 +211,35 @@ export function useChat() {
                   if (cur.role !== 'assistant') return prev
                   next[i] = {
                     ...cur,
-                    content:
-                      (typeof data.answer === 'string' && data.answer) ||
-                      cur.content ||
-                      'No answer returned.',
-                    latencyMs: data.latency_ms as number | undefined,
-                    costUsd: estimateChatMessageCostUsd(
-                      data.token_usage as Record<string, number> | undefined
-                    ),
-                    ragModel: data.rag_model as string | undefined,
+                    content: finalContent,
+                    latencyMs,
+                    costUsd,
+                    ragModel,
                     citations: citations.length > 0 ? citations : undefined,
                     metadata: { ...cur.metadata, ...metadata },
                   }
                   return next
                 })
+
+                void (async () => {
+                  try {
+                    await appendChatMessage(currentThreadId, {
+                      role: 'assistant',
+                      content: finalContent,
+                      citations: citations.length > 0 ? citationsForApi(citations) : undefined,
+                      metadata,
+                      latency_ms: latencyMs,
+                      cost_usd: costUsd,
+                      rag_model: ragModel,
+                    })
+                    onThreadsChanged?.()
+                    const rows = await reloadThreadMessages(currentThreadId)
+                    setMessages(rows)
+                  } catch (e) {
+                    console.error(e)
+                    toast.error('Assistant reply could not be saved to history.')
+                  }
+                })()
               },
               onError: msg => {
                 setMessages(prev => {
@@ -212,25 +310,30 @@ export function useChat() {
             }
           }
 
-          const assistantMessage: ChatMessage = {
-            id: uuid(),
-            role: 'assistant',
-            content: resp.answer ?? resp.output ?? 'No answer field returned.',
-            latencyMs: resp.latency_ms ?? resp.latencyMs,
-            costUsd: estimateChatMessageCostUsd(resp.token_usage ?? resp.tokenUsage),
-            ragModel: resp.rag_model ?? resp.ragModel,
-            citations: citations.length > 0 ? citations : undefined,
-            metadata,
-          }
+          const assistantContent = resp.answer ?? resp.output ?? 'No answer field returned.'
+          const latencyMs = resp.latency_ms ?? resp.latencyMs
+          const ragModel = resp.rag_model ?? resp.ragModel
+          const costUsd = estimateChatMessageCostUsd(resp.token_usage ?? resp.tokenUsage)
 
-          setMessages(prev => [...prev, assistantMessage])
+          await appendChatMessage(currentThreadId, {
+            role: 'assistant',
+            content: assistantContent,
+            citations: citations.length > 0 ? citationsForApi(citations) : undefined,
+            metadata,
+            latency_ms: latencyMs,
+            cost_usd: costUsd,
+            rag_model: ragModel,
+          })
+          onThreadsChanged?.()
+          const rows = await reloadThreadMessages(currentThreadId)
+          setMessages(rows)
         }
       } catch (err: unknown) {
-        const error = err as Error & { status?: number }
-        if (error.status === 429) {
+        const e = err as Error & { status?: number }
+        if (e.status === 429) {
           setUserError('Rate limit exceeded. Please wait a moment and try again.')
-        } else if (error.message) {
-          setUserError(error.message)
+        } else if (e.message) {
+          setUserError(e.message)
         } else {
           setUserError('Failed to query backend. Please try again.')
         }
@@ -240,7 +343,7 @@ export function useChat() {
         setIsLoading(false)
       }
     },
-    [setUserError]
+    [activeThreadId, setActiveThreadId, onThreadsChanged, setUserError]
   )
 
   const resetChat = useCallback(() => {
@@ -249,7 +352,8 @@ export function useChat() {
     setStreamPhase('idle')
     setMessages([])
     setError(null)
-  }, [])
+    setActiveThreadId(null)
+  }, [setActiveThreadId])
 
   return {
     messages,

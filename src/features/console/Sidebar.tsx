@@ -16,7 +16,13 @@ import { toast } from 'sonner'
 import IngestDialog from './IngestDialog'
 import DocumentPreviewDialog from './DocumentPreviewDialog'
 import RagSettingsDialog from './RagSettingsDialog'
-import { listDocuments, deleteDocument } from '@/lib/api/client'
+import {
+  listDocuments,
+  deleteDocument,
+  listChatThreads,
+  deleteChatThread,
+  type ChatThreadSummary,
+} from '@/lib/api/client'
 
 interface Document {
   id: string
@@ -30,9 +36,22 @@ interface Document {
 interface SidebarProps {
   collapsed?: boolean
   onToggleCollapse?: () => void
+  activeChatThreadId?: string | null
+  onSelectChatThread?: (threadId: string) => void
+  onNewChat?: () => void
+  chatThreadsRefreshToken?: number
+  onChatThreadDeleted?: (threadId: string) => void
 }
 
-export default function Sidebar({ collapsed = false, onToggleCollapse }: SidebarProps) {
+export default function Sidebar({
+  collapsed = false,
+  onToggleCollapse,
+  activeChatThreadId = null,
+  onSelectChatThread,
+  onNewChat,
+  chatThreadsRefreshToken = 0,
+  onChatThreadDeleted,
+}: SidebarProps) {
   const [ingestOpen, setIngestOpen] = useState(false)
   const [documents, setDocuments] = useState<Document[]>([])
   const [isLoadingDocs, setIsLoadingDocs] = useState(true)
@@ -41,6 +60,8 @@ export default function Sidebar({ collapsed = false, onToggleCollapse }: Sidebar
   const [isDeleting, setIsDeleting] = useState(false)
   const [previewDialogOpen, setPreviewDialogOpen] = useState(false)
   const [documentToPreview, setDocumentToPreview] = useState<Document | null>(null)
+  const [chatThreads, setChatThreads] = useState<ChatThreadSummary[]>([])
+  const [chatThreadsLoading, setChatThreadsLoading] = useState(false)
 
   const loadDocuments = async () => {
     try {
@@ -58,6 +79,22 @@ export default function Sidebar({ collapsed = false, onToggleCollapse }: Sidebar
     void loadDocuments()
   }, [])
 
+  const loadChatThreads = async () => {
+    try {
+      setChatThreadsLoading(true)
+      const threads = await listChatThreads()
+      setChatThreads(threads)
+    } catch {
+      setChatThreads([])
+    } finally {
+      setChatThreadsLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    void loadChatThreads()
+  }, [chatThreadsRefreshToken])
+
   const handleIngestSuccess = () => {
     void loadDocuments()
   }
@@ -71,6 +108,18 @@ export default function Sidebar({ collapsed = false, onToggleCollapse }: Sidebar
     e.stopPropagation() // Prevent triggering any parent click handlers
     setDocumentToDelete(doc)
     setDeleteDialogOpen(true)
+  }
+
+  const handleDeleteChatThread = async (thread: ChatThreadSummary, e: React.MouseEvent) => {
+    e.stopPropagation()
+    try {
+      await deleteChatThread(thread.id)
+      onChatThreadDeleted?.(thread.id)
+    } catch (error) {
+      toast.error(
+        `Failed to delete chat: ${error instanceof Error ? error.message : 'Unknown error'}`
+      )
+    }
   }
 
   const handleDeleteConfirm = async () => {
@@ -200,22 +249,67 @@ export default function Sidebar({ collapsed = false, onToggleCollapse }: Sidebar
 
           {/* Chats */}
           {!collapsed && (
-            <div>
+            <div className="border-t border-slate-100 pt-2">
               <div className="flex items-center justify-between px-4 py-2">
                 <div className="text-xs font-semibold tracking-wide text-slate-500">CHATS</div>
                 <Button
                   variant="ghost"
                   size="icon"
                   aria-label="New chat"
-                  onClick={() => {
-                    // Placeholder – real chat history later
-                  }}
+                  onClick={() => onNewChat?.()}
                   className="h-8 w-8"
                 >
                   <Plus className="h-4 w-4" />
                 </Button>
               </div>
-              <p className="px-4 text-xs text-slate-500">No chats yet. Start a new chat.</p>
+              {chatThreadsLoading ? (
+                <div className="flex justify-center px-4 py-6">
+                  <Loader2 className="h-5 w-5 animate-spin text-slate-400" aria-hidden />
+                </div>
+              ) : chatThreads.length === 0 ? (
+                <p className="px-4 pb-4 text-xs text-slate-500">
+                  No chats yet. Send a message to start one.
+                </p>
+              ) : (
+                <div className="max-h-[40vh] space-y-1 overflow-y-auto px-2 pb-4">
+                  {chatThreads.map(thread => {
+                    const label =
+                      thread.title?.trim() ||
+                      `Chat · ${thread.updated_at?.slice(0, 10) ?? thread.id.slice(0, 8)}`
+                    const selected = activeChatThreadId === thread.id
+                    return (
+                      <div
+                        key={thread.id}
+                        className={`group flex items-center gap-1 rounded-md px-2 ${selected ? 'bg-slate-100' : 'hover:bg-slate-50'}`}
+                      >
+                        <button
+                          type="button"
+                          onClick={() => onSelectChatThread?.(thread.id)}
+                          className="min-w-0 flex-1 truncate px-2 py-2 text-left text-xs text-slate-700"
+                          title={label}
+                        >
+                          <span className="block truncate font-medium">{label}</span>
+                          {typeof thread.message_count === 'number' && thread.message_count > 0 ? (
+                            <span className="text-[10px] text-slate-400">
+                              {thread.message_count} message
+                              {thread.message_count === 1 ? '' : 's'}
+                            </span>
+                          ) : null}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={e => void handleDeleteChatThread(thread, e)}
+                          className="rounded p-1.5 text-slate-400 opacity-0 transition-opacity hover:bg-red-50 hover:text-red-600 group-hover:opacity-100"
+                          aria-label={`Delete chat "${label}"`}
+                          title="Delete chat"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
             </div>
           )}
         </ScrollArea>
