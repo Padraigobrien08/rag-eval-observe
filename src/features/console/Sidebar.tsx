@@ -184,12 +184,12 @@ export default function Sidebar({
   return (
     <>
       <aside
-        className={`relative flex h-full flex-col border-r border-slate-200 bg-white transition-all duration-200 ${
+        className={`relative flex h-full flex-col border-r border-slate-100 bg-white transition-all duration-200 ${
           navCollapsed ? 'w-16 min-w-[64px] max-w-[64px]' : 'w-full min-w-[240px] max-w-[280px]'
         }`}
       >
         {/* Collapse/Expand Toggle Button - at the top */}
-        <div className="flex items-center justify-end border-b border-slate-200 p-2">
+        <div className="flex items-center justify-end border-b border-slate-100 px-3 py-2">
           {onToggleCollapse ? (
             <Button
               variant="ghost"
@@ -217,7 +217,7 @@ export default function Sidebar({
             {/* Documents */}
             <div>
               <div
-                className={`flex items-center ${navCollapsed ? 'justify-center px-2' : 'justify-between pl-4 pr-5'} py-2`}
+                className={`flex items-center ${navCollapsed ? 'justify-center px-2' : 'justify-between px-5'} py-2`}
               >
                 {!navCollapsed && (
                   <div className="text-xs font-semibold tracking-wide text-slate-500">
@@ -242,14 +242,14 @@ export default function Sidebar({
               </div>
               {isLoadingDocs ? (
                 <div
-                  className={`flex items-center gap-2 ${navCollapsed ? 'justify-center px-2' : 'pl-4 pr-5'} py-3`}
+                  className={`flex items-center gap-2 ${navCollapsed ? 'justify-center px-2' : 'px-5'} py-3`}
                 >
                   <Loader2 className="h-3 w-3 animate-spin text-slate-400" />
                   {!navCollapsed && <p className="text-xs text-slate-500">Loading documents...</p>}
                 </div>
               ) : documents.length === 0 ? (
                 !navCollapsed && (
-                  <div className="py-3 pl-4 pr-5">
+                  <div className="px-5 py-3">
                     <p className="text-xs text-slate-500">No documents yet.</p>
                     <p className="text-xs text-slate-400 mt-1">
                       Click + to add your first document.
@@ -257,7 +257,7 @@ export default function Sidebar({
                   </div>
                 )
               ) : (
-                <div className={`space-y-0.5 ${navCollapsed ? 'px-1' : 'pl-4 pr-5'}`}>
+                <div className={`space-y-0.5 ${navCollapsed ? 'px-1' : 'px-5'}`}>
                   {documents.map(doc => {
                     const docLabel = doc.title || doc.source
                     return (
@@ -354,7 +354,7 @@ export default function Sidebar({
             {/* Chats */}
             {!navCollapsed && (
               <div className="border-t border-slate-100 pt-2">
-                <div className="flex items-center justify-between py-2 pl-4 pr-5">
+                <div className="flex items-center justify-between px-5 py-2">
                   <div className="text-xs font-semibold tracking-wide text-slate-500">CHATS</div>
                   <Button
                     variant="ghost"
@@ -370,15 +370,15 @@ export default function Sidebar({
                   </Button>
                 </div>
                 {chatThreadsLoading ? (
-                  <div className="flex justify-center py-6 pl-4 pr-5">
+                  <div className="flex justify-center px-5 py-6">
                     <Loader2 className="h-5 w-5 animate-spin text-slate-400" aria-hidden />
                   </div>
                 ) : chatThreads.length === 0 ? (
-                  <p className="pb-4 pl-4 pr-5 text-xs text-slate-500">
+                  <p className="px-5 pb-4 text-xs text-slate-500">
                     No chats yet. Send a message to start one.
                   </p>
                 ) : (
-                  <div className="space-y-1 pb-3 pl-4 pr-5">
+                  <div className="space-y-1 px-5 pb-3">
                     {chatThreads.map(thread => {
                       const label =
                         thread.title?.trim() ||
@@ -454,7 +454,7 @@ export default function Sidebar({
         </div>
 
         <div
-          className={`flex border-t border-slate-200 py-2 ${navCollapsed ? 'justify-center px-2' : 'justify-start px-4'}`}
+          className={`flex border-t border-slate-100 py-2 ${navCollapsed ? 'justify-center px-2' : 'justify-start px-5'}`}
         >
           <RagSettingsDialog collapsed={navCollapsed} />
         </div>

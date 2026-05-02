@@ -54,7 +54,7 @@ export default function ConsoleLayout() {
     >
       <div
         className={cn(
-          'min-h-0 border-r border-slate-200 bg-white',
+          'min-h-0 bg-white',
           'z-50 max-md:fixed max-md:inset-y-0 max-md:left-0 max-md:w-[min(280px,92vw)] max-md:shadow-lg',
           'max-md:transition-transform max-md:duration-200 max-md:ease-out',
           sidebarOpen ? 'max-md:translate-x-0' : 'max-md:-translate-x-full',
