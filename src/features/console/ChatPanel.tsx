@@ -402,7 +402,7 @@ export default function ChatPanel({
         >
           <div className="mx-auto w-full max-w-4xl px-[clamp(12px,3vw,28px)] py-[clamp(0.625rem,1.8vw,0.875rem)]">
             <form onSubmit={handleSubmit} className="w-full min-w-0">
-              <InputGroup className="h-auto min-h-0 rounded-none border-0 bg-transparent shadow-none ring-0 [&:has([data-slot=input-group-control]:focus-visible)]:ring-0">
+              <InputGroup className="h-auto min-h-0 items-end gap-2 rounded-none border-0 bg-transparent shadow-none ring-0 [&:has([data-slot=input-group-control]:focus-visible)]:ring-0">
                 <InputGroupTextarea
                   ref={textareaRef}
                   value={input}
@@ -410,12 +410,12 @@ export default function ChatPanel({
                   onKeyDown={handleKeyDown}
                   placeholder="Message RAG Eval..."
                   rows={1}
-                  className="max-h-40 min-h-[44px] px-0 text-sm text-slate-900 placeholder:text-slate-400"
+                  className="max-h-40 min-h-[44px] flex-1 rounded-2xl border border-slate-200/90 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-slate-300/50"
                   disabled={isLoading}
                 />
                 <InputGroupAddon
                   align="inline-end"
-                  className="items-end gap-1.5 border-0 bg-transparent py-2 pl-2 pr-0"
+                  className="items-end gap-1.5 border-0 bg-transparent py-1 pl-0 pr-0"
                 >
                   {isLoading && streamResponses ? (
                     <InputGroupButton
