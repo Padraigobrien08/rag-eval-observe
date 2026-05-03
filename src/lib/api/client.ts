@@ -299,7 +299,7 @@ export async function ingestDocument(body: {
   return res.json() as Promise<IngestResponsePayload>
 }
 
-export async function listDocuments(limit = 100, offset = 0) {
+export async function listDocuments(limit = 100, offset = 0, includeTotal = false) {
   ensureBrowser()
 
   try {
@@ -307,7 +307,13 @@ export async function listDocuments(limit = 100, offset = 0) {
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
 
-    const res = await fetch(`${API_BASE_URL}/api/v1/documents?limit=${limit}&offset=${offset}`, {
+    const params = new URLSearchParams({
+      limit: String(limit),
+      offset: String(offset),
+    })
+    if (includeTotal) params.set('include_total', 'true')
+
+    const res = await fetch(`${API_BASE_URL}/api/v1/documents?${params}`, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' },
       signal: controller.signal,
@@ -550,6 +556,138 @@ export async function getMetrics() {
   }
 
   return res.json()
+}
+
+export type QueryLogDetail = {
+  id: string
+  query_text: string
+  rag_model: string
+  top_k: number | null
+  request_id: string | null
+  client_ip: string | null
+  user_agent: string | null
+  latency_ms: number | null
+  token_usage: Record<string, number> | null
+  cost_usd: number | null
+  citations_count: number | null
+  answer_length: number | null
+  created_at: string | null
+}
+
+export async function fetchQueryLogDetail(queryId: string): Promise<QueryLogDetail> {
+  ensureBrowser()
+  const id = encodeURIComponent(queryId)
+  const res = await fetch(`${API_BASE_URL}/api/v1/analytics/query-log/${id}`, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
+  })
+  if (!res.ok) {
+    const text = await res.text().catch(() => '')
+    throw new Error(messageFromErrorResponse(text, res.status))
+  }
+  return res.json() as Promise<QueryLogDetail>
+}
+
+export async function fetchQueryLogsList(params?: {
+  limit?: number
+  offset?: number
+  rag_model?: string
+  start_date?: string
+  end_date?: string
+}): Promise<{ logs: QueryLogDetail[] }> {
+  ensureBrowser()
+  const q = new URLSearchParams()
+  q.set('limit', String(params?.limit ?? 50))
+  q.set('offset', String(params?.offset ?? 0))
+  if (params?.rag_model?.trim()) q.set('rag_model', params.rag_model.trim())
+  if (params?.start_date?.trim()) q.set('start_date', params.start_date.trim())
+  if (params?.end_date?.trim()) q.set('end_date', params.end_date.trim())
+  const res = await fetch(`${API_BASE_URL}/api/v1/analytics/query-logs?${q}`, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
+  })
+  if (!res.ok) {
+    const text = await res.text().catch(() => '')
+    throw new Error(messageFromErrorResponse(text, res.status))
+  }
+  return res.json() as Promise<{ logs: QueryLogDetail[] }>
+}
+
+export type EvalRunSummary = {
+  id: string
+  created_at: string
+  finished_at: string
+  status: string
+  dataset_path: string
+  use_llm_judge: boolean
+  total_cases: number
+  successful: number
+  failed: number
+  hit_at_1: number
+  hit_at_3: number
+  hit_at_5: number
+  hit_at_8: number
+  mrr: number
+  llm_judge_correctness_rate: number | null
+  llm_judge_faithfulness_rate: number | null
+  config_json: Record<string, unknown>
+}
+
+export type EvalCaseResult = {
+  id: string
+  case_index: number
+  case_id: string
+  query: string
+  expected_sources: string[]
+  retrieved_sources: string[]
+  answer: string
+  hit_at_1: boolean
+  hit_at_3: boolean
+  hit_at_5: boolean
+  hit_at_8: boolean
+  mrr: number
+  llm_judge_correctness: boolean | null
+  llm_judge_faithfulness: boolean | null
+  llm_judge_reasoning: string | null
+  error: string | null
+  citations: Record<string, unknown>[]
+}
+
+export type EvalRunDetail = EvalRunSummary & {
+  error_message: string | null
+  cases: EvalCaseResult[]
+}
+
+export async function fetchEvalRunsList(params?: {
+  limit?: number
+  offset?: number
+}): Promise<{ runs: EvalRunSummary[] }> {
+  ensureBrowser()
+  const limit = params?.limit ?? 50
+  const offset = params?.offset ?? 0
+  const res = await fetch(`${API_BASE_URL}/api/v1/eval/runs?limit=${limit}&offset=${offset}`, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
+  })
+  if (!res.ok) {
+    const text = await res.text().catch(() => '')
+    throw new Error(messageFromErrorResponse(text, res.status))
+  }
+  return res.json() as Promise<{ runs: EvalRunSummary[] }>
+}
+
+export async function fetchEvalRunDetail(runId: string): Promise<EvalRunDetail> {
+  ensureBrowser()
+  const id = encodeURIComponent(runId)
+  const res = await fetch(`${API_BASE_URL}/api/v1/eval/runs/${id}`, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
+  })
+  if (!res.ok) {
+    const text = await res.text().catch(() => '')
+    throw new Error(messageFromErrorResponse(text, res.status))
+  }
+  return res.json() as Promise<EvalRunDetail>
 }
 
 export async function getDocumentChunks(documentId: string) {

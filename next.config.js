@@ -1,6 +1,15 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  async redirects() {
+    return [
+      {
+        source: '/eval/runs/:runId',
+        destination: '/eval/runs?id=:runId',
+        permanent: false,
+      },
+    ]
+  },
   async rewrites() {
     return [{ source: '/favicon.ico', destination: '/RAGEvalIcon.png' }]
   },

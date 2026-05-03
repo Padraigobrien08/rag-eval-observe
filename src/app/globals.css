@@ -64,7 +64,10 @@
   }
 }
 
-/* Ensure proper viewport and prevent scrolling */
+/*
+ * Lock document scroll for the chat console (internal panes scroll instead).
+ * Routes that need page scroll use app/(scrollable)/layout.tsx (h-full + overflow-y-auto).
+ */
 html {
   width: 100%;
   height: 100%;
