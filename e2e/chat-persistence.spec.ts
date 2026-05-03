@@ -201,10 +201,11 @@ test.describe('chat persistence (mocked backend)', () => {
 
     await page.getByTestId(`chat-thread-${tid}`).click()
 
-    await expect(page.getByText('Hello persistence', { exact: false })).toBeVisible({
+    const chatMain = page.getByTestId('chat-layout')
+    await expect(chatMain.getByText('Hello persistence', { exact: false })).toBeVisible({
       timeout: 10_000,
     })
-    await expect(page.getByText('Persisted mock reply.', { exact: false })).toBeVisible({
+    await expect(chatMain.getByText('Persisted mock reply.', { exact: false })).toBeVisible({
       timeout: 10_000,
     })
   })
