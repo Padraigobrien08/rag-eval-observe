@@ -251,6 +251,7 @@ export default function Sidebar({
   return (
     <>
       <aside
+        aria-label="Documents and chat threads"
         className={`relative flex h-full flex-col border-r border-slate-100 bg-white transition-all duration-200 ${
           navCollapsed ? 'w-16 min-w-[64px] max-w-[64px]' : 'w-full min-w-[220px] max-w-[260px]'
         }`}
@@ -325,7 +326,16 @@ export default function Sidebar({
                     <div className="px-5 py-3">
                       <p className="text-xs text-slate-500">No documents yet.</p>
                       <p className="text-xs text-slate-400 mt-1">
-                        Click + to add your first document.
+                        Click + to ingest, or run{' '}
+                        <code className="rounded bg-slate-100 px-1 py-0.5 text-[10px] text-slate-700">
+                          pnpm seed:corpus
+                        </code>{' '}
+                        /{' '}
+                        <code className="rounded bg-slate-100 px-1 py-0.5 text-[10px] text-slate-700">
+                          make seed
+                        </code>{' '}
+                        for the demo RAG corpus (see{' '}
+                        <span className="text-slate-500">DEVELOPMENT.md</span>).
                       </p>
                     </div>
                   )

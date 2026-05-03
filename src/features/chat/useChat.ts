@@ -198,6 +198,10 @@ export function useChat(
                 if (dbg?.retrieved) {
                   metadata.debug = { retrieved: dbg.retrieved }
                 }
+                const streamTu = data.token_usage as Record<string, number> | undefined
+                if (streamTu && typeof streamTu === 'object') {
+                  metadata.token_usage = streamTu
+                }
                 const answer = typeof data.answer === 'string' ? data.answer.trim() : ''
                 const streamed = streamAssistantBufferRef.current.trim()
                 const finalContent = answer || streamed || 'No answer returned.'
@@ -221,6 +225,10 @@ export function useChat(
                     ragModel,
                     citations: citations.length > 0 ? citations : undefined,
                     metadata: { ...cur.metadata, ...metadata },
+                    requestId:
+                      typeof data.request_id === 'string' ? data.request_id : cur.requestId,
+                    queryLogId:
+                      typeof data.query_log_id === 'string' ? data.query_log_id : cur.queryLogId,
                   }
                   return next
                 })
@@ -315,6 +323,10 @@ export function useChat(
             metadata.debug = {
               retrieved: resp.debug.retrieved,
             }
+          }
+          const restTu = (resp.token_usage ?? resp.tokenUsage) as Record<string, number> | undefined
+          if (restTu && typeof restTu === 'object') {
+            metadata.token_usage = restTu
           }
 
           const assistantContent = resp.answer ?? resp.output ?? 'No answer field returned.'

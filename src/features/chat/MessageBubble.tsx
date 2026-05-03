@@ -9,6 +9,7 @@ import type { ChatMessage } from './types'
 import CitationsDrawer from './CitationsDrawer'
 import CitationsDropdown from './CitationsDropdown'
 import InlineCitation from './InlineCitation'
+import MessageObservability from './MessageObservability'
 import { splitTextWithCitations } from './citationParser'
 import { useLocalStorage } from '@/features/settings/useLocalStorage'
 interface MessageBubbleProps {
@@ -452,6 +453,7 @@ export default function MessageBubble({ message, previousMessage }: MessageBubbl
               )}
             </div>
           )}
+          <MessageObservability message={message} />
         </div>
       )}
 

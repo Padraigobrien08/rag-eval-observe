@@ -5,14 +5,10 @@ import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupButton,
-  InputGroupTextarea,
-} from '@/components/ui/input-group'
+import { InputGroupButton, InputGroupTextarea } from '@/components/ui/input-group'
 import {
   BarChart3,
+  FlaskConical,
   SunMedium,
   Zap,
   AlertTriangle,
@@ -23,8 +19,10 @@ import {
 } from 'lucide-react'
 import { useChat } from '@/features/chat/useChat'
 import ChatLayout from '@/features/chat/ChatLayout'
+import { EvalAtAGlance } from './EvalAtAGlance'
 import { useRagSettings } from '@/features/settings/useRagSettings'
-import { checkHealth } from '@/lib/api/client'
+import { checkHealth, listDocuments } from '@/lib/api/client'
+import { DEMO_EXAMPLE_QUERIES } from '@/lib/demo-example-queries'
 
 type ConnectionState = 'unknown' | 'ok' | 'error'
 
@@ -48,6 +46,8 @@ export default function ChatPanel({
   const [connection, setConnection] = useState<ConnectionState>('unknown')
   const [input, setInput] = useState('')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const [demoDocTotal, setDemoDocTotal] = useState<number | null>(null)
+  const [demoDocLoading, setDemoDocLoading] = useState(true)
 
   useEffect(() => {
     // Check health on mount
@@ -68,6 +68,24 @@ export default function ChatPanel({
     }, 30000)
 
     return () => clearInterval(interval)
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    void (async () => {
+      try {
+        const res = await listDocuments(1, 0, true)
+        const total = typeof res.total === 'number' ? res.total : (res.documents?.length ?? 0)
+        if (!cancelled) setDemoDocTotal(total)
+      } catch {
+        if (!cancelled) setDemoDocTotal(null)
+      } finally {
+        if (!cancelled) setDemoDocLoading(false)
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   const handleSend = (content: string) => {
@@ -114,6 +132,7 @@ export default function ChatPanel({
       className="flex flex-col bg-slate-50 overflow-hidden"
       style={{ height: '100%', flex: '1 1 0%' }}
     >
+      <h1 className="sr-only">RAG Eval chat</h1>
       {/* Header */}
       <header
         className="shrink-0 border-b border-slate-200 bg-white px-4 py-2 flex items-center justify-between"
@@ -148,6 +167,15 @@ export default function ChatPanel({
             <BarChart3 className="mr-1 h-4 w-4" />
             Metrics
           </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            type="button"
+            onClick={() => router.push('/eval/runs')}
+          >
+            <FlaskConical className="mr-1 h-4 w-4" />
+            Eval
+          </Button>
           <Button variant="ghost" size="sm" type="button" onClick={() => resetChat()}>
             New chat
           </Button>
@@ -164,6 +192,8 @@ export default function ChatPanel({
           </Badge>
         </div>
       </header>
+
+      <EvalAtAGlance />
 
       {/* Chat region: home cards + messages + input */}
       <div
@@ -187,13 +217,47 @@ export default function ChatPanel({
 
               {/* Centered pill buttons */}
               <div className="flex flex-col items-center gap-[clamp(0.75rem,1.6vw,1.125rem)]">
-                {/* Info text */}
                 <p className="mb-[clamp(0.5rem,1.2vw,0.75rem)] max-w-prose text-center text-xs leading-relaxed text-slate-600">
-                  We have added some documents about RAG, so you can see functionality by just
-                  clicking one of the example queries
+                  {demoDocLoading && 'Checking your knowledge base…'}
+                  {!demoDocLoading && demoDocTotal === 0 && (
+                    <>
+                      No documents in the knowledge base yet. For the built-in demo corpus, run{' '}
+                      <code className="rounded bg-slate-200/80 px-1 py-0.5 text-[10px] text-slate-800">
+                        pnpm seed:corpus
+                      </code>{' '}
+                      or{' '}
+                      <code className="rounded bg-slate-200/80 px-1 py-0.5 text-[10px] text-slate-800">
+                        make seed
+                      </code>{' '}
+                      (needs{' '}
+                      <code className="rounded bg-slate-200/80 px-1 py-0.5 text-[10px]">
+                        DATABASE_URL
+                      </code>{' '}
+                      and{' '}
+                      <code className="rounded bg-slate-200/80 px-1 py-0.5 text-[10px]">
+                        OPENAI_API_KEY
+                      </code>
+                      ). Or use <strong className="font-medium text-slate-700">+</strong> in the
+                      sidebar to ingest files.
+                    </>
+                  )}
+                  {!demoDocLoading && demoDocTotal !== null && demoDocTotal > 0 && (
+                    <>
+                      You have{' '}
+                      <strong className="font-medium text-slate-800">{demoDocTotal}</strong>{' '}
+                      {demoDocTotal === 1 ? 'document' : 'documents'} indexed. Example questions
+                      below match the default seed corpus (RAG, embeddings, chunking, retrieval,
+                      evaluation).
+                    </>
+                  )}
+                  {!demoDocLoading && demoDocTotal === null && (
+                    <>
+                      Could not reach the API to count documents. If the backend is running, try
+                      refreshing. You can still type a question or ingest docs from the sidebar.
+                    </>
+                  )}
                 </p>
 
-                {/* Example Queries Section */}
                 <div className="flex w-full max-w-3xl flex-col items-center gap-[clamp(0.625rem,1.4vw,0.875rem)]">
                   <div className="flex items-center gap-2 text-slate-900">
                     <SunMedium className="h-4 w-4" />
@@ -204,79 +268,37 @@ export default function ChatPanel({
                         lineHeight: '1.3',
                       }}
                     >
-                      Example Queries
+                      Example queries
                     </span>
                   </div>
                   <div className="flex w-full flex-col gap-[clamp(0.625rem,1.4vw,0.875rem)]">
-                    {/* Top row - 3 pills */}
                     <div className="flex flex-wrap justify-center gap-2 sm:gap-3">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="h-auto min-h-[44px] min-w-0 max-w-full flex-1 basis-[min(100%,17rem)] rounded-full px-4 py-2 text-xs font-normal whitespace-normal hover:bg-slate-50 sm:max-w-[calc(33.333%-0.5rem)]"
-                        onClick={() =>
-                          handleExampleClick('Explain vector similarity search in simple terms')
-                        }
-                        disabled={isLoading}
-                      >
-                        Explain vector similarity search in simple terms
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="h-auto min-h-[44px] min-w-0 max-w-full flex-1 basis-[min(100%,17rem)] rounded-full px-4 py-2 text-xs font-normal whitespace-normal hover:bg-slate-50 sm:max-w-[calc(33.333%-0.5rem)]"
-                        onClick={() =>
-                          handleExampleClick('Summarize the main topics in my knowledge base')
-                        }
-                        disabled={isLoading}
-                      >
-                        Summarize the main topics in my knowledge base
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="h-auto min-h-[44px] min-w-0 max-w-full flex-1 basis-[min(100%,17rem)] rounded-full px-4 py-2 text-xs font-normal whitespace-normal hover:bg-slate-50 sm:max-w-[calc(33.333%-0.5rem)]"
-                        onClick={() => handleExampleClick('What documents have been ingested?')}
-                        disabled={isLoading}
-                      >
-                        What documents have been ingested?
-                      </Button>
+                      {DEMO_EXAMPLE_QUERIES.slice(0, 3).map(q => (
+                        <Button
+                          key={q.id}
+                          type="button"
+                          variant="outline"
+                          className="h-auto min-h-[44px] min-w-0 max-w-full flex-1 basis-[min(100%,17rem)] rounded-full px-4 py-2 text-xs font-normal whitespace-normal hover:bg-slate-50 sm:max-w-[calc(33.333%-0.5rem)]"
+                          onClick={() => handleExampleClick(q.prompt)}
+                          disabled={isLoading}
+                        >
+                          {q.label}
+                        </Button>
+                      ))}
                     </div>
-                    {/* Bottom row - 3 pills */}
                     <div className="flex flex-wrap justify-center gap-2 sm:gap-3">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="h-auto min-h-[44px] min-w-0 max-w-full flex-1 basis-[min(100%,17rem)] rounded-full px-4 py-2 text-xs font-normal whitespace-normal hover:bg-slate-50 sm:max-w-[calc(33.333%-0.5rem)]"
-                        onClick={() =>
-                          handleExampleClick('How does RAG improve language model responses?')
-                        }
-                        disabled={isLoading}
-                      >
-                        How does RAG improve language model responses?
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="h-auto min-h-[44px] min-w-0 max-w-full flex-1 basis-[min(100%,17rem)] rounded-full px-4 py-2 text-xs font-normal whitespace-normal hover:bg-slate-50 sm:max-w-[calc(33.333%-0.5rem)]"
-                        onClick={() =>
-                          handleExampleClick('What are the key components of a RAG system?')
-                        }
-                        disabled={isLoading}
-                      >
-                        What are the key components of a RAG system?
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="h-auto min-h-[44px] min-w-0 max-w-full flex-1 basis-[min(100%,17rem)] rounded-full px-4 py-2 text-xs font-normal whitespace-normal hover:bg-slate-50 sm:max-w-[calc(33.333%-0.5rem)]"
-                        onClick={() =>
-                          handleExampleClick('Compare keyword search vs semantic search')
-                        }
-                        disabled={isLoading}
-                      >
-                        Compare keyword search vs semantic search
-                      </Button>
+                      {DEMO_EXAMPLE_QUERIES.slice(3, 6).map(q => (
+                        <Button
+                          key={q.id}
+                          type="button"
+                          variant="outline"
+                          className="h-auto min-h-[44px] min-w-0 max-w-full flex-1 basis-[min(100%,17rem)] rounded-full px-4 py-2 text-xs font-normal whitespace-normal hover:bg-slate-50 sm:max-w-[calc(33.333%-0.5rem)]"
+                          onClick={() => handleExampleClick(q.prompt)}
+                          disabled={isLoading}
+                        >
+                          {q.label}
+                        </Button>
+                      ))}
                     </div>
                   </div>
                 </div>
@@ -402,7 +424,7 @@ export default function ChatPanel({
         >
           <div className="mx-auto w-full max-w-4xl px-[clamp(12px,3vw,28px)] py-[clamp(0.625rem,1.8vw,0.875rem)]">
             <form onSubmit={handleSubmit} className="w-full min-w-0">
-              <InputGroup className="h-auto min-h-0 items-end gap-2 rounded-none border-0 bg-transparent shadow-none ring-0 [&:has([data-slot=input-group-control]:focus-visible)]:ring-0">
+              <div className="relative w-full min-w-0">
                 <InputGroupTextarea
                   ref={textareaRef}
                   value={input}
@@ -410,40 +432,40 @@ export default function ChatPanel({
                   onKeyDown={handleKeyDown}
                   placeholder="Message RAG Eval..."
                   rows={1}
-                  className="max-h-40 min-h-[44px] flex-1 rounded-2xl border border-slate-200/90 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-slate-300/50"
+                  className="max-h-40 min-h-[44px] w-full rounded-2xl border border-slate-200/90 bg-white py-3 pl-4 pr-12 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-slate-300/50"
                   disabled={isLoading}
                 />
-                <InputGroupAddon
-                  align="inline-end"
-                  className="items-end gap-1.5 border-0 bg-transparent py-1 pl-0 pr-0"
-                >
+                <div className="pointer-events-none absolute bottom-2 right-2 z-10 flex items-center gap-1.5">
                   {isLoading && streamResponses ? (
                     <InputGroupButton
                       type="button"
                       variant="outline"
                       size="icon-sm"
-                      className="shrink-0 rounded-full border-slate-200 bg-white text-slate-900 hover:bg-slate-50"
+                      className="pointer-events-auto shrink-0 rounded-full border-slate-200 bg-white text-slate-900 shadow-sm hover:bg-slate-50"
                       title="Stop generation"
+                      aria-label="Stop generation"
                       onClick={() => stopStreaming()}
                     >
                       <Square className="h-4 w-4 fill-current" />
                     </InputGroupButton>
-                  ) : null}
-                  <InputGroupButton
-                    type="submit"
-                    variant="outline"
-                    size="icon-sm"
-                    className="shrink-0 rounded-full border-slate-200 bg-white text-slate-900 hover:bg-slate-50 hover:text-slate-900 disabled:opacity-40"
-                    disabled={isLoading || !input.trim()}
-                  >
-                    {isLoading ? (
-                      <Loader2 className="h-5 w-5 animate-spin text-slate-900" />
-                    ) : (
-                      <Send className="h-5 w-5 text-slate-900" />
-                    )}
-                  </InputGroupButton>
-                </InputGroupAddon>
-              </InputGroup>
+                  ) : (
+                    <InputGroupButton
+                      type="submit"
+                      variant="outline"
+                      size="icon-sm"
+                      className="pointer-events-auto shrink-0 rounded-full border-slate-200 bg-white text-slate-900 shadow-sm hover:bg-slate-50 hover:text-slate-900 disabled:opacity-40"
+                      disabled={isLoading || !input.trim()}
+                      aria-label="Send message"
+                    >
+                      {isLoading ? (
+                        <Loader2 className="h-5 w-5 animate-spin text-slate-900" />
+                      ) : (
+                        <Send className="h-5 w-5 text-slate-900" />
+                      )}
+                    </InputGroupButton>
+                  )}
+                </div>
+              </div>
             </form>
             {error && (
               <p className="text-sm text-destructive mt-2 px-0.5" role="status">

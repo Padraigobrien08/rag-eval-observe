@@ -84,14 +84,17 @@ export default function ConsoleLayout() {
         />
       ) : null}
 
-      <div className="relative z-10 flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden md:min-h-0">
+      <main
+        id="main-content"
+        className="relative z-10 flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden md:min-h-0"
+      >
         <ChatPanel
           setSidebarOpen={setSidebarOpen}
           activeThreadId={activeChatThreadId}
           setActiveThreadId={setActiveChatThreadId}
           onThreadsChanged={bumpChatThreads}
         />
-      </div>
+      </main>
     </div>
   )
 }
