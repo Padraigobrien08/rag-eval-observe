@@ -12,6 +12,14 @@
 
 The live deployment includes sample documents about RAG, so you can test the functionality immediately by clicking one of the example queries.
 
+## See it in action
+
+Automated walkthrough (mocked API): **chat → query logs → eval runs → compare two runs → export**.
+
+![Walkthrough: chat, query logs, eval compare, export](./docs/images/demo-walkthrough.gif)
+
+To regenerate the GIF locally: `pnpm demo:capture` then `pnpm demo:gif` ([ImageMagick](https://imagemagick.org/) on PATH). Intermediate frame PNGs live under `docs/images/demo-frames/` and are gitignored; commit `docs/images/demo-walkthrough.gif`.
+
 ## Developer setup
 
 See **[DEVELOPMENT.md](./DEVELOPMENT.md)** for the full local workflow (Postgres, migrate, seed, API, web, tests, Playwright, Alembic).

@@ -66,6 +66,17 @@ pnpm demo:e2e
 
 This runs `pnpm build` then `playwright test e2e/demo-automated.spec.ts`. The same spec is included in the default `pnpm exec playwright test` run in CI.
 
+## README walkthrough GIF
+
+The root README embeds `docs/images/demo-walkthrough.gif` (five screens: chat, query logs, eval list, compare, export). Regenerate from mocked Playwright captures:
+
+```bash
+pnpm demo:capture   # PNGs → docs/images/demo-frames/ (gitignored)
+pnpm demo:gif       # ImageMagick → docs/images/demo-walkthrough.gif (commit this)
+```
+
+`e2e/readme-demo-capture.spec.ts` runs only when `CAPTURE_README_DEMO=1` is set, so normal `pnpm exec playwright test` does not overwrite assets.
+
 ## One-command stack (Docker profile `full`)
 
 Runs Postgres, API, and Next dev server (slow first `pnpm install` in the container):
