@@ -1,13 +1,16 @@
 /**
  * Generates static frames (and optionally a GIF via scripts/stitch-demo-gif.sh)
- * for the README “proof” walkthrough. Gated so normal CI does not rewrite assets.
+ * for the README “proof” walkthrough (first frame: example pill → one assistant reply).
+ * Gated so normal CI does not rewrite assets.
  *
  *   pnpm demo:capture
  */
 import * as fs from 'fs'
 import * as path from 'path'
 
-import { test } from '@playwright/test'
+import { expect, test } from '@playwright/test'
+
+import { DEMO_EXAMPLE_QUERIES } from '../src/lib/demo-example-queries'
 
 const RUN_A = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
 const RUN_B = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'
@@ -57,7 +60,89 @@ function mkCase(rowId: string, caseIndex: number, caseId: string, hit5: boolean,
   }
 }
 
+const README_REQUEST_ID = 'req-readme-demo'
+const README_QUERY_LOG_ID = '11111111-1111-1111-1111-111111111111'
+
+/** Shown after clicking the first example pill (non-streaming /query path). */
+const README_DEMO_ANSWER =
+  '**What happened (mocked walkthrough)** — The app embedded your question, ran **vector-similarity** retrieval, pulled **3** top chunks (best match: *Introduction to RAG*), then composed this answer. The same turn appears under **Query logs** next.'
+
 async function installMocks(page: import('@playwright/test').Page) {
+  const exampleQuery = DEMO_EXAMPLE_QUERIES[0]
+  const iso = () => new Date().toISOString()
+  let seqThread = 0
+  let seqMsg = 0
+  const threads: Array<{
+    id: string
+    title: string | null
+    created_at: string
+    updated_at: string
+    message_count: number
+  }> = []
+  const messagesByThread: Record<
+    string,
+    Array<{
+      id: string
+      thread_id: string
+      role: string
+      content: string
+      citations: unknown[]
+      metadata: Record<string, unknown>
+      latency_ms: number | null
+      cost_usd: number | null
+      rag_model: string | null
+      seq: number
+      created_at: string
+      request_id?: string | null
+      query_log_id?: string | null
+    }>
+  > = {}
+
+  function syncCounts() {
+    for (const t of threads) {
+      t.message_count = messagesByThread[t.id]?.length ?? 0
+      const last = messagesByThread[t.id]?.at(-1)
+      if (last) t.updated_at = last.created_at
+    }
+  }
+
+  function appendMessage(threadId: string, role: string, content: string) {
+    const arr = messagesByThread[threadId] ?? []
+    const seq = arr.length + 1
+    const row = {
+      id: `m-${++seqMsg}`,
+      thread_id: threadId,
+      role,
+      content,
+      citations: [] as unknown[],
+      metadata: {} as Record<string, unknown>,
+      latency_ms: null,
+      cost_usd: null,
+      rag_model: null,
+      seq,
+      created_at: iso(),
+    }
+    arr.push(row)
+    messagesByThread[threadId] = arr
+    syncCounts()
+    return row
+  }
+
+  function createThread(title: string | null) {
+    const id = `t-${++seqThread}`
+    const now = iso()
+    const row = {
+      id,
+      title,
+      created_at: now,
+      updated_at: now,
+      message_count: 0,
+    }
+    threads.unshift(row)
+    messagesByThread[id] = []
+    return row
+  }
+
   await page.route('**/api/backend/api/v1/health', async route => {
     await route.fulfill({
       status: 200,
@@ -89,12 +174,89 @@ async function installMocks(page: import('@playwright/test').Page) {
     })
   })
 
-  await page.route('**/api/backend/api/v1/chat/threads**', async route => {
+  await page.route('**/api/backend/api/v1/query', async route => {
+    if (route.request().method() !== 'POST') {
+      await route.continue()
+      return
+    }
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ threads: [] }),
+      body: JSON.stringify({
+        answer: README_DEMO_ANSWER,
+        citations: [
+          {
+            chunk_id: 'chunk-demo-1',
+            document_id: 'demo-doc-1',
+            title: 'Introduction to RAG',
+            source: 'introduction-to-rag',
+            chunk_index: 0,
+          },
+        ],
+        used_chunk_ids: ['chunk-demo-1'],
+        latency_ms: 142,
+        token_usage: { prompt_tokens: 120, completion_tokens: 280, total_tokens: 400 },
+        rag_model: 'vector-similarity',
+        retrieved_chunk_count: 3,
+        request_id: README_REQUEST_ID,
+        query_log_id: README_QUERY_LOG_ID,
+      }),
     })
+  })
+
+  await page.route('**/api/backend/api/v1/chat/**', async route => {
+    const req = route.request()
+    const url = new URL(req.url())
+    const pathname = url.pathname
+    const method = req.method()
+
+    const msgMatch = pathname.match(/\/chat\/threads\/([^/]+)\/messages\/?$/)
+    if (msgMatch) {
+      const threadId = decodeURIComponent(msgMatch[1])
+      if (method === 'GET') {
+        const msgs = messagesByThread[threadId] ?? []
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ messages: msgs }),
+        })
+        return
+      }
+      if (method === 'POST') {
+        const body = req.postDataJSON() as { role: string; content: string }
+        const row = appendMessage(threadId, body.role, body.content)
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify(row),
+        })
+        return
+      }
+    }
+
+    if (pathname.endsWith('/chat/threads') || pathname.endsWith('/chat/threads/')) {
+      if (method === 'GET') {
+        syncCounts()
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ threads }),
+        })
+        return
+      }
+      if (method === 'POST') {
+        const body = (req.postDataJSON() as { title?: string | null }) ?? {}
+        const row = createThread(body.title ?? null)
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ ...row, message_count: 0 }),
+        })
+        return
+      }
+    }
+
+    await route.continue()
   })
 
   await page.route(`**/api/backend/api/v1/eval/runs/${RUN_A}`, async route => {
@@ -138,18 +300,18 @@ async function installMocks(page: import('@playwright/test').Page) {
       body: JSON.stringify({
         logs: [
           {
-            id: '11111111-1111-1111-1111-111111111111',
-            query_text: 'How does chunk overlap help RAG quality?',
+            id: README_QUERY_LOG_ID,
+            query_text: exampleQuery.prompt,
             rag_model: 'vector-similarity',
             top_k: 5,
-            request_id: 'req-demo-1',
+            request_id: README_REQUEST_ID,
             client_ip: '127.0.0.1',
-            user_agent: 'demo',
+            user_agent: 'readme-demo',
             latency_ms: 142,
             token_usage: { prompt: 120, completion: 340 },
             cost_usd: 0.002,
-            citations_count: 3,
-            answer_length: 890,
+            citations_count: 1,
+            answer_length: README_DEMO_ANSWER.length,
             created_at: '2026-01-03T10:00:00.000Z',
           },
         ],
@@ -205,8 +367,16 @@ test.describe('README demo asset capture', () => {
     })
     await installMocks(page)
 
+    const exampleQuery = DEMO_EXAMPLE_QUERIES[0]
     await page.goto('/')
-    await page.waitForTimeout(400)
+    await expect(page.getByRole('heading', { name: /what can i help with/i })).toBeVisible()
+    await expect(page.getByText(/5.*documents.*indexed/i)).toBeVisible({ timeout: 15_000 })
+    await page.getByRole('button', { name: new RegExp(exampleQuery.label, 'i') }).click()
+    await expect(page.getByText(/What happened \(mocked walkthrough\)/i)).toBeVisible({
+      timeout: 20_000,
+    })
+    await expect(page.getByText(/Introduction to RAG/i).first()).toBeVisible({ timeout: 10_000 })
+    await page.waitForTimeout(350)
     await page.screenshot({ path: path.join(OUT_DIR, '01-chat.png'), fullPage: true })
 
     await page.goto('/query-logs')

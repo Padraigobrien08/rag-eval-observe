@@ -14,7 +14,7 @@ The live deployment includes sample documents about RAG, so you can test the fun
 
 ## See it in action
 
-Automated walkthrough (mocked API): **chat → query logs → eval runs → compare two runs → export**.
+Automated walkthrough (mocked API): the first screen is an **example question plus one assistant reply** (what retrieval did), then **query logs → eval runs → compare two runs → export**.
 
 ![Walkthrough: chat, query logs, eval compare, export](./docs/images/demo-walkthrough.gif)
 

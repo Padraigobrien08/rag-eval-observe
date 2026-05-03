@@ -68,7 +68,7 @@ This runs `pnpm build` then `playwright test e2e/demo-automated.spec.ts`. The sa
 
 ## README walkthrough GIF
 
-The root README embeds `docs/images/demo-walkthrough.gif` (five screens: chat, query logs, eval list, compare, export). Regenerate from mocked Playwright captures:
+The root README embeds `docs/images/demo-walkthrough.gif` (five screens: chat with one example Q→A, query logs, eval list, compare, export). Regenerate from mocked Playwright captures:
 
 ```bash
 pnpm demo:capture   # PNGs → docs/images/demo-frames/ (gitignored)
