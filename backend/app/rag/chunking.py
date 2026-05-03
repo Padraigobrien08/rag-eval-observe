@@ -314,12 +314,17 @@ def merge_undersized_chunks(
     """
     if not chunks or min_chars <= 0:
         reindexed = [
-            Chunk(chunk_index=i, content=c.content, metadata=dict(c.metadata)) for i, c in enumerate(chunks)
+            Chunk(chunk_index=i, content=c.content, metadata=dict(c.metadata))
+            for i, c in enumerate(chunks)
         ]
         return reindexed, 0
 
     out: list[Chunk] = [
-        Chunk(chunk_index=chunks[0].chunk_index, content=chunks[0].content, metadata=dict(chunks[0].metadata))
+        Chunk(
+            chunk_index=chunks[0].chunk_index,
+            content=chunks[0].content,
+            metadata=dict(chunks[0].metadata),
+        )
     ]
     merges = 0
 

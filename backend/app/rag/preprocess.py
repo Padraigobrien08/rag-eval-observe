@@ -117,7 +117,10 @@ def preprocess_ingest_text(raw_text: str) -> PreprocessReport:
     if normalized_character_count == 0:
         warnings.append("empty_after_preprocessing")
 
-    if normalized_character_count < original_character_count * 0.5 and original_character_count > 500:
+    if (
+        normalized_character_count < original_character_count * 0.5
+        and original_character_count > 500
+    ):
         warnings.append("large_fraction_removed_review_source_quality")
 
     return PreprocessReport(
