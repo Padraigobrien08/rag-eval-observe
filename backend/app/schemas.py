@@ -254,3 +254,82 @@ class ChatQueryLinkItem(BaseModel):
 
 class ChatQueryLinksResponse(BaseModel):
     links: list[ChatQueryLinkItem]
+
+
+class EvalRunSummaryResponse(BaseModel):
+    """One persisted eval harness run (list view, no per-case rows)."""
+
+    id: str
+    created_at: str
+    finished_at: str
+    status: str
+    dataset_path: str
+    use_llm_judge: bool
+    total_cases: int
+    successful: int
+    failed: int
+    hit_at_1: float
+    hit_at_3: float
+    hit_at_5: float
+    hit_at_8: float
+    mrr: float
+    llm_judge_correctness_rate: float | None = None
+    llm_judge_faithfulness_rate: float | None = None
+    config_json: dict[str, Any] = Field(default_factory=dict)
+
+
+class EvalCaseResultResponse(BaseModel):
+    """Single case outcome from a persisted eval run."""
+
+    id: str
+    case_index: int
+    case_id: str
+    query: str
+    expected_sources: list[str] = Field(default_factory=list)
+    retrieved_sources: list[str] = Field(default_factory=list)
+    answer: str = ""
+    hit_at_1: bool
+    hit_at_3: bool
+    hit_at_5: bool
+    hit_at_8: bool
+    mrr: float
+    llm_judge_correctness: bool | None = None
+    llm_judge_faithfulness: bool | None = None
+    llm_judge_reasoning: str | None = None
+    error: str | None = None
+    citations: list[dict[str, Any]] = Field(default_factory=list)
+
+
+class EvalRunDetailResponse(EvalRunSummaryResponse):
+    """Eval run including all case results."""
+
+    error_message: str | None = None
+    cases: list[EvalCaseResultResponse] = Field(default_factory=list)
+
+
+class EvalRunListResponse(BaseModel):
+    runs: list[EvalRunSummaryResponse]
+
+
+class QueryLogDetailResponse(BaseModel):
+    """Single audit row from ``queries`` (observability drill-down)."""
+
+    id: str
+    query_text: str
+    rag_model: str
+    top_k: int | None = None
+    request_id: str | None = None
+    client_ip: str | None = None
+    user_agent: str | None = None
+    latency_ms: int | None = None
+    token_usage: dict[str, Any] | None = None
+    cost_usd: float | None = None
+    citations_count: int | None = None
+    answer_length: int | None = None
+    created_at: str | None = None
+
+
+class QueryLogsListResponse(BaseModel):
+    """Paged list of ``queries`` rows for the query-log explorer."""
+
+    logs: list[QueryLogDetailResponse]

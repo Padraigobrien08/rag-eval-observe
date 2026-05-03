@@ -417,6 +417,46 @@ async def get_query_logs(
         ]
 
 
+async def get_query_log_by_id(query_id: str) -> dict | None:
+    """Return one row from ``queries`` by primary key, or None."""
+    pool = await get_db_pool()
+    async with pool.acquire() as conn:
+        row = await conn.fetchrow(
+            """
+            SELECT
+                id, query_text, rag_model, top_k, request_id, client_ip, user_agent,
+                latency_ms, token_usage, cost_usd, citations_count, answer_length, created_at
+            FROM queries
+            WHERE id = $1
+            """,
+            query_id,
+        )
+    if not row:
+        return None
+    tu = row["token_usage"]
+    if tu is None:
+        token_usage = None
+    elif isinstance(tu, str):
+        token_usage = json.loads(tu) if tu else None
+    else:
+        token_usage = dict(tu)
+    return {
+        "id": row["id"],
+        "query_text": row["query_text"],
+        "rag_model": row["rag_model"],
+        "top_k": row["top_k"],
+        "request_id": row["request_id"],
+        "client_ip": row["client_ip"],
+        "user_agent": row["user_agent"],
+        "latency_ms": row["latency_ms"],
+        "token_usage": token_usage,
+        "cost_usd": float(row["cost_usd"]) if row["cost_usd"] is not None else None,
+        "citations_count": row["citations_count"],
+        "answer_length": row["answer_length"],
+        "created_at": row["created_at"].isoformat() if row["created_at"] else None,
+    }
+
+
 async def get_query_stats(
     start_date: str | None = None,
     end_date: str | None = None,
