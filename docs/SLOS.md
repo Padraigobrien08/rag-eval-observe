@@ -1,0 +1,47 @@
+# Service level objectives (examples)
+
+These are **starter SLOs** for a self-hosted API + web UI. Adjust numbers to your user contract and monitoring stack.
+
+## API availability
+
+| SLI | Target | Window |
+| --- | --- | --- |
+| **`GET /api/v1/health` success** | 99.9% | 30 rolling days |
+| **Non-stream query success** (`POST /api/v1/query` 2xx) | 99.5% | 30 rolling days |
+| **Streaming query** (`/api/v1/query/stream` completes without server error) | 99.0% | 30 rolling days |
+
+**Note:** LLM provider outages count toward **dependency** error budgets unless you define an exclusion.
+
+## Latency (p95)
+
+| Route | Example p95 target |
+| --- | --- |
+| `/api/v1/query` (non-stream, excluding LLM) | < 3 s |
+| Time-to-first-token (stream) | < 2 s |
+
+Measure with your APM or Prometheus histograms if you add them; in-process metrics today expose aggregated latencies per route label.
+
+## Error budget policy
+
+When availability falls below target for **7 consecutive days**:
+
+1. Freeze non-critical releases.
+2. Focus on reliability work (timeouts, retries, pool sizing, provider fallbacks).
+
+## UI availability
+
+| SLI | Target |
+| --- | --- |
+| Next.js origin returns **200** for `/` | 99.9% |
+
+Pair with synthetic checks (e.g. every 1–5 minutes) from multiple regions if you serve globally.
+
+## Eval / data pipeline
+
+Not traditionally “SLO’d” like the API, but useful:
+
+| SLI | Target |
+| --- | --- |
+| Harness run completes and persists (`eval_runs` row) when **`EVAL_PERSIST_RUNS`** is on | 95% of scheduled CI runs |
+
+Track in CI dashboards using artifacts from **[EVAL_CI.md](./EVAL_CI.md)**.

@@ -120,6 +120,10 @@ OTEL_SERVICE_NAME=rag-eval-backend
 ### Metrics and streaming
 
 - `GET /api/v1/analytics/chat-query-links?limit=50` returns recent rows joining **`chat_messages.query_log_id`** → **`queries.id`** (audit ↔ persisted assistant turns). Same **`API_KEY`** rules as other `/api/v1/*` routes when configured.
+- `GET /api/v1/analytics/query-log/{query_id}` returns one **`queries`** audit row (used by the chat UI “Observability” panel when a message has **`query_log_id`**).
+- `GET /api/v1/eval/runs` and **`GET /api/v1/eval/runs/{run_id}`** list and detail persisted eval harness runs (see Phase 1 **`eval_runs`** tables).
+- **`GET /api/v1/eval/runs/{run_id}/export?format=json|csv`** downloads the same detail as an attachment (CI / archival). See **`docs/EVAL_CI.md`**.
+- **`GET /api/v1/analytics/query-logs`** lists **`queries`** audit rows with optional `rag_model`, `start_date`, `end_date`, `limit`, `offset` (query-log explorer in the app at **`/query-logs`**).
 - `GET /api/v1/metrics` and `GET /api/v1/metrics/prometheus` expose per-route counters (including `/api/v1/query` and `/api/v1/query/stream`) and token totals. They are in-memory and reset on process restart.
 - Grafana: import `observability/grafana-rag-eval-prometheus.json` or use provisioning files under `observability/grafana/` (see `observability/grafana/README.md`).
 
@@ -136,6 +140,7 @@ OTEL_SERVICE_NAME=rag-eval-backend
 - `EVAL_MAX_CASES` — optional positive integer; truncate the eval dataset for cheaper runs (e.g. in CI smoke jobs).
 - `EVAL_USE_LLM_JUDGE` — `true` / `false` for extra LLM judging in `eval/run_eval.py`.
 - `EVAL_RECORD_CHAT` — when `true` / `1` / `yes`, `eval/run_eval.py` appends each case as user + assistant rows into **one** Postgres chat thread (same DB pool as retrieval), tagged with `eval_run_id` and `eval_case_id` (`case-{n}`). Requires current chat schema migrations applied.
+- `EVAL_PERSIST_RUNS` — default **on** (`true`). When enabled, each completed `eval/run_eval.py` run writes a row to `eval_runs` and per-case rows to `eval_case_results` (requires eval tables from `docker/init/07-eval-runs.sql` or Alembic `006_eval_runs`). Set to `false` / `0` / `no` to skip DB persistence (report file is still written).
 
 ---
 

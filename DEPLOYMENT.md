@@ -2,6 +2,8 @@
 
 This guide covers deploying the RAG Eval Observability system to production.
 
+**Operational add-ons:** after baseline deploy, use **[docs/RUNBOOK.md](./docs/RUNBOOK.md)** (incidents), **[docs/SLOS.md](./docs/SLOS.md)** (targets), **[docs/THREAT_MODEL.md](./docs/THREAT_MODEL.md)** (security review), and **[docs/HARDENING.md](./docs/HARDENING.md)** (`API_KEY`, rate limits, tenancy).
+
 ## Overview
 
 The system consists of:

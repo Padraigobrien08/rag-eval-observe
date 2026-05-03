@@ -21,11 +21,14 @@
    make migrate
    ```
 
-4. **Optional sample corpus** (idempotent; skips existing sources)
+4. **Demo corpus** (recommended for first open; idempotent — skips existing `source` values)
 
    ```bash
    make seed
+   # or: pnpm seed:corpus
    ```
+
+   Loads the same five short RAG-topic docs used by `eval/run_eval.py`, so the home-screen example queries retrieve well.
 
 5. **Backend**
 
@@ -42,6 +45,26 @@
    ```
 
 7. Open [http://localhost:3000](http://localhost:3000). The UI proxies API calls to `http://localhost:8000` unless `AZURE_API_BASE_URL` is set.
+
+## Troubleshooting (Eval page / `Cannot find module './NNN.js'`)
+
+If `/eval/runs` shows a huge error or **Cannot find module './463.js'**, the dev bundle is usually stale. From the repo root:
+
+```bash
+rm -rf .next && pnpm dev
+```
+
+Then hard-refresh the browser. The eval routes load their UI with **client-only** dynamic imports to reduce SSR edge cases; the API still uses `/api/backend` as usual.
+
+## Automated UI demo (no backend)
+
+Playwright can drive the full chat shell with **mocked** API routes (clicks an example pill + types a follow-up with the keyboard):
+
+```bash
+pnpm demo:e2e
+```
+
+This runs `pnpm build` then `playwright test e2e/demo-automated.spec.ts`. The same spec is included in the default `pnpm exec playwright test` run in CI.
 
 ## One-command stack (Docker profile `full`)
 
@@ -66,6 +89,8 @@ pnpm build && pnpm exec playwright test
 ```
 
 Playwright starts a production `next start` server on **http://127.0.0.1:4173** (see `playwright.config.ts`) so it does not collide with `pnpm dev` on port 3000.
+
+**Broader E2E:** `e2e/eval-observability-mocked.spec.ts` covers eval list/detail/compare and query logs with a mocked API. **`e2e/a11y-core-pages.spec.ts`** runs **axe-core** on `/`, `/eval/runs`, `/query-logs`, and `/metrics` (color-contrast disabled; focus on structure and naming — see file header). Both are included in `pnpm exec playwright test` / CI.
 
 ### Integration E2E (real API + Postgres)
 

@@ -16,6 +16,20 @@ The live deployment includes sample documents about RAG, so you can test the fun
 
 See **[DEVELOPMENT.md](./DEVELOPMENT.md)** for the full local workflow (Postgres, migrate, seed, API, web, tests, Playwright, Alembic).
 
+## Flagship documentation (polish & production narrative)
+
+| Doc | Purpose |
+| --- | --- |
+| **[docs/THESIS.md](./docs/THESIS.md)** | Sharp product story: **eval regression as a first-class workflow** |
+| **[docs/BENCHMARKS.md](./docs/BENCHMARKS.md)** | Reproducible harness procedure + case-study template |
+| **[docs/HARDENING.md](./docs/HARDENING.md)** | **`API_KEY`**, rate limits, CORS, **multi-tenant posture** |
+| **[docs/RUNBOOK.md](./docs/RUNBOOK.md)** | Health checks, incidents, rollback, escalation |
+| **[docs/THREAT_MODEL.md](./docs/THREAT_MODEL.md)** | Assets, trust boundaries, mitigations |
+| **[docs/SLOS.md](./docs/SLOS.md)** | Example availability / latency SLOs |
+| **[docs/EVAL_CI.md](./docs/EVAL_CI.md)** | **`curl` exports** and CI artifact patterns |
+
+Automated **accessibility** checks (axe-core) and broader **eval / query-log E2E** run in CI via Playwright (`e2e/a11y-core-pages.spec.ts`, `e2e/eval-observability-mocked.spec.ts`).
+
 ## Overview
 
 RAG Eval Observability is a full-stack platform designed to help developers and researchers build, test, and deploy production-ready RAG systems. It combines a modern web interface with a robust backend API, providing everything needed to ingest documents, query knowledge bases, and monitor system performance.
