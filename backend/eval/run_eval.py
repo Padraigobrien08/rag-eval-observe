@@ -22,6 +22,8 @@ import structlog
 from dotenv import load_dotenv
 
 from app.core.logging import setup_logging
+from app.db.eval_queries import insert_eval_run_completed
+from app.db.session import close_db_pool, init_db_pool
 from app.llm.openai_client import get_openai_client
 from app.rag.answer import generate_answer
 from app.rag.retrieve import retrieve
@@ -309,6 +311,10 @@ def _eval_record_chat_enabled() -> bool:
     return os.getenv("EVAL_RECORD_CHAT", "").strip().lower() in ("1", "true", "yes")
 
 
+def _eval_persist_runs_enabled() -> bool:
+    return os.getenv("EVAL_PERSIST_RUNS", "true").strip().lower() not in ("0", "false", "no")
+
+
 async def _persist_eval_turn_to_db(
     *,
     eval_run_id: str,
@@ -371,121 +377,182 @@ async def run_evaluation():
             logger.info("Truncated dataset via EVAL_MAX_CASES", max_cases=n)
     logger.info("Loaded cases", count=len(cases))
 
-    record_chat = _eval_record_chat_enabled()
-    eval_run_id = str(uuid.uuid4()) if record_chat else ""
-    thread_slot: dict[str, str | None] = {"id": None}
-    if record_chat:
-        logger.info(
-            "EVAL_RECORD_CHAT enabled — persisting turns to chat_threads/chat_messages",
-            eval_run_id=eval_run_id,
+    await init_db_pool()
+    try:
+        run_id = str(uuid.uuid4())
+        record_chat = _eval_record_chat_enabled()
+        thread_slot: dict[str, str | None] = {"id": None}
+        if record_chat:
+            logger.info(
+                "EVAL_RECORD_CHAT enabled — persisting turns to chat_threads/chat_messages",
+                eval_run_id=run_id,
+            )
+
+        # Run evaluation
+        results = []
+        for i, case in enumerate(cases, 1):
+            logger.info("Evaluating case", case_num=i, total=len(cases), query=case.query)
+            result = await evaluate_case(case, use_llm_judge=use_llm_judge)
+            results.append(result)
+
+            if record_chat:
+                try:
+                    await _persist_eval_turn_to_db(
+                        eval_run_id=run_id,
+                        case_index=i,
+                        case=case,
+                        result=result,
+                        thread_slot=thread_slot,
+                    )
+                except Exception as rec_err:
+                    logger.warning(
+                        "EVAL_RECORD_CHAT persist failed",
+                        case_num=i,
+                        error=str(rec_err),
+                        exc_info=True,
+                    )
+
+            # Small delay to avoid rate limits
+            if i < len(cases):
+                await asyncio.sleep(0.5)
+
+        # Calculate summary
+        successful = sum(1 for r in results if not r.error)
+        failed = len(results) - successful
+
+        hit_at_1_count = sum(1 for r in results if r.hit_at_1)
+        hit_at_3_count = sum(1 for r in results if r.hit_at_3)
+        hit_at_5_count = sum(1 for r in results if r.hit_at_5)
+        hit_at_8_count = sum(1 for r in results if r.hit_at_8)
+        mrr_sum = sum(r.mrr for r in results)
+
+        summary = EvaluationSummary(
+            total_cases=len(results),
+            successful=successful,
+            failed=failed,
+            hit_at_1=hit_at_1_count / len(results) if results else 0.0,
+            hit_at_3=hit_at_3_count / len(results) if results else 0.0,
+            hit_at_5=hit_at_5_count / len(results) if results else 0.0,
+            hit_at_8=hit_at_8_count / len(results) if results else 0.0,
+            mrr=mrr_sum / len(results) if results else 0.0,
         )
 
-    # Run evaluation
-    results = []
-    for i, case in enumerate(cases, 1):
-        logger.info("Evaluating case", case_num=i, total=len(cases), query=case.query)
-        result = await evaluate_case(case, use_llm_judge=use_llm_judge)
-        results.append(result)
+        # LLM judge metrics
+        if use_llm_judge:
+            correctness_count = sum(1 for r in results if r.llm_judge_correctness is True)
+            faithfulness_count = sum(1 for r in results if r.llm_judge_faithfulness is True)
+            judged_count = sum(1 for r in results if r.llm_judge_correctness is not None)
 
-        if record_chat:
-            try:
-                await _persist_eval_turn_to_db(
-                    eval_run_id=eval_run_id,
-                    case_index=i,
-                    case=case,
-                    result=result,
-                    thread_slot=thread_slot,
+            if judged_count > 0:
+                summary.llm_judge_correctness_rate = correctness_count / judged_count
+                summary.llm_judge_faithfulness_rate = faithfulness_count / judged_count
+
+        # Collect failure examples
+        failure_examples = []
+        for result in results:
+            if not result.hit_at_5 or result.error:
+                failure_examples.append(
+                    {
+                        "query": result.query,
+                        "expected_sources": result.expected_sources,
+                        "retrieved_sources": result.retrieved_sources,
+                        "answer": result.answer,
+                        "llm_judge_reasoning": result.llm_judge_reasoning,
+                    }
                 )
-            except Exception as rec_err:
+        summary.failure_examples = failure_examples[:10]  # Top 10 failures
+
+        # Generate and save report
+        report = generate_report(summary, results)
+        with open(report_path, "w") as f:
+            f.write(report)
+
+        logger.info(
+            "Evaluation completed",
+            report_path=str(report_path),
+            hit_at_1=summary.hit_at_1,
+            hit_at_5=summary.hit_at_5,
+            mrr=summary.mrr,
+        )
+
+        if _eval_persist_runs_enabled():
+            case_rows = []
+            for i, result in enumerate(results, start=1):
+                case_rows.append(
+                    {
+                        "case_index": i,
+                        "case_id": f"case-{i}",
+                        "query": result.query,
+                        "expected_sources": result.expected_sources,
+                        "retrieved_sources": result.retrieved_sources,
+                        "answer": result.answer,
+                        "hit_at_1": result.hit_at_1,
+                        "hit_at_3": result.hit_at_3,
+                        "hit_at_5": result.hit_at_5,
+                        "hit_at_8": result.hit_at_8,
+                        "mrr": result.mrr,
+                        "llm_judge_correctness": result.llm_judge_correctness,
+                        "llm_judge_faithfulness": result.llm_judge_faithfulness,
+                        "llm_judge_reasoning": result.llm_judge_reasoning,
+                        "error": result.error,
+                        "citations": result.citations,
+                    }
+                )
+            config_json = {
+                "openai_embedding_model": os.getenv("OPENAI_EMBEDDING_MODEL", ""),
+                "openai_chat_model": os.getenv("OPENAI_CHAT_MODEL", ""),
+                "eval_max_cases": max_cases_raw or None,
+                "eval_use_llm_judge": use_llm_judge,
+            }
+            try:
+                await insert_eval_run_completed(
+                    run_id=run_id,
+                    dataset_path=str(dataset_path.resolve()),
+                    use_llm_judge=use_llm_judge,
+                    total_cases=summary.total_cases,
+                    successful=summary.successful,
+                    failed=summary.failed,
+                    hit_at_1=summary.hit_at_1,
+                    hit_at_3=summary.hit_at_3,
+                    hit_at_5=summary.hit_at_5,
+                    hit_at_8=summary.hit_at_8,
+                    mrr=summary.mrr,
+                    llm_judge_correctness_rate=summary.llm_judge_correctness_rate,
+                    llm_judge_faithfulness_rate=summary.llm_judge_faithfulness_rate,
+                    config_json=config_json,
+                    case_rows=case_rows,
+                )
+                logger.info("Persisted eval run to database", eval_run_id=run_id)
+            except Exception as persist_err:
                 logger.warning(
-                    "EVAL_RECORD_CHAT persist failed",
-                    case_num=i,
-                    error=str(rec_err),
+                    "Failed to persist eval run",
+                    error=str(persist_err),
                     exc_info=True,
                 )
 
-        # Small delay to avoid rate limits
-        if i < len(cases):
-            await asyncio.sleep(0.5)
-
-    # Calculate summary
-    successful = sum(1 for r in results if not r.error)
-    failed = len(results) - successful
-
-    hit_at_1_count = sum(1 for r in results if r.hit_at_1)
-    hit_at_3_count = sum(1 for r in results if r.hit_at_3)
-    hit_at_5_count = sum(1 for r in results if r.hit_at_5)
-    hit_at_8_count = sum(1 for r in results if r.hit_at_8)
-    mrr_sum = sum(r.mrr for r in results)
-
-    summary = EvaluationSummary(
-        total_cases=len(results),
-        successful=successful,
-        failed=failed,
-        hit_at_1=hit_at_1_count / len(results) if results else 0.0,
-        hit_at_3=hit_at_3_count / len(results) if results else 0.0,
-        hit_at_5=hit_at_5_count / len(results) if results else 0.0,
-        hit_at_8=hit_at_8_count / len(results) if results else 0.0,
-        mrr=mrr_sum / len(results) if results else 0.0,
-    )
-
-    # LLM judge metrics
-    if use_llm_judge:
-        correctness_count = sum(1 for r in results if r.llm_judge_correctness is True)
-        faithfulness_count = sum(1 for r in results if r.llm_judge_faithfulness is True)
-        judged_count = sum(1 for r in results if r.llm_judge_correctness is not None)
-
-        if judged_count > 0:
-            summary.llm_judge_correctness_rate = correctness_count / judged_count
-            summary.llm_judge_faithfulness_rate = faithfulness_count / judged_count
-
-    # Collect failure examples
-    failure_examples = []
-    for result in results:
-        if not result.hit_at_5 or result.error:
-            failure_examples.append(
-                {
-                    "query": result.query,
-                    "expected_sources": result.expected_sources,
-                    "retrieved_sources": result.retrieved_sources,
-                    "answer": result.answer,
-                    "llm_judge_reasoning": result.llm_judge_reasoning,
-                }
-            )
-    summary.failure_examples = failure_examples[:10]  # Top 10 failures
-
-    # Generate and save report
-    report = generate_report(summary, results)
-    with open(report_path, "w") as f:
-        f.write(report)
-
-    logger.info(
-        "Evaluation completed",
-        report_path=str(report_path),
-        hit_at_1=summary.hit_at_1,
-        hit_at_5=summary.hit_at_5,
-        mrr=summary.mrr,
-    )
-
-    # Print summary to console
-    print("\n" + "=" * 60)
-    print("EVALUATION SUMMARY")
-    print("=" * 60)
-    print(f"Total Cases: {summary.total_cases}")
-    print(f"Successful: {summary.successful}")
-    print(f"Failed: {summary.failed}")
-    print("\nRetrieval Metrics:")
-    print(f"  Hit@1: {summary.hit_at_1:.2%}")
-    print(f"  Hit@3: {summary.hit_at_3:.2%}")
-    print(f"  Hit@5: {summary.hit_at_5:.2%}")
-    print(f"  Hit@8: {summary.hit_at_8:.2%}")
-    print(f"  MRR: {summary.mrr:.3f}")
-    if summary.llm_judge_correctness_rate is not None:
-        print("\nLLM Judge Metrics:")
-        print(f"  Correctness: {summary.llm_judge_correctness_rate:.2%}")
-        print(f"  Faithfulness: {summary.llm_judge_faithfulness_rate:.2%}")
-    print(f"\nReport saved to: {report_path}")
-    print("=" * 60 + "\n")
+        # Print summary to console
+        print("\n" + "=" * 60)
+        print("EVALUATION SUMMARY")
+        print("=" * 60)
+        print(f"Total Cases: {summary.total_cases}")
+        print(f"Successful: {summary.successful}")
+        print(f"Failed: {summary.failed}")
+        print("\nRetrieval Metrics:")
+        print(f"  Hit@1: {summary.hit_at_1:.2%}")
+        print(f"  Hit@3: {summary.hit_at_3:.2%}")
+        print(f"  Hit@5: {summary.hit_at_5:.2%}")
+        print(f"  Hit@8: {summary.hit_at_8:.2%}")
+        print(f"  MRR: {summary.mrr:.3f}")
+        if summary.llm_judge_correctness_rate is not None:
+            print("\nLLM Judge Metrics:")
+            print(f"  Correctness: {summary.llm_judge_correctness_rate:.2%}")
+            print(f"  Faithfulness: {summary.llm_judge_faithfulness_rate:.2%}")
+        print(f"\nReport saved to: {report_path}")
+        if _eval_persist_runs_enabled():
+            print(f"Eval run id (database): {run_id}")
+        print("=" * 60 + "\n")
+    finally:
+        await close_db_pool()
 
 
 if __name__ == "__main__":
