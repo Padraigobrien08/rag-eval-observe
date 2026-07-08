@@ -93,7 +93,7 @@ export default function MetricsPage() {
 
   if (isLoading && !metrics) {
     return (
-      <div className="min-h-screen bg-slate-50 p-8">
+      <div className="min-h-screen bg-background p-8">
         <div className="max-w-7xl mx-auto space-y-8">
           <div className="flex items-center justify-between">
             <Skeleton className="h-10 w-40" />
@@ -119,7 +119,7 @@ export default function MetricsPage() {
 
   if (error && !metrics) {
     return (
-      <div className="min-h-screen bg-slate-50 p-8">
+      <div className="min-h-screen bg-background p-8">
         <div className="max-w-lg mx-auto space-y-4">
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
@@ -146,7 +146,7 @@ export default function MetricsPage() {
   const totalCost = estimateDashboardTokenCostUsd(metrics.token_usage)
 
   return (
-    <div className="min-h-screen bg-slate-50 p-8">
+    <div className="min-h-screen bg-background p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
@@ -157,7 +157,7 @@ export default function MetricsPage() {
             </Button>
             <div>
               <h1
-                className="font-bold text-slate-900"
+                className="font-bold text-foreground"
                 style={{
                   fontSize: 'clamp(24px, 2.8vw, 40px)',
                   lineHeight: '1.1',
@@ -165,7 +165,7 @@ export default function MetricsPage() {
               >
                 System Metrics
               </h1>
-              <p className="text-sm text-slate-500 mt-1">
+              <p className="text-sm text-muted-foreground mt-1">
                 Last updated: {lastUpdated.toLocaleTimeString()}
               </p>
             </div>
@@ -181,13 +181,13 @@ export default function MetricsPage() {
           </div>
         </div>
 
-        <p className="text-xs text-slate-500 mb-6">
+        <p className="text-xs text-muted-foreground mb-6">
           Prometheus scrape (same in-memory counters): API{' '}
-          <code className="rounded bg-slate-100 px-1 py-0.5 text-[11px]">
+          <code className="rounded bg-muted px-1 py-0.5 text-[11px]">
             /api/v1/metrics/prometheus
           </code>{' '}
           · via Next proxy{' '}
-          <code className="rounded bg-slate-100 px-1 py-0.5 text-[11px]">
+          <code className="rounded bg-muted px-1 py-0.5 text-[11px]">
             /api/backend/api/v1/metrics/prometheus
           </code>
         </p>
@@ -197,7 +197,7 @@ export default function MetricsPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Uptime</CardTitle>
-              <Clock className="h-4 w-4 text-slate-500" />
+              <Clock className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div
@@ -209,14 +209,14 @@ export default function MetricsPage() {
               >
                 {formatUptime(metrics.uptime_seconds)}
               </div>
-              <p className="text-xs text-slate-500 mt-1">System uptime</p>
+              <p className="text-xs text-muted-foreground mt-1">System uptime</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Requests</CardTitle>
-              <Activity className="h-4 w-4 text-slate-500" />
+              <Activity className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div
@@ -228,14 +228,14 @@ export default function MetricsPage() {
               >
                 {totalRequests.toLocaleString()}
               </div>
-              <p className="text-xs text-slate-500 mt-1">Across all routes</p>
+              <p className="text-xs text-muted-foreground mt-1">Across all routes</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Cost</CardTitle>
-              <DollarSign className="h-4 w-4 text-slate-500" />
+              <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div
@@ -247,7 +247,7 @@ export default function MetricsPage() {
               >
                 ${totalCost.toFixed(4)}
               </div>
-              <p className="text-xs text-slate-500 mt-1">
+              <p className="text-xs text-muted-foreground mt-1">
                 Estimated API costs (embedding-3-small + gpt-4o-mini rates)
               </p>
             </CardContent>
@@ -256,7 +256,7 @@ export default function MetricsPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Tokens</CardTitle>
-              <Database className="h-4 w-4 text-slate-500" />
+              <Database className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div
@@ -270,7 +270,7 @@ export default function MetricsPage() {
                   metrics.token_usage.embedding_total_tokens + metrics.token_usage.chat_total_tokens
                 ).toLocaleString()}
               </div>
-              <p className="text-xs text-slate-500 mt-1">Embedding + Chat tokens</p>
+              <p className="text-xs text-muted-foreground mt-1">Embedding + Chat tokens</p>
             </CardContent>
           </Card>
         </div>
@@ -285,19 +285,19 @@ export default function MetricsPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-slate-600">Request Count</span>
+                  <span className="text-sm text-muted-foreground">Request Count</span>
                   <span className="text-lg font-semibold">
                     {queryRoute.request_count.toLocaleString()}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-slate-600">Average Latency</span>
+                  <span className="text-sm text-muted-foreground">Average Latency</span>
                   <span className="text-lg font-semibold">
                     {queryRoute.avg_latency_ms.toFixed(2)}ms
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-slate-600">Total Latency</span>
+                  <span className="text-sm text-muted-foreground">Total Latency</span>
                   <span className="text-lg font-semibold">
                     {queryRoute.total_latency_ms.toLocaleString()}ms
                   </span>
@@ -349,15 +349,12 @@ export default function MetricsPage() {
                   return (
                     <div key={bucket} className="space-y-2">
                       <div className="flex items-center justify-between text-sm">
-                        <span className="text-slate-600">{bucket}</span>
+                        <span className="text-muted-foreground">{bucket}</span>
                         <span className="font-medium">
                           {count} ({percentage.toFixed(1)}%)
                         </span>
                       </div>
-                      <Progress
-                        value={percentage}
-                        className="h-2 bg-slate-200 [&>div]:bg-blue-600"
-                      />
+                      <Progress value={percentage} className="h-2 bg-muted [&>div]:bg-primary" />
                     </div>
                   )
                 })}
@@ -375,19 +372,19 @@ export default function MetricsPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-slate-600">Prompt Tokens</span>
+                <span className="text-sm text-muted-foreground">Prompt Tokens</span>
                 <span className="text-lg font-semibold">
                   {metrics.token_usage.embedding_prompt_tokens.toLocaleString()}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-slate-600">Total Tokens</span>
+                <span className="text-sm text-muted-foreground">Total Tokens</span>
                 <span className="text-lg font-semibold">
                   {metrics.token_usage.embedding_total_tokens.toLocaleString()}
                 </span>
               </div>
               <div className="flex items-center justify-between pt-2 border-t">
-                <span className="text-sm text-slate-600">Estimated Cost</span>
+                <span className="text-sm text-muted-foreground">Estimated Cost</span>
                 <span className="text-lg font-semibold">
                   ${((metrics.token_usage.embedding_total_tokens / 1000) * 0.00002).toFixed(4)}
                 </span>
@@ -402,25 +399,25 @@ export default function MetricsPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-slate-600">Prompt Tokens</span>
+                <span className="text-sm text-muted-foreground">Prompt Tokens</span>
                 <span className="text-lg font-semibold">
                   {metrics.token_usage.chat_prompt_tokens.toLocaleString()}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-slate-600">Completion Tokens</span>
+                <span className="text-sm text-muted-foreground">Completion Tokens</span>
                 <span className="text-lg font-semibold">
                   {metrics.token_usage.chat_completion_tokens.toLocaleString()}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-slate-600">Total Tokens</span>
+                <span className="text-sm text-muted-foreground">Total Tokens</span>
                 <span className="text-lg font-semibold">
                   {metrics.token_usage.chat_total_tokens.toLocaleString()}
                 </span>
               </div>
               <div className="flex items-center justify-between pt-2 border-t">
-                <span className="text-sm text-slate-600">Estimated Cost</span>
+                <span className="text-sm text-muted-foreground">Estimated Cost</span>
                 <span className="text-lg font-semibold">
                   $
                   {(
@@ -445,24 +442,24 @@ export default function MetricsPage() {
                 {Object.entries(metrics.routes).map(([route, routeMetrics]) => (
                   <div key={route} className="border-b last:border-b-0 pb-4 last:pb-0">
                     <div className="flex items-center justify-between mb-2">
-                      <h3 className="font-semibold text-slate-900">{route}</h3>
+                      <h3 className="font-semibold text-foreground">{route}</h3>
                       <Badge variant="outline">{routeMetrics.request_count} requests</Badge>
                     </div>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                       <div>
-                        <span className="text-slate-500">Avg Latency</span>
+                        <span className="text-muted-foreground">Avg Latency</span>
                         <div className="font-medium">
                           {routeMetrics.avg_latency_ms.toFixed(2)}ms
                         </div>
                       </div>
                       <div>
-                        <span className="text-slate-500">Total Latency</span>
+                        <span className="text-muted-foreground">Total Latency</span>
                         <div className="font-medium">
                           {routeMetrics.total_latency_ms.toLocaleString()}ms
                         </div>
                       </div>
                       <div>
-                        <span className="text-slate-500">Success Rate</span>
+                        <span className="text-muted-foreground">Success Rate</span>
                         <div className="font-medium">
                           {routeMetrics.request_count > 0
                             ? (
@@ -475,7 +472,7 @@ export default function MetricsPage() {
                         </div>
                       </div>
                       <div>
-                        <span className="text-slate-500">Status Codes</span>
+                        <span className="text-muted-foreground">Status Codes</span>
                         <div className="flex gap-1 mt-1">
                           {Object.keys(routeMetrics.status_counts).map(status => (
                             <Badge key={status} variant="outline" className="text-xs">

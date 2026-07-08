@@ -72,25 +72,25 @@ export default function QueryLogsExplorerClient() {
   const applyFilters = () => void load(0)
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-100/80 to-slate-50 pb-12 pt-6 md:pb-16 md:pt-8">
+    <div className="min-h-screen bg-gradient-to-b from-muted to-background pb-12 pt-6 md:pb-16 md:pt-8">
       <div className="mx-auto max-w-6xl space-y-6 px-4 md:px-8">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <Button variant="ghost" size="sm" onClick={() => router.push('/')}>
             <ArrowLeft className="mr-2 h-4 w-4" />
             Chat
           </Button>
-          <div className="flex items-center gap-2 text-slate-800">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white shadow-sm ring-1 ring-slate-200/80">
-              <ScrollText className="h-4 w-4 text-slate-600" />
+          <div className="flex items-center gap-2 text-foreground">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-card shadow-sm ring-1 ring-border">
+              <ScrollText className="h-4 w-4 text-muted-foreground" />
             </div>
             <div>
               <h1 className="text-lg font-semibold leading-tight">Query logs</h1>
-              <p className="text-xs text-slate-500">Audit rows from the queries table</p>
+              <p className="text-xs text-muted-foreground">Audit rows from the queries table</p>
             </div>
           </div>
         </div>
 
-        <Card className="border-slate-200/90 shadow-sm">
+        <Card className="border-border shadow-sm">
           <CardHeader className="pb-3">
             <CardTitle className="text-base">Filters</CardTitle>
             <CardDescription>
@@ -98,7 +98,7 @@ export default function QueryLogsExplorerClient() {
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
-            <label className="flex min-w-[8rem] flex-1 flex-col gap-1 text-xs font-medium text-slate-600">
+            <label className="flex min-w-[8rem] flex-1 flex-col gap-1 text-xs font-medium text-muted-foreground">
               RAG model
               <Input
                 placeholder="e.g. vector-similarity"
@@ -107,7 +107,7 @@ export default function QueryLogsExplorerClient() {
                 className="h-9"
               />
             </label>
-            <label className="flex min-w-[8rem] flex-1 flex-col gap-1 text-xs font-medium text-slate-600">
+            <label className="flex min-w-[8rem] flex-1 flex-col gap-1 text-xs font-medium text-muted-foreground">
               From (date)
               <Input
                 type="date"
@@ -116,7 +116,7 @@ export default function QueryLogsExplorerClient() {
                 className="h-9"
               />
             </label>
-            <label className="flex min-w-[8rem] flex-1 flex-col gap-1 text-xs font-medium text-slate-600">
+            <label className="flex min-w-[8rem] flex-1 flex-col gap-1 text-xs font-medium text-muted-foreground">
               To (date)
               <Input
                 type="date"
@@ -150,13 +150,13 @@ export default function QueryLogsExplorerClient() {
         )}
 
         {loading && logs.length === 0 ? (
-          <div className="flex items-center gap-2 text-slate-600">
+          <div className="flex items-center gap-2 text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" />
             Loading…
           </div>
         ) : null}
 
-        <Card className="border-slate-200/90 shadow-sm">
+        <Card className="border-border shadow-sm">
           <CardHeader className="pb-2">
             <CardTitle className="text-base">Recent queries</CardTitle>
             <CardDescription>Click a row for full detail.</CardDescription>
@@ -165,7 +165,7 @@ export default function QueryLogsExplorerClient() {
             <table className="w-full text-sm">
               <caption className="sr-only">Query audit log entries</caption>
               <thead>
-                <tr className="border-b border-slate-200 bg-slate-50/80 text-left text-xs text-slate-500">
+                <tr className="border-b border-border bg-background text-left text-xs text-muted-foreground">
                   <th className="px-3 py-2 font-medium" scope="col">
                     Time
                   </th>
@@ -187,20 +187,20 @@ export default function QueryLogsExplorerClient() {
                 {logs.map(log => (
                   <tr
                     key={log.id}
-                    className="cursor-pointer border-b border-slate-100 hover:bg-slate-50/80"
+                    className="cursor-pointer border-b border-border hover:bg-muted"
                     onClick={() => setSelected(log)}
                   >
-                    <td className="whitespace-nowrap px-3 py-2 text-xs text-slate-600">
+                    <td className="whitespace-nowrap px-3 py-2 text-xs text-muted-foreground">
                       {log.created_at ?? '—'}
                     </td>
                     <td className="px-3 py-2 text-xs">{log.rag_model}</td>
                     <td className="px-3 py-2 font-mono text-xs">
                       {log.latency_ms != null ? `${log.latency_ms} ms` : '—'}
                     </td>
-                    <td className="max-w-md truncate px-3 py-2 text-xs text-slate-800">
+                    <td className="max-w-md truncate px-3 py-2 text-xs text-foreground">
                       {log.query_text}
                     </td>
-                    <td className="px-3 py-2 font-mono text-[10px] text-slate-500">
+                    <td className="px-3 py-2 font-mono text-[10px] text-muted-foreground">
                       {log.id.slice(0, 8)}…
                     </td>
                   </tr>
@@ -208,7 +208,7 @@ export default function QueryLogsExplorerClient() {
               </tbody>
             </table>
             {logs.length === 0 && !loading ? (
-              <p className="p-6 text-center text-sm text-slate-500">No rows match.</p>
+              <p className="p-6 text-center text-sm text-muted-foreground">No rows match.</p>
             ) : null}
           </CardContent>
         </Card>
@@ -234,10 +234,10 @@ export default function QueryLogsExplorerClient() {
           </Button>
         </div>
 
-        <p className="text-center text-xs text-slate-500">
+        <p className="text-center text-xs text-muted-foreground">
           Chat observability uses the same rows via{' '}
-          <code className="rounded bg-slate-200/80 px-1">query_log_id</code>.{' '}
-          <Link href="/eval/runs" className="text-slate-700 underline-offset-2 hover:underline">
+          <code className="rounded bg-muted px-1">query_log_id</code>.{' '}
+          <Link href="/eval/runs" className="text-foreground underline-offset-2 hover:underline">
             Eval runs
           </Link>
         </p>
@@ -251,36 +251,36 @@ export default function QueryLogsExplorerClient() {
           {selected ? (
             <dl className="grid gap-2 text-sm">
               <div>
-                <dt className="text-xs text-slate-500">Id</dt>
+                <dt className="text-xs text-muted-foreground">Id</dt>
                 <dd className="font-mono text-xs break-all">{selected.id}</dd>
               </div>
               <div>
-                <dt className="text-xs text-slate-500">Query</dt>
-                <dd className="whitespace-pre-wrap text-slate-800">{selected.query_text}</dd>
+                <dt className="text-xs text-muted-foreground">Query</dt>
+                <dd className="whitespace-pre-wrap text-foreground">{selected.query_text}</dd>
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <dt className="text-xs text-slate-500">RAG model</dt>
+                  <dt className="text-xs text-muted-foreground">RAG model</dt>
                   <dd>{selected.rag_model}</dd>
                 </div>
                 <div>
-                  <dt className="text-xs text-slate-500">Latency</dt>
+                  <dt className="text-xs text-muted-foreground">Latency</dt>
                   <dd>{selected.latency_ms != null ? `${selected.latency_ms} ms` : '—'}</dd>
                 </div>
                 <div>
-                  <dt className="text-xs text-slate-500">Request id</dt>
+                  <dt className="text-xs text-muted-foreground">Request id</dt>
                   <dd className="font-mono text-xs break-all">{selected.request_id ?? '—'}</dd>
                 </div>
                 <div>
-                  <dt className="text-xs text-slate-500">Created</dt>
+                  <dt className="text-xs text-muted-foreground">Created</dt>
                   <dd className="text-xs">{selected.created_at ?? '—'}</dd>
                 </div>
               </div>
               {selected.token_usage && Object.keys(selected.token_usage).length > 0 ? (
                 <div>
-                  <dt className="text-xs text-slate-500">Token usage</dt>
+                  <dt className="text-xs text-muted-foreground">Token usage</dt>
                   <dd>
-                    <pre className="mt-1 max-h-32 overflow-auto rounded border bg-slate-50 p-2 text-xs">
+                    <pre className="mt-1 max-h-32 overflow-auto rounded border bg-background p-2 text-xs">
                       {JSON.stringify(selected.token_usage, null, 2)}
                     </pre>
                   </dd>

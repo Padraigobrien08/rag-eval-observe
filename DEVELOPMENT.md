@@ -14,12 +14,23 @@
 
 2. **Environment**
    - Put `DATABASE_URL` and `OPENAI_API_KEY` in the repo root `.env` and/or `backend/.env` (backend loads both; see `ENV_VARS.md`).
+   - The web app also needs (root `.env`):
+     - `POSTGRES_URL` — the same Postgres the backend uses (Drizzle owns the chat/auth tables in it). Falls back to `DATABASE_URL`.
+     - `AUTH_SECRET` — Auth.js signing secret. Generate with `openssl rand -base64 32` (or `npx auth secret`).
+   - The chat UI now requires a session; a **guest** user is created automatically on first load, so no login is needed to try it.
 
-3. **Schema** (Docker init SQL + Alembic `upgrade head`)
+3. **Schema**
+   - Backend RAG tables (Docker init SQL + Alembic `upgrade head`):
 
-   ```bash
-   make migrate
-   ```
+     ```bash
+     make migrate
+     ```
+
+   - Chat + auth tables (Drizzle, into the same DB via `POSTGRES_URL`):
+
+     ```bash
+     pnpm db:migrate
+     ```
 
 4. **Demo corpus** (recommended for first open; idempotent — skips existing `source` values)
 

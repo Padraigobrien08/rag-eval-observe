@@ -25,13 +25,7 @@ function runSummary(id: string, hit5: number) {
   }
 }
 
-function mkCase(
-  rowId: string,
-  caseIndex: number,
-  caseId: string,
-  hit5: boolean,
-  mrr: number
-) {
+function mkCase(rowId: string, caseIndex: number, caseId: string, hit5: boolean, mrr: number) {
   return {
     id: rowId,
     case_index: caseIndex,
@@ -70,10 +64,7 @@ test.describe('eval & observability (mocked API)', () => {
         body: JSON.stringify({
           ...runSummary(RUN_A, 1),
           error_message: null,
-          cases: [
-            mkCase('c1', 0, 'case-1', true, 1),
-            mkCase('c2', 1, 'case-2', false, 0.25),
-          ],
+          cases: [mkCase('c1', 0, 'case-1', true, 1), mkCase('c2', 1, 'case-2', false, 0.25)],
         }),
       })
     })
@@ -85,10 +76,7 @@ test.describe('eval & observability (mocked API)', () => {
         body: JSON.stringify({
           ...runSummary(RUN_B, 0.5),
           error_message: null,
-          cases: [
-            mkCase('c1b', 0, 'case-1', false, 0.2),
-            mkCase('c2b', 1, 'case-2', true, 1),
-          ],
+          cases: [mkCase('c1b', 0, 'case-1', false, 0.2), mkCase('c2b', 1, 'case-2', true, 1)],
         }),
       })
     })
@@ -157,11 +145,15 @@ test.describe('eval & observability (mocked API)', () => {
     })
   })
 
-  test('eval runs list and detail by query param', async ({ page }) => {
+  test('eval runs list', async ({ page }) => {
     await page.goto('/eval/runs')
     await expect(page.getByRole('heading', { name: 'Eval runs' })).toBeVisible()
-    await expect(page.getByRole('link', { name: new RegExp(RUN_A.slice(0, 8)) }).first()).toBeVisible()
+    await expect(
+      page.getByRole('link', { name: new RegExp(RUN_A.slice(0, 8)) }).first()
+    ).toBeVisible()
+  })
 
+  test('eval run detail by query param', async ({ page }) => {
     await page.goto(`/eval/runs?id=${RUN_A}`)
     await expect(page.getByRole('heading', { name: 'Eval run' })).toBeVisible()
     await expect(page.getByRole('button', { name: 'JSON' })).toBeVisible()

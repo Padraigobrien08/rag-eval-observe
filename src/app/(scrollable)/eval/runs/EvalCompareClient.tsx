@@ -46,18 +46,20 @@ function miniMetric(label: string, a: number, b: number, asPct = false) {
   const d = b - a
   const delta =
     Math.abs(d) < 1e-6 ? (
-      <span className="text-slate-400">—</span>
+      <span className="text-muted-foreground">—</span>
     ) : d > 0 ? (
       <span className="text-emerald-700">+{asPct ? `${(d * 100).toFixed(1)}%` : d.toFixed(3)}</span>
     ) : (
       <span className="text-rose-700">{asPct ? `${(d * 100).toFixed(1)}%` : d.toFixed(3)}</span>
     )
   return (
-    <div className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm">
-      <p className="text-[10px] font-medium uppercase tracking-wide text-slate-500">{label}</p>
-      <p className="mt-1 font-mono tabular-nums text-slate-900">
+    <div className="rounded-lg border border-border bg-card px-3 py-2 text-sm">
+      <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+        {label}
+      </p>
+      <p className="mt-1 font-mono tabular-nums text-foreground">
         <span title="Run A">{fmt(a)}</span>
-        <span className="mx-1.5 text-slate-300">→</span>
+        <span className="mx-1.5 text-muted-foreground">→</span>
         <span title="Run B">{fmt(b)}</span>
         <span className="ml-2 text-xs font-sans font-normal">{delta}</span>
       </p>
@@ -106,7 +108,7 @@ export default function EvalCompareClient({ runIdA, runIdB }: { runIdA: string; 
   const aligned = useMemo(() => (a && b ? buildCaseIdAlignment(a, b) : null), [a, b])
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-100/80 to-slate-50 pb-12 pt-6 md:pb-16 md:pt-8">
+    <div className="min-h-screen bg-gradient-to-b from-muted to-background pb-12 pt-6 md:pb-16 md:pt-8">
       <div className="mx-auto max-w-5xl space-y-8 px-4 md:px-8">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-2">
@@ -120,19 +122,19 @@ export default function EvalCompareClient({ runIdA, runIdB }: { runIdA: string; 
               Chat
             </Button>
           </div>
-          <div className="flex items-center gap-2 text-slate-800">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white shadow-sm ring-1 ring-slate-200/80">
-              <GitCompareArrows className="h-4 w-4 text-slate-600" />
+          <div className="flex items-center gap-2 text-foreground">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-card shadow-sm ring-1 ring-border">
+              <GitCompareArrows className="h-4 w-4 text-muted-foreground" />
             </div>
             <div>
               <h1 className="text-lg font-semibold leading-tight">Compare eval runs</h1>
-              <p className="text-xs text-slate-500">Run A → Run B</p>
+              <p className="text-xs text-muted-foreground">Run A → Run B</p>
             </div>
           </div>
         </div>
 
         {loading && (
-          <div className="flex items-center gap-2 text-slate-600">
+          <div className="flex items-center gap-2 text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" />
             Loading…
           </div>
@@ -159,11 +161,11 @@ export default function EvalCompareClient({ runIdA, runIdB }: { runIdA: string; 
                 <CardHeader className="pb-2">
                   <CardTitle className="flex items-center gap-2 text-base">
                     <Badge variant="secondary">A</Badge>
-                    <FlaskConical className="h-4 w-4 text-slate-500" />
+                    <FlaskConical className="h-4 w-4 text-muted-foreground" />
                     Earlier / baseline
                   </CardTitle>
                   <CardDescription className="font-mono text-xs break-all">{a.id}</CardDescription>
-                  <p className="text-xs text-slate-500">{a.created_at}</p>
+                  <p className="text-xs text-muted-foreground">{a.created_at}</p>
                 </CardHeader>
                 <CardContent>
                   <Button variant="link" className="h-auto p-0 text-xs" asChild>
@@ -175,11 +177,11 @@ export default function EvalCompareClient({ runIdA, runIdB }: { runIdA: string; 
                 <CardHeader className="pb-2">
                   <CardTitle className="flex items-center gap-2 text-base">
                     <Badge variant="secondary">B</Badge>
-                    <FlaskConical className="h-4 w-4 text-slate-500" />
+                    <FlaskConical className="h-4 w-4 text-muted-foreground" />
                     Later / candidate
                   </CardTitle>
                   <CardDescription className="font-mono text-xs break-all">{b.id}</CardDescription>
-                  <p className="text-xs text-slate-500">{b.created_at}</p>
+                  <p className="text-xs text-muted-foreground">{b.created_at}</p>
                 </CardHeader>
                 <CardContent>
                   <Button variant="link" className="h-auto p-0 text-xs" asChild>
@@ -200,10 +202,9 @@ export default function EvalCompareClient({ runIdA, runIdB }: { runIdA: string; 
                 <CardHeader>
                   <CardTitle className="text-base">Per-case @5 (aligned by case id)</CardTitle>
                   <CardDescription>
-                    Rows join on{' '}
-                    <code className="rounded bg-slate-100 px-1 text-[11px]">case_id</code>. Run
-                    A-only: {aligned.onlyA}, run B-only: {aligned.onlyB}. Amber rows: Hit@5 changed
-                    when both sides exist.
+                    Rows join on <code className="rounded bg-muted px-1 text-[11px]">case_id</code>.
+                    Run A-only: {aligned.onlyA}, run B-only: {aligned.onlyB}. Amber rows: Hit@5
+                    changed when both sides exist.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="overflow-x-auto">
@@ -212,7 +213,7 @@ export default function EvalCompareClient({ runIdA, runIdB }: { runIdA: string; 
                       Eval case comparison keyed by case identifier
                     </caption>
                     <thead>
-                      <tr className="border-b border-slate-200 text-left text-xs text-slate-500">
+                      <tr className="border-b border-border text-left text-xs text-muted-foreground">
                         <th className="pb-2 pr-3 font-medium" scope="col">
                           #
                         </th>
@@ -243,9 +244,9 @@ export default function EvalCompareClient({ runIdA, runIdB }: { runIdA: string; 
                           <tr
                             key={caseId}
                             className={cn(
-                              'border-b border-slate-100',
+                              'border-b border-border',
                               hitFlip,
-                              partial ? 'bg-slate-50/90' : ''
+                              partial ? 'bg-background' : ''
                             )}
                           >
                             <td className="py-2 pr-3 font-mono text-xs">{i + 1}</td>
