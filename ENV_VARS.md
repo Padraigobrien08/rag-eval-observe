@@ -28,6 +28,23 @@ AZURE_API_BACKEND_KEY=your-shared-secret
 
 The Next.js route forwards this as `X-API-Key` on every proxied request. Leave unset for local dev when the backend has no `API_KEY`.
 
+### Required: Auth.js + chat persistence (Drizzle)
+
+The chat UI uses Auth.js (guest + email/password) and persists chats via Drizzle
+into the **same Postgres** the backend uses.
+
+```env
+# Auth.js signing secret — generate with: openssl rand -base64 32
+AUTH_SECRET=your-32-byte-secret
+
+# Postgres for Drizzle (chat/auth tables). Same DB as the backend's DATABASE_URL;
+# POSTGRES_URL is preferred, DATABASE_URL is the fallback.
+POSTGRES_URL=postgresql://user:pass@host:5432/ragdb
+```
+
+Apply the Drizzle chat/auth tables with `pnpm db:migrate` (additive — it does not
+touch the backend's `documents`/`chunks`/`queries`/`eval_*` tables).
+
 ---
 
 ## Backend (Azure Container Apps)

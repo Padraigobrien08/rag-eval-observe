@@ -26,15 +26,15 @@ See **[DEVELOPMENT.md](./DEVELOPMENT.md)** for the full local workflow (Postgres
 
 ## Flagship documentation (polish & production narrative)
 
-| Doc | Purpose |
-| --- | --- |
-| **[docs/THESIS.md](./docs/THESIS.md)** | Sharp product story: **eval regression as a first-class workflow** |
-| **[docs/BENCHMARKS.md](./docs/BENCHMARKS.md)** | Reproducible harness procedure + case-study template |
-| **[docs/HARDENING.md](./docs/HARDENING.md)** | **`API_KEY`**, rate limits, CORS, **multi-tenant posture** |
-| **[docs/RUNBOOK.md](./docs/RUNBOOK.md)** | Health checks, incidents, rollback, escalation |
-| **[docs/THREAT_MODEL.md](./docs/THREAT_MODEL.md)** | Assets, trust boundaries, mitigations |
-| **[docs/SLOS.md](./docs/SLOS.md)** | Example availability / latency SLOs |
-| **[docs/EVAL_CI.md](./docs/EVAL_CI.md)** | **`curl` exports** and CI artifact patterns |
+| Doc                                                | Purpose                                                            |
+| -------------------------------------------------- | ------------------------------------------------------------------ |
+| **[docs/THESIS.md](./docs/THESIS.md)**             | Sharp product story: **eval regression as a first-class workflow** |
+| **[docs/BENCHMARKS.md](./docs/BENCHMARKS.md)**     | Reproducible harness procedure + case-study template               |
+| **[docs/HARDENING.md](./docs/HARDENING.md)**       | **`API_KEY`**, rate limits, CORS, **multi-tenant posture**         |
+| **[docs/RUNBOOK.md](./docs/RUNBOOK.md)**           | Health checks, incidents, rollback, escalation                     |
+| **[docs/THREAT_MODEL.md](./docs/THREAT_MODEL.md)** | Assets, trust boundaries, mitigations                              |
+| **[docs/SLOS.md](./docs/SLOS.md)**                 | Example availability / latency SLOs                                |
+| **[docs/EVAL_CI.md](./docs/EVAL_CI.md)**           | **`curl` exports** and CI artifact patterns                        |
 
 Automated **accessibility** checks (axe-core) and broader **eval / query-log E2E** run in CI via Playwright (`e2e/a11y-core-pages.spec.ts`, `e2e/eval-observability-mocked.spec.ts`).
 
@@ -128,13 +128,18 @@ Choose from multiple RAG models optimized for different scenarios:
 
 ### Technology Stack
 
-**Frontend:**
+**Frontend** (based on Vercel's [Next.js AI Chatbot](https://vercel.com/templates/next.js/chatbot) template):
 
-- Next.js 14+ (App Router)
+- Next.js 15 (App Router), React 19
 - TypeScript
-- Tailwind CSS
-- shadcn/ui components
-- React Markdown
+- Tailwind CSS v4 + shadcn/ui + AI Elements
+- AI SDK v5 (`useChat`) — streams from the FastAPI RAG backend; citations and
+  per-message observability (latency, cost, tokens, retrieved chunks, query-log link)
+- Auth.js (guest + email/password)
+- Drizzle ORM (chat/auth tables in the same Postgres as the backend)
+
+The RAG retrieval, generation, evaluation, and metrics all remain in the FastAPI
+backend; the template UI adapts to it rather than calling an LLM directly.
 
 **Backend:**
 
