@@ -39,7 +39,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           enableSystem
           disableTransitionOnChange
         >
-          <SessionProvider>{children}</SessionProvider>
+          <SessionProvider refetchOnWindowFocus={false} refetchInterval={0}>
+            {children}
+          </SessionProvider>
           <Toaster richColors closeButton position="top-center" />
           {enableVercelAnalytics ? <Analytics /> : null}
         </ThemeProvider>
