@@ -38,7 +38,7 @@ function HitAt5Sparkline({ runs }: { runs: EvalRunSummary[] }) {
     .join(' ')
   return (
     <div className="flex items-center gap-3">
-      <span className="text-[10px] font-medium uppercase tracking-wide text-slate-500">
+      <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
         Hit@5 trend
       </span>
       <svg width={w} height={h} className="shrink-0" aria-hidden>
@@ -51,8 +51,8 @@ function HitAt5Sparkline({ runs }: { runs: EvalRunSummary[] }) {
           points={pts}
         />
       </svg>
-      <span className="text-xs text-slate-400">
-        oldest <span className="text-slate-300">→</span> newest
+      <span className="text-xs text-muted-foreground">
+        oldest <span className="text-muted-foreground">→</span> newest
       </span>
     </div>
   )
@@ -94,7 +94,7 @@ export default function EvalRunsListClient() {
   const canCompare = cmpA && cmpB && cmpA !== cmpB
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-100/80 to-slate-50 pb-12 pt-6 md:pb-16 md:pt-8">
+    <div className="min-h-screen bg-gradient-to-b from-muted to-background pb-12 pt-6 md:pb-16 md:pt-8">
       <div className="mx-auto max-w-4xl space-y-8 px-4 md:px-8">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <Button variant="ghost" size="sm" onClick={() => router.push('/')}>
@@ -108,20 +108,20 @@ export default function EvalRunsListClient() {
                 Query logs
               </Link>
             </Button>
-            <div className="flex items-center gap-2 text-slate-800">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white shadow-sm ring-1 ring-slate-200/80">
-                <FlaskConical className="h-4 w-4 text-slate-600" />
+            <div className="flex items-center gap-2 text-foreground">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-card shadow-sm ring-1 ring-border">
+                <FlaskConical className="h-4 w-4 text-muted-foreground" />
               </div>
               <div>
                 <h1 className="text-lg font-semibold leading-tight">Eval runs</h1>
-                <p className="text-xs text-slate-500">Persisted harness results</p>
+                <p className="text-xs text-muted-foreground">Persisted harness results</p>
               </div>
             </div>
           </div>
         </div>
 
         {loading && (
-          <div className="flex items-center gap-2 text-slate-600">
+          <div className="flex items-center gap-2 text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" />
             Loading…
           </div>
@@ -135,7 +135,7 @@ export default function EvalRunsListClient() {
         )}
 
         {!loading && !error && runs.length >= 2 && (
-          <Card className="border-slate-200/90 bg-white/90 shadow-sm">
+          <Card className="border-border bg-card/90 shadow-sm">
             <CardHeader className="pb-2">
               <CardTitle className="text-base">Trends</CardTitle>
               <CardDescription>
@@ -149,10 +149,10 @@ export default function EvalRunsListClient() {
         )}
 
         {!loading && !error && runs.length >= 2 && (
-          <Card className="border-slate-200/90 bg-white/90 shadow-sm">
+          <Card className="border-border bg-card/90 shadow-sm">
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2 text-base">
-                <GitCompareArrows className="h-4 w-4 text-slate-500" />
+                <GitCompareArrows className="h-4 w-4 text-muted-foreground" />
                 Compare two runs
               </CardTitle>
               <CardDescription>
@@ -160,11 +160,11 @@ export default function EvalRunsListClient() {
               </CardDescription>
             </CardHeader>
             <CardContent className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
-              <label className="flex min-w-[10rem] flex-1 flex-col gap-1 text-xs font-medium text-slate-600">
+              <label className="flex min-w-[10rem] flex-1 flex-col gap-1 text-xs font-medium text-muted-foreground">
                 Run A
                 <select
                   aria-label="Baseline run for comparison"
-                  className="rounded-md border border-slate-200 bg-white px-2 py-2 text-sm text-slate-900"
+                  className="rounded-md border border-border bg-card px-2 py-2 text-sm text-foreground"
                   value={cmpA}
                   onChange={e => setCmpA(e.target.value)}
                 >
@@ -175,11 +175,11 @@ export default function EvalRunsListClient() {
                   ))}
                 </select>
               </label>
-              <label className="flex min-w-[10rem] flex-1 flex-col gap-1 text-xs font-medium text-slate-600">
+              <label className="flex min-w-[10rem] flex-1 flex-col gap-1 text-xs font-medium text-muted-foreground">
                 Run B
                 <select
                   aria-label="Candidate run for comparison"
-                  className="rounded-md border border-slate-200 bg-white px-2 py-2 text-sm text-slate-900"
+                  className="rounded-md border border-border bg-card px-2 py-2 text-sm text-foreground"
                   value={cmpB}
                   onChange={e => setCmpB(e.target.value)}
                 >
@@ -206,14 +206,12 @@ export default function EvalRunsListClient() {
         )}
 
         {!loading && !error && runs.length === 0 && (
-          <Card className="border-dashed border-slate-300 bg-white/80">
+          <Card className="border-dashed border-border bg-card/80">
             <CardHeader>
               <CardTitle className="text-base">No runs yet</CardTitle>
               <CardDescription>
-                Run{' '}
-                <code className="rounded bg-slate-100 px-1 py-0.5 text-xs">eval/run_eval.py</code>{' '}
-                with{' '}
-                <code className="rounded bg-slate-100 px-1 py-0.5 text-xs">EVAL_PERSIST_RUNS</code>{' '}
+                Run <code className="rounded bg-muted px-1 py-0.5 text-xs">eval/run_eval.py</code>{' '}
+                with <code className="rounded bg-muted px-1 py-0.5 text-xs">EVAL_PERSIST_RUNS</code>{' '}
                 enabled (default) after migrating the database.
               </CardDescription>
             </CardHeader>
@@ -229,14 +227,14 @@ export default function EvalRunsListClient() {
                 <Link href={`/eval/runs?id=${encodeURIComponent(r.id)}`} className="block group">
                   <Card
                     className={cn(
-                      'border-slate-200/90 shadow-sm transition-colors',
-                      'hover:border-slate-300 hover:bg-white'
+                      'border-border shadow-sm transition-colors',
+                      'hover:border-border hover:bg-card'
                     )}
                   >
                     <CardContent className="flex items-start gap-3 p-4 sm:p-5">
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-2">
-                          <span className="font-mono text-xs text-slate-500">
+                          <span className="font-mono text-xs text-muted-foreground">
                             {r.id.slice(0, 8)}…
                           </span>
                           <Badge
@@ -250,16 +248,16 @@ export default function EvalRunsListClient() {
                           >
                             Hit@5 {hit5.toFixed(0)}%
                           </Badge>
-                          <span className="text-xs text-slate-400">
+                          <span className="text-xs text-muted-foreground">
                             MRR {r.mrr.toFixed(3)} · {r.total_cases} cases
                           </span>
                         </div>
-                        <p className="mt-2 truncate text-sm font-medium text-slate-800">
+                        <p className="mt-2 truncate text-sm font-medium text-foreground">
                           {r.dataset_path}
                         </p>
-                        <p className="mt-0.5 text-xs text-slate-500">{r.created_at}</p>
+                        <p className="mt-0.5 text-xs text-muted-foreground">{r.created_at}</p>
                       </div>
-                      <ChevronRight className="mt-1 h-5 w-5 shrink-0 text-slate-300 transition-transform group-hover:translate-x-0.5 group-hover:text-slate-500" />
+                      <ChevronRight className="mt-1 h-5 w-5 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-muted-foreground" />
                     </CardContent>
                   </Card>
                 </Link>
