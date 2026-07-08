@@ -3,20 +3,22 @@ import { NextRequest, NextResponse } from 'next/server'
 // Backend URL - server-side only (no NEXT_PUBLIC_ prefix needed)
 const base = process.env.AZURE_API_BASE_URL || 'http://localhost:8000'
 
-export async function GET(request: NextRequest, { params }: { params: { path: string[] } }) {
-  return proxyRequest(request, params.path)
+type RouteContext = { params: Promise<{ path: string[] }> }
+
+export async function GET(request: NextRequest, { params }: RouteContext) {
+  return proxyRequest(request, (await params).path)
 }
 
-export async function POST(request: NextRequest, { params }: { params: { path: string[] } }) {
-  return proxyRequest(request, params.path)
+export async function POST(request: NextRequest, { params }: RouteContext) {
+  return proxyRequest(request, (await params).path)
 }
 
-export async function DELETE(request: NextRequest, { params }: { params: { path: string[] } }) {
-  return proxyRequest(request, params.path)
+export async function DELETE(request: NextRequest, { params }: RouteContext) {
+  return proxyRequest(request, (await params).path)
 }
 
-export async function PATCH(request: NextRequest, { params }: { params: { path: string[] } }) {
-  return proxyRequest(request, params.path)
+export async function PATCH(request: NextRequest, { params }: RouteContext) {
+  return proxyRequest(request, (await params).path)
 }
 
 async function proxyRequest(request: NextRequest, pathSegments: string[]) {

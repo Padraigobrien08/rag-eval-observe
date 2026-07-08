@@ -55,7 +55,7 @@ export default function ChatPanel({
       try {
         const health = await checkHealth()
         setConnection(health.ok && health.db ? 'ok' : 'error')
-      } catch (error) {
+      } catch {
         setConnection('error')
       }
     }

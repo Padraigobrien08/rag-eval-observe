@@ -1,7 +1,10 @@
 import './globals.css'
 
 import type { Metadata, Viewport } from 'next'
+import { GeistSans } from 'geist/font/sans'
+import { GeistMono } from 'geist/font/mono'
 import { Analytics } from '@vercel/analytics/react'
+import { ThemeProvider } from '@/components/theme-provider'
 import { Toaster } from '@/components/ui/sonner'
 
 /** Only load Vercel Web Analytics when deployed on Vercel (avoids localhost 404 + console noise). */
@@ -23,11 +26,22 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className="h-full">
-      <body className="h-full bg-slate-50 text-gray-900">
-        {children}
-        <Toaster richColors closeButton position="top-center" />
-        {enableVercelAnalytics ? <Analytics /> : null}
+    <html
+      lang="en"
+      className={`h-full ${GeistSans.variable} ${GeistMono.variable}`}
+      suppressHydrationWarning
+    >
+      <body className="h-full bg-background text-foreground">
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          {children}
+          <Toaster richColors closeButton position="top-center" />
+          {enableVercelAnalytics ? <Analytics /> : null}
+        </ThemeProvider>
       </body>
     </html>
   )

@@ -1,6 +1,11 @@
+const path = require('path')
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  // Pin the file-tracing root to this project (a stray parent lockfile otherwise
+  // makes Next infer the wrong workspace root).
+  outputFileTracingRoot: path.join(__dirname),
   async redirects() {
     return [
       {

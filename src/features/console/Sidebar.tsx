@@ -102,7 +102,7 @@ export default function Sidebar({
       setIsLoadingDocs(true)
       const response = await listDocuments()
       setDocuments(response.documents || [])
-    } catch (error) {
+    } catch {
       setDocuments([])
     } finally {
       setIsLoadingDocs(false)
