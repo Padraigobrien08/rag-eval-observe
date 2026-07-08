@@ -2,7 +2,7 @@ import { compare } from 'bcrypt-ts'
 import NextAuth, { type DefaultSession } from 'next-auth'
 import type { DefaultJWT } from 'next-auth/jwt'
 import Credentials from 'next-auth/providers/credentials'
-import { DUMMY_PASSWORD } from '@/lib/constants'
+import { DUMMY_PASSWORD, isTestEnvironment } from '@/lib/constants'
 import { createGuestUser, getUser } from '@/lib/db/queries'
 import { authConfig } from './auth.config'
 
@@ -68,6 +68,15 @@ export const {
       id: 'guest',
       credentials: {},
       async authorize() {
+        // In Playwright the DB is mocked at the network boundary; return a
+        // stub guest so the app loads without a real Postgres.
+        if (isTestEnvironment) {
+          return {
+            id: '00000000-0000-4000-8000-000000000000',
+            email: 'guest-test',
+            type: 'guest',
+          }
+        }
         const [guestUser] = await createGuestUser()
         return { ...guestUser, type: 'guest' }
       },

@@ -13,6 +13,7 @@ export function SidebarToggle({ className }: ComponentProps<typeof SidebarTrigge
     <Tooltip>
       <TooltipTrigger asChild>
         <Button
+          aria-label="Toggle sidebar"
           className={cn('h-8 px-2 md:h-fit md:px-2', className)}
           data-testid="sidebar-toggle-button"
           onClick={toggleSidebar}

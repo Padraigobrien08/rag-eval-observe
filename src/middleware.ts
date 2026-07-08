@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { getToken } from 'next-auth/jwt'
-import { guestRegex, isDevelopmentEnvironment } from '@/lib/constants'
+import { guestRegex } from '@/lib/constants'
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
@@ -17,7 +17,9 @@ export async function middleware(request: NextRequest) {
   const token = await getToken({
     req: request,
     secret: process.env.AUTH_SECRET,
-    secureCookie: !isDevelopmentEnvironment,
+    // Derive from the request protocol at runtime (env vars are inlined into the
+    // edge middleware at build time, so an env-based flag would be baked wrong).
+    secureCookie: request.nextUrl.protocol === 'https:',
   })
 
   if (!token) {

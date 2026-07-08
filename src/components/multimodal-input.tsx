@@ -60,6 +60,9 @@ function PureMultimodalInput({
         <PromptInputToolbar>
           <PromptInputTools />
           <PromptInputSubmit
+            aria-label={
+              status === 'streaming' || status === 'submitted' ? 'Stop generating' : 'Send message'
+            }
             data-testid="send-button"
             disabled={status === 'ready' && !input.trim()}
             status={status}

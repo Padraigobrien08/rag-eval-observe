@@ -48,7 +48,7 @@ export function SidebarUserNav({ user }: { user: User }) {
                 data-testid="user-nav-button"
               >
                 <Image
-                  alt={user.email ?? 'User Avatar'}
+                  alt=""
                   className="rounded-full"
                   height={24}
                   src={`https://avatar.vercel.sh/${user.email}`}

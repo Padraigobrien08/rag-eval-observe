@@ -17,7 +17,6 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
-  SidebarMenu,
   useSidebar,
 } from '@/components/ui/sidebar'
 import {
@@ -56,7 +55,7 @@ export function AppSidebar({ user }: { user: User | undefined }) {
     <>
       <Sidebar className="group-data-[side=left]:border-r-0">
         <SidebarHeader>
-          <SidebarMenu>
+          <div className="flex w-full min-w-0 flex-col gap-1">
             <div className="flex flex-row items-center justify-between">
               <Link
                 className="flex flex-row items-center gap-3"
@@ -72,6 +71,7 @@ export function AppSidebar({ user }: { user: User | undefined }) {
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button
+                        aria-label="Delete all chats"
                         className="h-8 p-1 md:h-fit md:p-2"
                         onClick={() => setShowDeleteAllDialog(true)}
                         type="button"
@@ -88,6 +88,7 @@ export function AppSidebar({ user }: { user: User | undefined }) {
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
+                      aria-label="New chat"
                       className="h-8 p-1 md:h-fit md:p-2"
                       onClick={() => {
                         setOpenMobile(false)
@@ -106,7 +107,7 @@ export function AppSidebar({ user }: { user: User | undefined }) {
                 </Tooltip>
               </div>
             </div>
-          </SidebarMenu>
+          </div>
         </SidebarHeader>
         <SidebarContent>
           <SidebarHistory user={user} />

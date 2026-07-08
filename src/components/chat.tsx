@@ -96,6 +96,7 @@ export function Chat({
 
   return (
     <div className="overscroll-behavior-contain flex h-dvh min-w-0 touch-pan-y flex-col bg-background">
+      <h1 className="sr-only">RAG Eval chat</h1>
       <ChatHeader
         chatId={id}
         isReadonly={isReadonly}

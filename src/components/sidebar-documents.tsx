@@ -61,17 +61,17 @@ export function SidebarDocuments() {
         </Button>
       </SidebarGroupLabel>
       <SidebarGroupContent>
-        <SidebarMenu>
-          {loading ? (
-            <div className="flex items-center gap-2 px-2 py-1.5 text-muted-foreground text-xs">
-              <Loader2 className="size-3 animate-spin" /> Loading…
-            </div>
-          ) : documents.length === 0 ? (
-            <p className="px-2 py-1.5 text-muted-foreground text-xs">
-              No documents yet. Click + to ingest.
-            </p>
-          ) : (
-            documents.map(doc => (
+        {loading ? (
+          <div className="flex items-center gap-2 px-2 py-1.5 text-muted-foreground text-xs">
+            <Loader2 className="size-3 animate-spin" /> Loading…
+          </div>
+        ) : documents.length === 0 ? (
+          <p className="px-2 py-1.5 text-muted-foreground text-xs">
+            No documents yet. Click + to ingest.
+          </p>
+        ) : (
+          <SidebarMenu>
+            {documents.map(doc => (
               <SidebarMenuItem key={doc.id}>
                 <SidebarMenuButton
                   onClick={() => {
@@ -84,9 +84,9 @@ export function SidebarDocuments() {
                   <span className="truncate">{doc.title || doc.source}</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
-            ))
-          )}
-        </SidebarMenu>
+            ))}
+          </SidebarMenu>
+        )}
       </SidebarGroupContent>
 
       <IngestDialog onOpenChange={setIngestOpen} onSuccess={load} open={ingestOpen} />
