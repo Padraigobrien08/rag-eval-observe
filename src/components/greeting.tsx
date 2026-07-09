@@ -22,8 +22,8 @@ export const Greeting = () => {
         initial={{ opacity: 0, y: 10 }}
         transition={{ delay: 0.6 }}
       >
-        Every answer shows its retrieved sources, latency, and cost — and lands in a query
-        log you can replay, evaluate, and compare across runs.
+        Every answer shows its retrieved sources, latency, and cost — and lands in a query log you
+        can replay, evaluate, and compare across runs.
       </motion.div>
     </div>
   )
