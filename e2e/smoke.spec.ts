@@ -5,6 +5,6 @@ test('home loads and shows the chat greeting', async ({ page }) => {
   await mockChatBackend(page)
   await mockHistory(page, createChatStore())
   await page.goto('/')
-  await expect(page.getByText(/what can i help you find/i)).toBeVisible()
+  await expect(page.getByText(/ask your documents anything/i)).toBeVisible()
   await expect(page.getByTestId('multimodal-input')).toBeVisible()
 })

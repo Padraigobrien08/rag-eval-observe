@@ -153,7 +153,7 @@ test.describe('accessibility (axe, mocked API)', () => {
 
   test('home / chat shell', async ({ page }) => {
     await page.goto('/')
-    await expect(page.getByText(/what can i help you find/i)).toBeVisible()
+    await expect(page.getByText(/ask your documents anything/i)).toBeVisible()
     // 'region': the template sidebar's group content isn't wrapped in a landmark
     // (a known template-structural limitation); other rules still enforced.
     await assertNoAxeViolations(page, ['region'])
