@@ -1,7 +1,6 @@
 'use client'
 
 import { ChevronUp } from 'lucide-react'
-import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import type { User } from 'next-auth'
 import { signOut, useSession } from 'next-auth/react'
@@ -24,6 +23,8 @@ export function SidebarUserNav({ user }: { user: User }) {
   const { setTheme, resolvedTheme } = useTheme()
 
   const isGuest = guestRegex.test(data?.user?.email ?? '')
+  const displayName = isGuest ? 'Guest' : (user?.email ?? '')
+  const initial = (isGuest ? 'G' : (user?.email?.[0] ?? '?')).toUpperCase()
 
   return (
     <SidebarMenu>
@@ -47,15 +48,14 @@ export function SidebarUserNav({ user }: { user: User }) {
                 className="h-10 bg-background data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                 data-testid="user-nav-button"
               >
-                <Image
-                  alt=""
-                  className="rounded-full"
-                  height={24}
-                  src={`https://avatar.vercel.sh/${user.email}`}
-                  width={24}
-                />
+                <span
+                  aria-hidden
+                  className="flex size-6 shrink-0 items-center justify-center rounded-full bg-muted font-medium text-[11px] text-muted-foreground"
+                >
+                  {initial}
+                </span>
                 <span className="truncate" data-testid="user-email">
-                  {isGuest ? 'Guest' : user?.email}
+                  {displayName}
                 </span>
                 <ChevronUp className="ml-auto" />
               </SidebarMenuButton>

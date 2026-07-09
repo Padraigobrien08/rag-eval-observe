@@ -73,13 +73,13 @@ function ChunkSpreadBar({
 }) {
   if (min === max) {
     return (
-      <section className="rounded-xl border border-slate-200 bg-slate-50/60 p-4">
-        <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+      <section className="rounded-xl border border-border bg-muted/40 p-4">
+        <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           Chunk length (characters)
         </h3>
-        <p className="mt-2 text-center text-sm text-slate-600">
+        <p className="mt-2 text-center text-sm text-muted-foreground">
           All shards are the same length:{' '}
-          <span className="font-mono font-semibold text-slate-900">{min.toLocaleString()}</span>{' '}
+          <span className="font-mono font-semibold text-foreground">{min.toLocaleString()}</span>{' '}
           chars
         </p>
       </section>
@@ -88,27 +88,27 @@ function ChunkSpreadBar({
   const span = Math.max(1e-9, max - min)
   const pct = (v: number) => Math.min(100, Math.max(0, ((v - min) / span) * 100))
   const markers = [
-    { label: 'Min', value: min, dot: 'bg-slate-700' },
-    { label: 'Median', value: median, dot: 'bg-violet-600' },
-    { label: 'Mean', value: mean, dot: 'bg-sky-600' },
-    { label: 'Max', value: max, dot: 'bg-amber-600' },
+    { label: 'Min', value: min, dot: 'bg-foreground' },
+    { label: 'Median', value: median, dot: 'bg-violet-500' },
+    { label: 'Mean', value: mean, dot: 'bg-sky-500' },
+    { label: 'Max', value: max, dot: 'bg-amber-500' },
   ] as const
 
   return (
-    <section className="rounded-xl border border-slate-200 bg-slate-50/60 p-4">
-      <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+    <section className="rounded-xl border border-border bg-muted/40 p-4">
+      <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
         Chunk length (characters)
       </h3>
-      <p className="mt-1 text-xs text-slate-500">
+      <p className="mt-1 text-xs text-muted-foreground">
         Distribution of stored shard sizes after merging.
       </p>
       <div className="relative mx-auto mt-4 h-5 max-w-xl">
-        <div className="absolute inset-x-0 top-1/2 h-2.5 -translate-y-1/2 rounded-full bg-slate-200/90 shadow-inner" />
+        <div className="absolute inset-x-0 top-1/2 h-2.5 -translate-y-1/2 rounded-full bg-muted shadow-inner" />
         {markers.map(({ label, value, dot }) => (
           <span
             key={`tick-${label}`}
             className={cn(
-              'absolute top-1/2 z-[1] block h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow-sm',
+              'absolute top-1/2 z-[1] block h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-background shadow-sm',
               dot
             )}
             style={{ left: `${pct(value)}%` }}
@@ -120,14 +120,14 @@ function ChunkSpreadBar({
         {markers.map(({ label, value, dot }) => (
           <div
             key={label}
-            className="flex items-start gap-2 rounded-lg border border-white/90 bg-white px-3 py-2.5 shadow-sm"
+            className="flex items-start gap-2 rounded-lg border border-border bg-card px-3 py-2.5 shadow-sm"
           >
             <span className={cn('mt-1.5 h-2 w-2 shrink-0 rounded-full', dot)} aria-hidden />
             <div className="min-w-0">
-              <dt className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
+              <dt className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
                 {label}
               </dt>
-              <dd className="font-mono text-sm font-semibold tabular-nums leading-snug text-slate-900">
+              <dd className="font-mono text-sm font-semibold tabular-nums leading-snug text-foreground">
                 {formatLengthStat(value)}
               </dd>
             </div>
@@ -178,18 +178,18 @@ function IngestInsightPanel({
   const chunkingSideTitle = chunking.adaptive_chunking ? 'Adaptive chunking' : 'Chunk configuration'
 
   return (
-    <Card className="flex min-h-0 flex-1 flex-col overflow-hidden border-slate-200/90 shadow-sm">
-      <CardHeader className="shrink-0 space-y-4 border-b border-slate-100 bg-gradient-to-br from-slate-50/80 to-white pb-4 pt-5">
+    <Card className="flex min-h-0 flex-1 flex-col overflow-hidden border-border shadow-sm">
+      <CardHeader className="shrink-0 space-y-4 border-b border-border bg-muted/30 pb-4 pt-5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="flex gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-violet-100 text-violet-700">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-foreground">
               <Sparkles className="h-5 w-5" aria-hidden />
             </div>
             <div className="space-y-1">
-              <CardTitle className="text-lg font-semibold tracking-tight text-slate-900">
+              <CardTitle className="text-lg font-semibold tracking-tight text-foreground">
                 {outcome.replaced_existing ? 'Index updated' : 'Indexed successfully'}
               </CardTitle>
-              <CardDescription className="text-sm leading-relaxed text-slate-600">
+              <CardDescription className="text-sm leading-relaxed text-muted-foreground">
                 {chunking.chunks_created.toLocaleString()} chunks · mean shard{' '}
                 {formatLengthStat(chunking.chunk_length_mean)} chars · window{' '}
                 {chunking.chunk_target_size}/{chunking.chunk_overlap}
@@ -198,14 +198,14 @@ function IngestInsightPanel({
           </div>
           <div className="flex shrink-0 flex-wrap gap-2 sm:justify-end">
             {chunking.adaptive_chunking ? (
-              <Badge className="bg-violet-600 font-medium hover:bg-violet-600">Adaptive</Badge>
+              <Badge className="font-medium">Adaptive</Badge>
             ) : (
               <Badge variant="secondary" className="font-medium">
                 Fixed size
               </Badge>
             )}
             {outcome.replaced_existing ? (
-              <Badge variant="outline" className="border-amber-300 font-medium text-amber-950">
+              <Badge variant="outline" className="font-medium">
                 Replaced existing
               </Badge>
             ) : null}
@@ -213,10 +213,10 @@ function IngestInsightPanel({
         </div>
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-[11px] font-medium uppercase tracking-wider text-slate-500">
+            <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
               Document ID
             </p>
-            <p className="mt-0.5 break-all font-mono text-xs text-slate-700">
+            <p className="mt-0.5 break-all font-mono text-xs text-foreground">
               {outcome.document_id}
             </p>
           </div>
@@ -239,39 +239,41 @@ function IngestInsightPanel({
 
       <CardContent className="min-h-0 flex-1 space-y-6 overflow-y-auto py-5 text-sm">
         <div>
-          <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
+          <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             Shard summary
           </h3>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
-            <div className="rounded-lg border border-slate-200 bg-white p-3 text-left shadow-sm sm:p-3.5">
-              <p className="text-2xl font-semibold tabular-nums text-slate-900">
+            <div className="rounded-lg border border-border bg-card p-3 text-left shadow-sm sm:p-3.5">
+              <p className="text-2xl font-semibold tabular-nums text-foreground">
                 {chunking.chunks_created.toLocaleString()}
               </p>
-              <p className="mt-1 text-xs font-medium leading-snug text-slate-500">Chunks stored</p>
+              <p className="mt-1 text-xs font-medium leading-snug text-muted-foreground">
+                Chunks stored
+              </p>
             </div>
-            <div className="rounded-lg border border-slate-200 bg-white p-3 text-left shadow-sm sm:p-3.5">
-              <p className="text-2xl font-semibold tabular-nums text-slate-900">
+            <div className="rounded-lg border border-border bg-card p-3 text-left shadow-sm sm:p-3.5">
+              <p className="text-2xl font-semibold tabular-nums text-foreground">
                 {formatLengthStat(chunking.chunk_length_mean)}
               </p>
-              <p className="mt-1 text-xs font-medium leading-snug text-slate-500">
+              <p className="mt-1 text-xs font-medium leading-snug text-muted-foreground">
                 Avg. shard length
               </p>
             </div>
-            <div className="rounded-lg border border-slate-200 bg-white p-3 text-left shadow-sm sm:p-3.5">
-              <p className="text-lg font-semibold tabular-nums leading-tight text-slate-900 sm:text-xl">
+            <div className="rounded-lg border border-border bg-card p-3 text-left shadow-sm sm:p-3.5">
+              <p className="text-lg font-semibold tabular-nums leading-tight text-foreground sm:text-xl">
                 {chunking.chunk_target_size}
-                <span className="font-normal text-slate-400"> / </span>
+                <span className="font-normal text-muted-foreground"> / </span>
                 {chunking.chunk_overlap}
               </p>
-              <p className="mt-1 text-xs font-medium leading-snug text-slate-500">
+              <p className="mt-1 text-xs font-medium leading-snug text-muted-foreground">
                 Window / overlap
               </p>
             </div>
-            <div className="rounded-lg border border-slate-200 bg-white p-3 text-left shadow-sm sm:p-3.5">
-              <p className="text-2xl font-semibold tabular-nums text-slate-900">
+            <div className="rounded-lg border border-border bg-card p-3 text-left shadow-sm sm:p-3.5">
+              <p className="text-2xl font-semibold tabular-nums text-foreground">
                 {chunking.undersized_chunk_merges.toLocaleString()}
               </p>
-              <p className="mt-1 text-xs font-medium leading-snug text-slate-500">
+              <p className="mt-1 text-xs font-medium leading-snug text-muted-foreground">
                 Undersize merges
               </p>
             </div>
@@ -285,27 +287,29 @@ function IngestInsightPanel({
           mean={chunking.chunk_length_mean}
         />
 
-        <Separator className="bg-slate-200" />
+        <Separator className="bg-border" />
 
         <div className="grid gap-6 sm:grid-cols-2">
           <div className="space-y-2">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Preprocessing
             </h3>
-            <p className="text-sm text-slate-700">
+            <p className="text-sm text-foreground">
               <span className="font-mono tabular-nums">
                 {preprocessing.original_character_count.toLocaleString()}
               </span>
-              <span className="text-slate-400"> → </span>
+              <span className="text-muted-foreground"> → </span>
               <span className="font-mono tabular-nums">
                 {preprocessing.normalized_character_count.toLocaleString()}
               </span>
-              <span className="text-slate-500"> characters</span>
+              <span className="text-muted-foreground"> characters</span>
               {preprocessing.character_delta !== 0 ? (
                 <span
                   className={cn(
                     'ml-1.5 font-medium tabular-nums',
-                    preprocessing.character_delta < 0 ? 'text-emerald-700' : 'text-amber-800'
+                    preprocessing.character_delta < 0
+                      ? 'text-emerald-600 dark:text-emerald-400'
+                      : 'text-amber-600 dark:text-amber-400'
                   )}
                 >
                   ({preprocessing.character_delta > 0 ? '+' : ''}
@@ -322,28 +326,30 @@ function IngestInsightPanel({
                 ))}
               </div>
             ) : (
-              <p className="text-xs text-slate-500">No structural changes (already clean).</p>
+              <p className="text-xs text-muted-foreground">
+                No structural changes (already clean).
+              </p>
             )}
           </div>
           <div className="space-y-2">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               {chunkingSideTitle}
             </h3>
-            <ul className="space-y-2 text-sm text-slate-700">
-              <li className="flex justify-between gap-4 border-b border-slate-100 pb-2">
-                <span className="text-slate-500">Est. target shards</span>
+            <ul className="space-y-2 text-sm text-foreground">
+              <li className="flex justify-between gap-4 border-b border-border pb-2">
+                <span className="text-muted-foreground">Est. target shards</span>
                 <span className="font-mono font-medium tabular-nums">
                   {chunking.estimated_target_chunks.toLocaleString()}
                 </span>
               </li>
-              <li className="flex justify-between gap-4 border-b border-slate-100 pb-2">
-                <span className="text-slate-500">Defaults (env)</span>
+              <li className="flex justify-between gap-4 border-b border-border pb-2">
+                <span className="text-muted-foreground">Defaults (env)</span>
                 <span className="font-mono font-medium tabular-nums">
                   {chunking.config_chunk_size} / {chunking.config_chunk_overlap}
                 </span>
               </li>
               <li className="flex justify-between gap-4">
-                <span className="text-slate-500">Merge soft cap</span>
+                <span className="text-muted-foreground">Merge soft cap</span>
                 <span className="font-mono font-medium tabular-nums">
                   {chunking.merged_chunk_soft_cap_chars.toLocaleString()} chars
                 </span>
@@ -353,21 +359,23 @@ function IngestInsightPanel({
         </div>
 
         {preprocessing.warnings.length > 0 ? (
-          <Alert className="border-amber-200 bg-amber-50/95">
-            <AlertTitle className="text-amber-950">Preprocessing notice</AlertTitle>
-            <AlertDescription className="text-sm text-amber-950/90">
+          <Alert className="border-amber-500/40 bg-amber-500/10">
+            <AlertTitle className="text-amber-700 dark:text-amber-300">
+              Preprocessing notice
+            </AlertTitle>
+            <AlertDescription className="text-sm text-amber-700/90 dark:text-amber-200/90">
               {preprocessing.warnings.join(' · ')}
             </AlertDescription>
           </Alert>
         ) : null}
       </CardContent>
 
-      <CardFooter className="flex shrink-0 flex-col gap-3 border-t border-slate-200 bg-slate-50/90 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+      <CardFooter className="flex shrink-0 flex-col gap-3 border-t border-border bg-muted/50 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
         <Button
           type="button"
           variant="ghost"
           size="sm"
-          className="text-slate-600"
+          className="text-muted-foreground"
           onClick={onBackToForm}
         >
           Back to form
@@ -663,8 +671,8 @@ export default function IngestDialog({ open, onOpenChange, onSuccess }: Props) {
       >
         <div
           className={cn(
-            'shrink-0 border-b border-slate-100 px-6 pb-5 pt-7 sm:px-8',
-            ingestInsight && 'bg-slate-50/60'
+            'shrink-0 border-b border-border px-6 pb-5 pt-7 sm:px-8',
+            ingestInsight && 'bg-muted/40'
           )}
         >
           <DialogHeader
@@ -677,12 +685,12 @@ export default function IngestDialog({ open, onOpenChange, onSuccess }: Props) {
               )}
             >
               {ingestInsight ? (
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 ring-4 ring-emerald-50/80">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-600 ring-4 ring-emerald-500/20 dark:text-emerald-400">
                   <CheckCircle2 className="h-7 w-7" strokeWidth={2.25} aria-hidden />
                 </div>
               ) : (
-                <div className="rounded-full bg-slate-100 p-3 ring-1 ring-slate-200/80">
-                  <Upload className="h-7 w-7 text-slate-500" aria-hidden />
+                <div className="rounded-full bg-muted p-3 ring-1 ring-border">
+                  <Upload className="h-7 w-7 text-muted-foreground" aria-hidden />
                 </div>
               )}
             </div>
@@ -690,7 +698,9 @@ export default function IngestDialog({ open, onOpenChange, onSuccess }: Props) {
               {ingestInsight ? 'Ingest report' : 'Ingest a document'}
             </DialogTitle>
             <DialogDescription
-              className={cn(ingestInsight ? 'text-sm text-slate-600' : 'text-base text-slate-600')}
+              className={cn(
+                ingestInsight ? 'text-sm text-muted-foreground' : 'text-base text-muted-foreground'
+              )}
             >
               {ingestInsight
                 ? 'Normalization, chunking, and merge stats for this run. Use the card below for details and actions.'
@@ -725,8 +735,8 @@ export default function IngestDialog({ open, onOpenChange, onSuccess }: Props) {
             onClick={() => fileInputRef.current?.click()}
             className={`border-2 border-dashed rounded-lg text-center transition-all cursor-pointer ${
               isDragging
-                ? 'border-blue-500 bg-blue-50 scale-[1.02]'
-                : 'border-slate-300 bg-slate-50 hover:border-slate-400 hover:bg-slate-100'
+                ? 'border-foreground bg-accent scale-[1.02]'
+                : 'border-border bg-muted/40 hover:border-foreground/30 hover:bg-muted'
             }`}
             style={{
               padding: '2.5rem',
@@ -738,14 +748,14 @@ export default function IngestDialog({ open, onOpenChange, onSuccess }: Props) {
             }}
           >
             {isDragging ? (
-              <p className="text-sm font-medium text-blue-600">Drop file here</p>
+              <p className="text-sm font-medium text-foreground">Drop file here</p>
             ) : (
               <>
-                <Upload className="h-8 w-8 text-slate-400 mb-2" />
-                <p className="text-sm text-slate-600">
+                <Upload className="h-8 w-8 text-muted-foreground mb-2" />
+                <p className="text-sm text-muted-foreground">
                   Drag and drop a file here, or click to browse
                 </p>
-                <p className="text-xs text-slate-500 mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   Supported: .txt, .md, .markdown, .json, .pdf, .docx
                 </p>
               </>
@@ -767,23 +777,9 @@ export default function IngestDialog({ open, onOpenChange, onSuccess }: Props) {
           >
             <Button
               type="button"
+              variant="secondary"
               size="sm"
               onClick={() => setShowManualInput(!showManualInput)}
-              style={{
-                backgroundColor: '#0f172a',
-                color: 'white',
-                borderRadius: '0.5rem',
-                border: 'none',
-                width: 'auto',
-                paddingLeft: '1.5rem',
-                paddingRight: '1.5rem',
-              }}
-              onMouseEnter={e => {
-                e.currentTarget.style.backgroundColor = '#1e293b'
-              }}
-              onMouseLeave={e => {
-                e.currentTarget.style.backgroundColor = '#0f172a'
-              }}
             >
               {showManualInput ? 'Hide' : 'Enter text manually'}
             </Button>
@@ -812,11 +808,13 @@ export default function IngestDialog({ open, onOpenChange, onSuccess }: Props) {
               />
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              <label className="text-sm font-medium">Title</label>
+              <label className="text-sm font-medium">
+                Title <span className="font-normal text-muted-foreground">(optional)</span>
+              </label>
               <Input
                 value={title}
                 onChange={e => setTitle(e.target.value)}
-                placeholder="Document title"
+                placeholder="Auto-filled from the file name if left blank"
                 disabled={isLoading}
               />
             </div>
@@ -824,7 +822,7 @@ export default function IngestDialog({ open, onOpenChange, onSuccess }: Props) {
 
           {/* Error message */}
           {error && (
-            <p className="text-sm text-red-600" style={{ marginTop: '0.5rem' }}>
+            <p className="text-sm text-destructive" style={{ marginTop: '0.5rem' }}>
               {error}
             </p>
           )}
