@@ -1,30 +1,28 @@
-import { motion } from 'framer-motion'
+import { motion, useReducedMotion } from 'framer-motion'
 
 export const Greeting = () => {
+  const reduceMotion = useReducedMotion()
+  const rise = reduceMotion
+    ? { initial: { opacity: 0 }, animate: { opacity: 1 } }
+    : { initial: { opacity: 0, y: 8 }, animate: { opacity: 1, y: 0 } }
+
   return (
-    <div
-      className="mx-auto mt-4 flex size-full max-w-3xl flex-col justify-center px-4 md:mt-16 md:px-8"
-      key="overview"
-    >
-      <motion.div
-        animate={{ opacity: 1, y: 0 }}
-        className="font-semibold text-xl md:text-2xl"
-        exit={{ opacity: 0, y: 10 }}
-        initial={{ opacity: 0, y: 10 }}
-        transition={{ delay: 0.5 }}
+    <div className="mx-auto flex max-w-2xl flex-col items-center text-center" key="overview">
+      <motion.h2
+        {...rise}
+        className="text-balance font-semibold text-3xl leading-[1.1] tracking-[-0.02em] md:text-4xl"
+        transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
       >
         Ask your documents anything.
-      </motion.div>
-      <motion.div
-        animate={{ opacity: 1, y: 0 }}
-        className="text-xl text-zinc-500 md:text-2xl"
-        exit={{ opacity: 0, y: 10 }}
-        initial={{ opacity: 0, y: 10 }}
-        transition={{ delay: 0.6 }}
+      </motion.h2>
+      <motion.p
+        {...rise}
+        className="mt-4 text-balance text-base text-muted-foreground leading-relaxed md:text-lg"
+        transition={{ duration: 0.4, delay: 0.06, ease: [0.16, 1, 0.3, 1] }}
       >
-        Every answer shows its retrieved sources, latency, and cost — and lands in a query log you
-        can replay, evaluate, and compare across runs.
-      </motion.div>
+        Every answer carries its sources, latency, and cost, then lands in a query log you can
+        replay, evaluate, and compare across runs.
+      </motion.p>
     </div>
   )
 }

@@ -109,6 +109,7 @@ export function Chat({
         isReadonly={isReadonly}
         messages={messages}
         regenerate={regenerate}
+        sendMessage={sendMessage}
         setMessages={setMessages}
         status={status}
       />
@@ -118,7 +119,6 @@ export function Chat({
           <MultimodalInput
             chatId={id}
             input={input}
-            messages={messages}
             sendMessage={sendMessage}
             setInput={setInput}
             status={status}

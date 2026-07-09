@@ -42,7 +42,13 @@ export function RagModelSelector({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild className={cn('w-fit', className)}>
-        <Button className="h-8 md:h-fit md:px-2" data-testid="rag-model-selector" variant="outline">
+        <Button
+          aria-label={`Retrieval strategy: ${selected.label}`}
+          className="h-8 gap-2 border-border bg-card font-medium shadow-sm md:h-fit md:px-2.5"
+          data-testid="rag-model-selector"
+          variant="outline"
+        >
+          <span aria-hidden className="size-1.5 rounded-full bg-foreground" />
           {selected.label}
           <ChevronDownIcon />
         </Button>

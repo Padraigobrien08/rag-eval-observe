@@ -10,7 +10,6 @@ import {
   PromptInputTools,
 } from '@/components/elements/prompt-input'
 import type { ChatMessage } from '@/lib/types'
-import { SuggestedActions } from './suggested-actions'
 
 function PureMultimodalInput({
   chatId,
@@ -18,7 +17,6 @@ function PureMultimodalInput({
   setInput,
   status,
   stop,
-  messages,
   sendMessage,
 }: {
   chatId: string
@@ -26,7 +24,6 @@ function PureMultimodalInput({
   setInput: (value: string) => void
   status: UseChatHelpers<ChatMessage>['status']
   stop: () => void
-  messages: ChatMessage[]
   sendMessage: UseChatHelpers<ChatMessage>['sendMessage']
 }) {
   const submit = useCallback(() => {
@@ -39,8 +36,6 @@ function PureMultimodalInput({
 
   return (
     <div className="flex w-full flex-col gap-3">
-      {messages.length === 0 && <SuggestedActions chatId={chatId} sendMessage={sendMessage} />}
-
       <PromptInput
         onSubmit={e => {
           e.preventDefault()
@@ -63,6 +58,7 @@ function PureMultimodalInput({
             aria-label={
               status === 'streaming' || status === 'submitted' ? 'Stop generating' : 'Send message'
             }
+            className="size-8 rounded-full"
             data-testid="send-button"
             disabled={status === 'ready' && !input.trim()}
             status={status}
