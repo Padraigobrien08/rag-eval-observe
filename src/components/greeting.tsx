@@ -13,7 +13,7 @@ export const Greeting = () => {
         initial={{ opacity: 0, y: 10 }}
         transition={{ delay: 0.5 }}
       >
-        What can I help you find?
+        Ask your documents anything.
       </motion.div>
       <motion.div
         animate={{ opacity: 1, y: 0 }}
@@ -22,7 +22,8 @@ export const Greeting = () => {
         initial={{ opacity: 0, y: 10 }}
         transition={{ delay: 0.6 }}
       >
-        Ask a question about your ingested documents.
+        Every answer shows its retrieved sources, latency, and cost — and lands in a query log you
+        can replay, evaluate, and compare across runs.
       </motion.div>
     </div>
   )

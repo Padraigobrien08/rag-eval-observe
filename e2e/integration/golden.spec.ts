@@ -12,7 +12,7 @@ test('real stack boots: guest session, chat shell, and backend proxy', async ({ 
 
   // Rendering the greeting proves middleware → guest sign-in (real User insert)
   // → session → server render all succeeded against the real DB.
-  await expect(page.getByText(/what can i help you find/i)).toBeVisible({ timeout: 60_000 })
+  await expect(page.getByText(/ask your documents anything/i)).toBeVisible({ timeout: 60_000 })
   await expect(page.getByTestId('multimodal-input')).toBeVisible()
 
   // The sidebar Documents section fetches from the real FastAPI via the proxy;

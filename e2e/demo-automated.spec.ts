@@ -37,7 +37,7 @@ test.describe('automated UI demo (mocked API)', () => {
     })
 
     await page.goto('/')
-    await expect(page.getByText(/what can i help you find/i)).toBeVisible()
+    await expect(page.getByText(/ask your documents anything/i)).toBeVisible()
 
     await page.getByTestId('suggested-actions').getByRole('button').first().click()
     await expect(page.getByTestId('message-assistant').first()).toContainText(ANSWER_ONE, {

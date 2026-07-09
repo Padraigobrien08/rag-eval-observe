@@ -1,30 +1,46 @@
+<div align="center">
+
 # RAG Eval Observability
 
-> A production-ready platform for building, evaluating, and monitoring Retrieval-Augmented Generation (RAG) systems with an intuitive chat interface and comprehensive observability tools.
+**Chat over your documents — then persist offline evals, compare runs by `case_id`, and trace every answer in the query log. One repo you can deploy.**
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.3+-blue.svg)](https://www.typescriptlang.org/)
-[![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://www.python.org/)
+[![Live demo](https://img.shields.io/badge/demo-pob--rag--chat.xyz-0b0b0f?style=flat-square&logo=vercel&logoColor=white)](https://pob-rag-chat.xyz/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.6+-3178c6.svg?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Python](https://img.shields.io/badge/Python-3.11+-3776ab.svg?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
 
-## 🚀 Live Demo
+![RAG Eval Observability — close the loop on RAG](./docs/images/social-preview.png)
 
-**Try it out:** [https://pob-rag-chat.xyz/](https://pob-rag-chat.xyz/)
+### [Try the live demo →](https://pob-rag-chat.xyz/)
 
-The live deployment includes sample documents about RAG, so you can test the functionality immediately by clicking one of the example queries.
+_The live deployment is seeded with sample RAG documents — click an example query to see retrieval, citations, and per-answer latency/cost immediately._
+
+</div>
+
+## Why this exists
+
+Most RAG demos stop at chat. This one is built to **close the loop**: change the system → measure the same dataset → see **what regressed, why, and where to look in production traces**.
+
+- **💬 Grounded chat** — answers cite their retrieved sources, with per-message latency, cost, tokens, and a link straight to the query-log trace.
+- **🧪 Persisted eval runs** — every `eval/run_eval.py` completion lands in Postgres with a stable ID. List runs → drill into a run → **compare two runs keyed by `case_id`** (not fragile row order), with per-metric deltas and highlighted Hit@5 flips.
+- **🔍 Query-log explorer** — live traffic and eval failures share one mental model via `query_log_id`, so a regression in CI points at the same rows you can inspect in production.
+- **📤 Eval-as-code** — export JSON/CSV with `curl` patterns ([docs/EVAL_CI.md](./docs/EVAL_CI.md)) so pipelines can archive artifacts and gate merges.
+
+Read the full product argument in **[docs/THESIS.md](./docs/THESIS.md)**.
 
 ## See it in action
 
-Automated walkthrough (mocked API): the first screen is an **example question plus one assistant reply** (what retrieval did), then **query logs → eval runs → compare two runs → export**.
+|                                   Query-log explorer                                    |                                 System metrics                                 |
+| :-------------------------------------------------------------------------------------: | :----------------------------------------------------------------------------: |
+| [![Query logs](./docs/images/live/query-logs.png)](https://pob-rag-chat.xyz/query-logs) | [![Metrics](./docs/images/live/metrics.png)](https://pob-rag-chat.xyz/metrics) |
 
-![Walkthrough: chat, query logs, eval compare, export](./docs/images/demo-walkthrough.gif)
-
-To regenerate the GIF locally: `pnpm demo:capture` then `pnpm demo:gif` ([ImageMagick](https://imagemagick.org/) on PATH). Intermediate frame PNGs live under `docs/images/demo-frames/` and are gitignored; commit `docs/images/demo-walkthrough.gif`.
+_Screenshots from the live deployment. The chat streams from the FastAPI RAG backend; the observability pages read the same Postgres._
 
 ## Developer setup
 
 See **[DEVELOPMENT.md](./DEVELOPMENT.md)** for the full local workflow (Postgres, migrate, seed, API, web, tests, Playwright, Alembic).
 
-## Flagship documentation (polish & production narrative)
+## Deep dives
 
 | Doc                                                | Purpose                                                            |
 | -------------------------------------------------- | ------------------------------------------------------------------ |
@@ -150,9 +166,12 @@ backend; the template UI adapts to it rather than calling an LLM directly.
 
 **Infrastructure:**
 
-- Docker & Docker Compose
-- Vercel (frontend deployment)
-- Azure Container Apps (backend deployment)
+- Docker & Docker Compose (local development)
+- Vercel — frontend hosting
+- Render — FastAPI backend hosting
+- Neon — managed Postgres + pgvector
+
+> The live demo runs on Vercel + Render + Neon. The backend is portable — see [AZURE_DEPLOY.md](./AZURE_DEPLOY.md) for an Azure Container Apps path, or [DEPLOYMENT.md](./DEPLOYMENT.md) for Docker Compose.
 
 ## Quick Start
 
@@ -347,15 +366,17 @@ See [backend/README.md](./backend/README.md) and [docs/API_CONTRACT.md](./docs/A
 
 ## Deployment
 
+The live demo runs on **Vercel (frontend) + Render (backend) + Neon (Postgres)**.
+
 ### Frontend (Vercel)
 
 1. Connect your repository to Vercel
-2. Set `AZURE_API_BASE_URL` environment variable
+2. Set `AZURE_API_BASE_URL` to your backend's base URL (despite the name, this is just the FastAPI origin the Next.js proxy forwards to) and `POSTGRES_URL` / `AUTH_SECRET`
 3. Deploy automatically
 
-### Backend (Azure Container Apps)
+### Backend (Render, Azure, or any container host)
 
-See [AZURE_DEPLOY.md](./AZURE_DEPLOY.md) for detailed Azure deployment instructions.
+The FastAPI backend is a standard container — deploy it anywhere. See [AZURE_DEPLOY.md](./AZURE_DEPLOY.md) for an Azure Container Apps walkthrough, or [DEPLOYMENT.md](./DEPLOYMENT.md) for the general guide.
 
 ### Docker Compose
 
