@@ -18,6 +18,11 @@ services:
         condition: service_healthy
       tempo:
         condition: service_started
+    volumes:
+      # Mask the bind-mounted backend/.venv with an anonymous volume so a host
+      # (e.g. macOS) virtualenv never leaks into the Linux container. uv builds
+      # a fresh Linux venv inside this volume; the host dir is left untouched.
+      - /app/backend/.venv
     # Install the otel extra (not in the base image) before launching.
     command: >
       sh -c "uv sync --extra otel &&
