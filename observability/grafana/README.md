@@ -1,15 +1,15 @@
 # Grafana
 
-Dashboard JSON for Prometheus-backed metrics lives next to this folder:
-[`grafana-rag-eval-prometheus.json`](../grafana-rag-eval-prometheus.json).
+Two dashboards live next to this folder:
 
-Panels use datasource UID `prometheus` (or the `${datasource}` variable when importing).
+- [`grafana-rag-eval-prometheus.json`](../grafana-rag-eval-prometheus.json) — API metrics (requests, latency, tokens). Datasource UID `prometheus`.
+- [`grafana-rag-eval-traces.json`](../grafana-rag-eval-traces.json) — RAG pipeline **trace waterfall** (recent traces table + span waterfall). Datasource type `tempo`.
 
 ## Import in the UI
 
 1. Grafana → **Dashboards** → **New** → **Import**.
-2. Upload `observability/grafana-rag-eval-prometheus.json`.
-3. Choose your Prometheus datasource when prompted.
+2. Upload the dashboard JSON.
+3. Choose your Prometheus (metrics) or Tempo (traces) datasource when prompted.
 
 ## Provisioning (Docker / Kubernetes)
 
@@ -20,8 +20,20 @@ Use the files under `provisioning/`:
 | `/etc/grafana/provisioning/datasources/datasource.yaml` | `provisioning/datasources/datasource.yaml` |
 | `/etc/grafana/provisioning/dashboards/default.yaml` | `provisioning/dashboards/default.yaml` |
 | `/etc/grafana/dashboards/rag-eval.json` | `../grafana-rag-eval-prometheus.json` |
+| `/etc/grafana/dashboards/rag-eval-traces.json` | `../grafana-rag-eval-traces.json` |
 
-Edit `datasource.yaml` so `url` points at your Prometheus. The dashboard provider reads JSON from `/etc/grafana/dashboards`.
+Edit `datasource.yaml` so `url` points at your Prometheus (`prometheus:9090`) and Tempo (`tempo:3200`). The dashboard provider reads all JSON from `/etc/grafana/dashboards`.
+
+## Traces (waterfall)
+
+`datasource.yaml` provisions a **Tempo** datasource (uid `tempo`). Run the backend with `OTEL_ENABLED=true` (`cd backend && uv sync --extra otel`) and set `OTEL_EXPORTER_OTLP_ENDPOINT` to your collector so spans reach Tempo.
+
+The **RAG Eval — Traces** dashboard has:
+
+1. a **recent-traces table** (slowest first) filtered by `$service` (defaults to `OTEL_SERVICE_NAME` = `rag-eval-backend`) — click a **Trace ID** to open its waterfall;
+2. a **trace waterfall** panel pinned to the `$traceId` variable — paste an id from the app (logged as `trace_id`, shared with the request's `query_log_id`).
+
+The waterfall shows one span per pipeline stage — `rag.retrieve` → `openai.embedding` / `db.vector_search` → `rag.generate` → `openai.chat` — with `gen_ai.*` token/model attributes, so a slow or expensive query is diagnosable end to end.
 
 ## Metrics reference
 
