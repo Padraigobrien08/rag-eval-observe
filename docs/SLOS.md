@@ -19,7 +19,11 @@ These are **starter SLOs** for a self-hosted API + web UI. Adjust numbers to you
 | `/api/v1/query` (non-stream, excluding LLM) | < 3 s |
 | Time-to-first-token (stream) | < 2 s |
 
-Measure with your APM or Prometheus histograms if you add them; in-process metrics today expose aggregated latencies per route label.
+Measure these directly: `/api/v1/metrics` exposes `percentiles` (p50/p95/p99)
+per route and per RAG pipeline stage, and `/api/v1/metrics/prometheus` emits
+`http_request_latency_ms` / `rag_stage_latency_ms` histograms for
+`histogram_quantile()` in Grafana. With `OTEL_ENABLED=true`, per-stage spans in
+the trace waterfall show whether a p95 breach is retrieval or generation.
 
 ## Error budget policy
 

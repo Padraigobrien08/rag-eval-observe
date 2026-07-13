@@ -7,6 +7,7 @@ from typing import Any
 import structlog
 
 from app.core.config import settings
+from app.core.tracing import span
 from app.llm.openai_client import OpenAIError, TokenUsage, get_openai_client
 from app.rag.types import RetrievedChunk
 
@@ -280,11 +281,25 @@ async def generate_answer(
             },
         ]
 
-        completion_response = await openai_client.create_chat_completion(
-            messages=messages,
-            temperature=0.7,
-            max_tokens=1000,
-        )
+        # rag.generate span: parents the nested openai.chat span so the trace
+        # waterfall shows generation as a distinct pipeline stage.
+        with span(
+            "rag.generate",
+            **{
+                "rag.chunk_count": len(sanitized_chunks),
+                "rag.meta_query": bool(document_list_context),
+            },
+        ) as gen_span:
+            completion_response = await openai_client.create_chat_completion(
+                messages=messages,
+                temperature=0.7,
+                max_tokens=1000,
+            )
+            if completion_response.token_usage:
+                gen_span.set(
+                    "gen_ai.usage.total_tokens",
+                    completion_response.token_usage.total_tokens,
+                )
 
         answer = completion_response.content
         token_usage = completion_response.token_usage

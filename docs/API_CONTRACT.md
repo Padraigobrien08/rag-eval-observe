@@ -270,8 +270,22 @@ Get application metrics including request counts, latency, and token usage.
         ">5s": "number"
       },
       "avg_latency_ms": "number",
-      "total_latency_ms": "number"
+      "total_latency_ms": "number",
+      "percentiles": {
+        "p50_ms": "number",
+        "p95_ms": "number",
+        "p99_ms": "number"
+      }
     }
+  },
+  "stages": {
+    "retrieve": {
+      "count": "number",
+      "avg_latency_ms": "number",
+      "percentiles": { "p50_ms": "number", "p95_ms": "number", "p99_ms": "number" }
+    },
+    "embedding": { "...": "same shape" },
+    "chat_completion": { "...": "same shape" }
   },
   "token_usage": {
     "embedding_prompt_tokens": "number",
@@ -283,6 +297,29 @@ Get application metrics including request counts, latency, and token usage.
   "note": "string"
 }
 ```
+
+**Latency percentiles** (`percentiles`, `stages[*].percentiles`) are estimated
+in-process from a fixed-bucket histogram using the same linear interpolation as
+Prometheus `histogram_quantile`, so the JSON numbers agree with what Grafana
+computes from the scraped series.
+
+**`stages`** reports per-stage latency for the RAG pipeline (`retrieve`,
+`embedding`, `db.vector_search`, `chat_completion`, `chat_completion_stream`),
+populated from the OpenTelemetry-instrumented spans. It is empty until the first
+query runs.
+
+### Get Prometheus Metrics
+
+**GET** `/metrics/prometheus`
+
+Same in-memory counters in Prometheus text exposition format. Emits real
+histogram series — `http_request_latency_ms_bucket{route,le}` /
+`_sum` / `_count` and `rag_stage_latency_ms_bucket{stage,le}` — so
+`histogram_quantile(0.95, ...)` works directly in Grafana. When
+`OTEL_ENABLED=true` (`uv sync --extra otel`), the pipeline also exports a
+distributed trace per request (server span → `rag.retrieve` →
+`openai.embedding` / `db.vector_search` → `rag.generate` → `openai.chat`) to the
+configured OTLP endpoint.
 
 #### Example Response
 
