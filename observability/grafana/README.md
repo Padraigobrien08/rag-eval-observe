@@ -24,6 +24,41 @@ Use the files under `provisioning/`:
 
 Edit `datasource.yaml` so `url` points at your Prometheus (`prometheus:9090`) and Tempo (`tempo:3200`). The dashboard provider reads all JSON from `/etc/grafana/dashboards`.
 
+## Run the whole stack locally (verify traces end to end)
+
+An overlay brings up Tempo + Prometheus + Grafana wired to the API, turns on
+OpenTelemetry, and installs the `otel` extra automatically:
+
+```bash
+export OPENAI_API_KEY=sk-...   # real key: /query calls embeddings + chat
+docker compose -f docker-compose.yml -f docker-compose.observability.yml up --build
+```
+
+Then generate a trace and open the waterfall:
+
+```bash
+# Fire a query — response includes request_id + query_log_id; the api logs
+# print the matching trace_id.
+curl -s localhost:8000/api/v1/query \
+  -H 'content-type: application/json' \
+  -d '{"query":"what is RAG?","top_k":5}' | jq '{request_id, query_log_id}'
+```
+
+1. Open Grafana at **http://localhost:3001** (anonymous admin, no login).
+2. **Dashboards → RAG Eval — Traces (Tempo waterfall)**.
+3. The **recent-traces** table lists the query — click its **Trace ID** to see
+   the `rag.retrieve → openai.embedding / db.vector_search → rag.generate →
+   openai.chat` waterfall, or paste the `trace_id` into the `traceId` variable.
+
+Ports: API `8000`, Grafana `3001`, Prometheus `9090`, Tempo `3200` / OTLP
+`4318`. Add `--profile full` to also run the Next.js UI on `3000`. Tear down
+with `docker compose -f docker-compose.yml -f docker-compose.observability.yml
+down -v`.
+
+> Without a valid `OPENAI_API_KEY` the query errors, but the trace still
+> exports with the failing span marked ERROR — useful to verify instrumentation
+> even offline.
+
 ## Traces (waterfall)
 
 `datasource.yaml` provisions a **Tempo** datasource (uid `tempo`). Run the backend with `OTEL_ENABLED=true` (`cd backend && uv sync --extra otel`) and set `OTEL_EXPORTER_OTLP_ENDPOINT` to your collector so spans reach Tempo.

@@ -111,13 +111,17 @@ class TestMetricsCollector:
 
 
 class TestTracingShim:
-    def test_otel_absent_by_default(self):
-        # The otel extra is not installed in the default/test env, so the shim
-        # must operate in no-op mode without raising.
-        assert otel_available() is False
+    def test_current_trace_id_none_without_active_span(self):
+        # With no span active there is no trace to correlate. True whether or
+        # not the otel extra is installed (no-op returns None; real SDK reports
+        # an invalid span context), so this stays green in both environments.
         assert current_trace_id() is None
 
-    def test_span_is_noop_safe(self):
+    def test_otel_available_is_boolean(self):
+        # Reflects whether the otel extra is importable; must not raise either way.
+        assert isinstance(otel_available(), bool)
+
+    def test_span_is_safe_in_both_modes(self):
         with span("rag.retrieve", **{"rag.top_k": 5}) as active:
             active.set("rag.result_count", 3)
             active.set("skip_none", None)
