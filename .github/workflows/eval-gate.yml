@@ -2,8 +2,9 @@
 # baseline (backend/eval/baseline.json), post a delta table as a PR comment, and
 # fail the check if a gated metric (Hit@5 / MRR) regresses beyond tolerance.
 #
-# Needs the OPENAI_API_KEY repo secret. PRs from forks (no secret) are skipped
-# gracefully rather than failing.
+# Needs the OPENAI_API_KEY repo secret. Fork PRs (which can't see secrets) are
+# skipped gracefully; a same-repo run with the secret missing fails loudly, so
+# the gate can never silently pass just because it didn't run.
 name: Eval gate
 
 on:
@@ -57,14 +58,24 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Guard — require OPENAI_API_KEY (skip on forks)
+      - name: Guard — require OPENAI_API_KEY
         id: guard
+        env:
+          # true only for PRs opened from a fork (where repo secrets are withheld).
+          # null/absent for same-repo PRs and workflow_dispatch -> treated as non-fork.
+          IS_FORK: ${{ github.event.pull_request.head.repo.fork || false }}
         run: |
-          if [ -z "${OPENAI_API_KEY:-}" ]; then
-            echo "should_run=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::No OPENAI_API_KEY (likely a fork PR) — skipping the eval gate."
-          else
+          if [ -n "${OPENAI_API_KEY:-}" ]; then
             echo "should_run=true" >> "$GITHUB_OUTPUT"
+          elif [ "$IS_FORK" = "true" ]; then
+            # Fork PRs legitimately can't see secrets — skip, don't fail.
+            echo "should_run=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Fork PR without repo secrets — skipping the eval gate (expected)."
+          else
+            # Same-repo / dispatch run with no secret is a misconfiguration, not a
+            # fork: fail loudly so the gate can't silently pass by absence.
+            echo "::error::OPENAI_API_KEY is not set on this repository, so the eval gate cannot run. Add it under Settings → Secrets and variables → Actions, then re-run."
+            exit 1
           fi
 
       - name: Install uv
