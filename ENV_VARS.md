@@ -5,13 +5,13 @@
 ### Required (Server-Side Only - No NEXT*PUBLIC* prefix)
 
 ```env
-AZURE_API_BASE_URL=https://your-azure-container-apps-url
+BACKEND_API_BASE_URL=https://your-azure-container-apps-url
 ```
 
 **Example:**
 
 ```env
-AZURE_API_BASE_URL=https://rag-eval-aci-dns-4.bme0cjc9bkevdbd4.westeurope.azurecontainer.io
+BACKEND_API_BASE_URL=https://your-backend.onrender.com
 ```
 
 **Where to set:** Vercel Dashboard → Project → Settings → Environment Variables
@@ -23,7 +23,7 @@ AZURE_API_BASE_URL=https://rag-eval-aci-dns-4.bme0cjc9bkevdbd4.westeurope.azurec
 If the FastAPI app has `API_KEY` set (see backend section), browsers never see that secret. Add the same value on Vercel so the server-side proxy can attach it:
 
 ```env
-AZURE_API_BACKEND_KEY=your-shared-secret
+BACKEND_API_KEY=your-shared-secret
 ```
 
 The Next.js route forwards this as `X-API-Key` on every proxied request. Leave unset for local dev when the backend has no `API_KEY`.
@@ -208,8 +208,8 @@ CORS_ALLOW_ORIGINS=https://rag-eval-observability.vercel.app,https://rag-eval-ob
 
 ### Vercel:
 
-- [ ] Add `AZURE_API_BASE_URL` pointing to your FastAPI base URL (no `NEXT_PUBLIC_` prefix)
-- [ ] If the backend uses `API_KEY`, add `AZURE_API_BACKEND_KEY` with the same value
+- [ ] Add `BACKEND_API_BASE_URL` pointing to your FastAPI base URL (no `NEXT_PUBLIC_` prefix)
+- [ ] If the backend uses `API_KEY`, add `BACKEND_API_KEY` with the same value
 - [ ] Redeploy after adding environment variables
 
 ### Azure Container Apps:
@@ -219,7 +219,7 @@ CORS_ALLOW_ORIGINS=https://rag-eval-observability.vercel.app,https://rag-eval-ob
 - [ ] Add `OPENAI_API_KEY` - **Mark as Secure**
 - [ ] Add `ENVIRONMENT=production`
 - [ ] Add `CORS_ALLOW_ORIGINS` with your Vercel URL(s)
-- [ ] Optional: add `API_KEY` and the same value in Vercel as `AZURE_API_BACKEND_KEY`
+- [ ] Optional: add `API_KEY` and the same value in Vercel as `BACKEND_API_KEY`
 - [ ] Optional: `OTEL_ENABLED=true` and OTLP endpoint env vars after `uv sync --extra otel`
 - [ ] Save and wait for container restart
 

@@ -17,8 +17,11 @@ import { postRequestBodySchema, type PostRequestBody } from './schema'
 
 export const maxDuration = 60
 
-const BACKEND_BASE = process.env.AZURE_API_BASE_URL || 'http://localhost:8000'
-const BACKEND_KEY = process.env.AZURE_API_BACKEND_KEY?.trim()
+// `BACKEND_*` are the canonical names; `AZURE_*` kept as a back-compat fallback
+// for existing deployments. Despite the legacy name, this is just the FastAPI origin.
+const BACKEND_BASE =
+  process.env.BACKEND_API_BASE_URL || process.env.AZURE_API_BASE_URL || 'http://localhost:8000'
+const BACKEND_KEY = (process.env.BACKEND_API_KEY || process.env.AZURE_API_BACKEND_KEY)?.trim()
 
 /** Normalize backend citation payloads (snake/camel) into our Citation shape. */
 function mapCitations(raw: unknown): Citation[] {

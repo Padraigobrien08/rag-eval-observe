@@ -55,7 +55,7 @@
    pnpm dev
    ```
 
-7. Open [http://localhost:3000](http://localhost:3000). The UI proxies API calls to `http://localhost:8000` unless `AZURE_API_BASE_URL` is set.
+7. Open [http://localhost:3000](http://localhost:3000). The UI proxies API calls to `http://localhost:8000` unless `BACKEND_API_BASE_URL` is set.
 
 ## Troubleshooting (Eval page / `Cannot find module './NNN.js'`)
 
@@ -96,7 +96,7 @@ Runs Postgres, API, and Next dev server (slow first `pnpm install` in the contai
 docker compose --profile full up
 ```
 
-Set `OPENAI_API_KEY` in your environment before starting. The web service uses `AZURE_API_BASE_URL=http://api:8000`.
+Set `OPENAI_API_KEY` in your environment before starting. The web service uses `BACKEND_API_BASE_URL=http://api:8000`.
 
 ## Tests
 
@@ -116,11 +116,11 @@ Playwright starts a production `next start` server on **http://127.0.0.1:4173** 
 
 ### Integration E2E (real API + Postgres)
 
-CI runs this in `.github/workflows/e2e-integration.yml`. Locally, with Postgres migrated and API on port 8000, and Next built with `AZURE_API_BASE_URL=http://127.0.0.1:8000`:
+CI runs this in `.github/workflows/e2e-integration.yml`. Locally, with Postgres migrated and API on port 8000, and Next built with `BACKEND_API_BASE_URL=http://127.0.0.1:8000`:
 
 ```bash
 pnpm build
-PW_INTEGRATION=1 PLAYWRIGHT_BASE_URL=http://127.0.0.1:4173 AZURE_API_BASE_URL=http://127.0.0.1:8000 \
+PW_INTEGRATION=1 PLAYWRIGHT_BASE_URL=http://127.0.0.1:4173 BACKEND_API_BASE_URL=http://127.0.0.1:8000 \
   pnpm exec next start -H 127.0.0.1 -p 4173 &
 pnpm exec playwright test
 ```

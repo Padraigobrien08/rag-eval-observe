@@ -215,7 +215,7 @@ This outputs the URL. Add `https://` in front of it.
 ### Step 1: Configure Vercel Environment Variables
 
 1. In your Vercel project dashboard, go to **Settings** → **Environment Variables**
-2. Add: `AZURE_API_BASE_URL` = Your Azure Container Apps URL
+2. Add: `BACKEND_API_BASE_URL` = Your Azure Container Apps URL
 3. **Important:** After adding, trigger a new deployment (redeploy)
 
 ### Step 2: Update Azure CORS Settings

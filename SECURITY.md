@@ -7,7 +7,7 @@ This document outlines security considerations for the RAG Eval Observability pl
 **Important**: The Next.js API proxy (`/api/backend/[...path]`) protects the **backend URL** but does **not** protect the **API functionality**.
 
 ### What the Proxy Protects ✅
-- **Backend URL/IP**: The actual backend URL (`AZURE_API_BASE_URL`) is server-side only and not visible to clients
+- **Backend URL/IP**: The actual backend URL (`BACKEND_API_BASE_URL`) is server-side only and not visible to clients
 - **CORS issues**: Avoids mixed content warnings (HTTPS frontend → HTTP backend)
 - **Network topology**: Hides backend infrastructure details
 
