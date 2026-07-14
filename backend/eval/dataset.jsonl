@@ -47,3 +47,33 @@
 {"query": "What is exact search?", "expected_sources": ["retrieval-methods"], "expected_answer_contains": ["exact", "search", "accurate"]}
 {"query": "What is context utilization metric?", "expected_sources": ["evaluation-metrics"], "expected_answer_contains": ["context", "utilization", "retrieved"]}
 
+{"query": "What is the difference between naive and advanced RAG?", "expected_sources": ["rag-architecture-patterns"], "expected_answer_contains": ["naive", "reranking", "pipeline"]}
+{"query": "How does two-stage retrieval trade latency for accuracy?", "expected_sources": ["rag-architecture-patterns"], "expected_answer_contains": ["two-stage", "reranker", "candidate"]}
+{"query": "How does agentic RAG handle multi-hop questions?", "expected_sources": ["agentic-rag"], "expected_answer_contains": ["agent", "multi-hop", "loop"]}
+{"query": "When should I use RAG instead of fine-tuning?", "expected_sources": ["rag-vs-fine-tuning"], "expected_answer_contains": ["fine-tuning", "weights", "retrieving"]}
+{"query": "How do I choose between OpenAI and open-source embedding models?", "expected_sources": ["embedding-models-compared"], "expected_answer_contains": ["mteb", "sentence-transformer", "retrieval"]}
+{"query": "What is Matryoshka representation learning for embeddings?", "expected_sources": ["embedding-dimensions-and-mrl"], "expected_answer_contains": ["dimension", "truncated", "matryoshka"]}
+{"query": "What is the trade-off when choosing embedding dimensionality?", "expected_sources": ["embedding-dimensions-and-mrl"], "expected_answer_contains": ["dimension", "memory", "quality"]}
+{"query": "How do multilingual embeddings enable cross-lingual retrieval?", "expected_sources": ["multilingual-embeddings"], "expected_answer_contains": ["multilingual", "cross-lingual", "language"]}
+{"query": "How do I choose the right chunk size?", "expected_sources": ["chunk-size-tuning"], "expected_answer_contains": ["chunk", "context", "overlap"]}
+{"query": "How does semantic chunking decide where to split a document?", "expected_sources": ["semantic-chunking"], "expected_answer_contains": ["semantic", "sentence", "boundary"]}
+{"query": "What is sentence-window retrieval?", "expected_sources": ["sentence-window-retrieval"], "expected_answer_contains": ["sentence", "window", "context"]}
+{"query": "How does the HNSW graph search find neighbors?", "expected_sources": ["hnsw-index-internals"], "expected_answer_contains": ["hnsw", "graph", "layer"]}
+{"query": "What do the M and efSearch parameters control in HNSW?", "expected_sources": ["hnsw-index-internals"], "expected_answer_contains": ["neighbor", "recall", "efsearch"]}
+{"query": "How do probes and lists affect an IVFFlat index?", "expected_sources": ["ivfflat-tuning"], "expected_answer_contains": ["ivfflat", "lists", "probes"]}
+{"query": "Which vector index uses less memory but must be built on populated data?", "expected_sources": ["ivfflat-tuning"], "expected_answer_contains": ["ivfflat", "memory", "centroid"]}
+{"query": "How does hybrid search combine BM25 and vector retrieval?", "expected_sources": ["hybrid-search-bm25"], "expected_answer_contains": ["bm25", "dense", "fusion"]}
+{"query": "How does reciprocal rank fusion merge two result lists?", "expected_sources": ["hybrid-search-bm25"], "expected_answer_contains": ["reciprocal", "rank", "fusion"]}
+{"query": "What are hypothetical document embeddings (HyDE)?", "expected_sources": ["query-expansion"], "expected_answer_contains": ["hypothetical", "query", "embeds"]}
+{"query": "Why embed a drafted answer instead of the raw query?", "expected_sources": ["query-expansion"], "expected_answer_contains": ["hypothetical", "answer", "vector"]}
+{"query": "How does metadata filtering restrict retrieval results?", "expected_sources": ["metadata-filtering"], "expected_answer_contains": ["metadata", "filter", "attributes"]}
+{"query": "Why are cross-encoders used for reranking retrieved documents?", "expected_sources": ["reranking-cross-encoders"], "expected_answer_contains": ["cross-encoder", "rerank", "relevance"]}
+{"query": "What is late interaction and MaxSim in ColBERT?", "expected_sources": ["colbert-late-interaction"], "expected_answer_contains": ["colbert", "late interaction", "maxsim"]}
+{"query": "What biases affect LLM-as-judge evaluation?", "expected_sources": ["llm-as-judge"], "expected_answer_contains": ["judge", "bias", "rubric"]}
+{"query": "What does faithfulness measure in a RAG answer?", "expected_sources": ["faithfulness-and-hallucination"], "expected_answer_contains": ["faithfulness", "context", "grounding"]}
+{"query": "What causes low faithfulness even when retrieval is good?", "expected_sources": ["faithfulness-and-hallucination"], "expected_answer_contains": ["generation", "context", "abstain"]}
+{"query": "What reference-free metrics does the RAGAS framework provide?", "expected_sources": ["ragas-framework"], "expected_answer_contains": ["ragas", "faithfulness", "context"]}
+{"query": "What is the difference between precision at k and recall at k?", "expected_sources": ["precision-recall-at-k"], "expected_answer_contains": ["precision", "recall", "relevant"]}
+{"query": "What makes a good RAG prompt template?", "expected_sources": ["prompt-templates-for-rag"], "expected_answer_contains": ["template", "context", "citation"]}
+{"query": "What is the lost-in-the-middle effect when packing context?", "expected_sources": ["context-window-packing"], "expected_answer_contains": ["lost-in-the-middle", "context", "order"]}
+{"query": "What is contextual compression of retrieved passages?", "expected_sources": ["context-window-packing"], "expected_answer_contains": ["compression", "passage", "budget"]}
