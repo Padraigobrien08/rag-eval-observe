@@ -307,6 +307,45 @@ Generated: {time.strftime("%Y-%m-%d %H:%M:%S")}
     return report
 
 
+def write_summary_json(
+    path: Path,
+    summary: EvaluationSummary,
+    results: list[EvaluationResult],
+    config: dict[str, Any],
+) -> None:
+    """Write a machine-readable run summary for CI comparison (compare_eval.py).
+
+    Kept intentionally small: aggregate metrics plus per-case ``hit_at_5`` / ``mrr``
+    keyed by ``case_id`` so the gate can compute deltas and detect Hit@5 flips
+    without a database.
+    """
+    payload = {
+        "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "git_sha": os.getenv("GITHUB_SHA") or os.getenv("GIT_SHA") or None,
+        "config": config,
+        "metrics": {
+            "hit_at_1": summary.hit_at_1,
+            "hit_at_3": summary.hit_at_3,
+            "hit_at_5": summary.hit_at_5,
+            "hit_at_8": summary.hit_at_8,
+            "mrr": summary.mrr,
+            "llm_judge_correctness_rate": summary.llm_judge_correctness_rate,
+            "llm_judge_faithfulness_rate": summary.llm_judge_faithfulness_rate,
+        },
+        "cases": [
+            {
+                "case_id": f"case-{i}",
+                "query": r.query,
+                "hit_at_5": r.hit_at_5,
+                "mrr": r.mrr,
+            }
+            for i, r in enumerate(results, start=1)
+        ],
+    }
+    with open(path, "w") as f:
+        json.dump(payload, f, indent=2)
+
+
 def _eval_record_chat_enabled() -> bool:
     return os.getenv("EVAL_RECORD_CHAT", "").strip().lower() in ("1", "true", "yes")
 
@@ -467,9 +506,21 @@ async def run_evaluation():
         with open(report_path, "w") as f:
             f.write(report)
 
+        # Machine-readable summary for the CI regression gate (compare_eval.py).
+        summary_config = {
+            "embedding_model": os.getenv("OPENAI_EMBEDDING_MODEL", ""),
+            "chat_model": os.getenv("OPENAI_CHAT_MODEL", ""),
+            "dataset": dataset_path.name,
+            "total_cases": summary.total_cases,
+            "use_llm_judge": use_llm_judge,
+        }
+        summary_path = eval_dir / "summary.json"
+        write_summary_json(summary_path, summary, results, summary_config)
+
         logger.info(
             "Evaluation completed",
             report_path=str(report_path),
+            summary_path=str(summary_path),
             hit_at_1=summary.hit_at_1,
             hit_at_5=summary.hit_at_5,
             mrr=summary.mrr,

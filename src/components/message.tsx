@@ -2,18 +2,22 @@
 
 import type { UseChatHelpers } from '@ai-sdk/react'
 import equal from 'fast-deep-equal'
-import { memo } from 'react'
+import { memo, useCallback, useMemo, useState } from 'react'
 import type { Citation, ChatMessage, Observability } from '@/lib/types'
 import { cn, sanitizeText } from '@/lib/utils'
 import { MessageContent } from './elements/message'
 import { Response } from './elements/response'
 import { SparklesIcon } from './icons'
+import { createCitationComponents } from './inline-citations'
+import { MessageActions } from './message-actions'
 import { MessageCitations } from './message-citations'
 import { MessageObservability } from './message-observability'
 
 const PurePreviewMessage = ({
   message,
   isLoading,
+  regenerate,
+  isReadonly,
 }: {
   chatId: string
   message: ChatMessage
@@ -23,6 +27,27 @@ const PurePreviewMessage = ({
   isReadonly: boolean
   requiresScrollPadding: boolean
 }) => {
+  // Citations arrive as their own message part; pull them up so the answer text
+  // (rendered first) can turn [n] refs into chips that open this list.
+  const citations =
+    (message.parts?.find(part => part.type === 'data-citations')?.data as Citation[] | undefined) ??
+    []
+  const [citationsOpen, setCitationsOpen] = useState(false)
+  const [highlightIndex, setHighlightIndex] = useState<number | null>(null)
+
+  const handleCitationClick = useCallback((n: number) => {
+    setHighlightIndex(n - 1)
+    setCitationsOpen(true)
+  }, [])
+
+  const citationComponents = useMemo(
+    () =>
+      message.role === 'assistant'
+        ? createCitationComponents(handleCitationClick, citations.length)
+        : undefined,
+    [message.role, citations.length, handleCitationClick]
+  )
+
   return (
     <div
       className="group/message fade-in w-full animate-in duration-200"
@@ -61,14 +86,22 @@ const PurePreviewMessage = ({
                     })}
                     data-testid="message-content"
                   >
-                    <Response>{sanitizeText(part.text)}</Response>
+                    <Response components={citationComponents}>{sanitizeText(part.text)}</Response>
                   </MessageContent>
                 </div>
               )
             }
 
             if (part.type === 'data-citations') {
-              return <MessageCitations citations={part.data as Citation[]} key={key} />
+              return (
+                <MessageCitations
+                  citations={part.data as Citation[]}
+                  highlightIndex={highlightIndex}
+                  key={key}
+                  onOpenChange={setCitationsOpen}
+                  open={citationsOpen}
+                />
+              )
             }
 
             if (part.type === 'data-observability') {
@@ -80,6 +113,15 @@ const PurePreviewMessage = ({
 
           {isLoading && message.role === 'assistant' && (
             <span className="sr-only">Generating…</span>
+          )}
+
+          {message.role === 'assistant' && (
+            <MessageActions
+              isLoading={isLoading}
+              isReadonly={isReadonly}
+              message={message}
+              regenerate={regenerate}
+            />
           )}
         </div>
       </div>

@@ -1,0 +1,147 @@
+# Eval regression gate: on every PR, run the harness, compare against the pinned
+# baseline (backend/eval/baseline.json), post a delta table as a PR comment, and
+# fail the check if a gated metric (Hit@5 / MRR) regresses beyond tolerance.
+#
+# Needs the OPENAI_API_KEY repo secret. PRs from forks (no secret) are skipped
+# gracefully rather than failing.
+name: Eval gate
+
+on:
+  pull_request:
+    paths:
+      - "backend/**"
+      - ".github/workflows/eval-gate.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: eval-gate-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  eval-gate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: evaldb
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/evaldb
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      OPENAI_EMBEDDING_MODEL: text-embedding-3-small
+      OPENAI_CHAT_MODEL: gpt-4o-mini
+      EMBEDDING_DIMENSION: 1536
+      EVAL_USE_LLM_JUDGE: "false"
+      EVAL_PERSIST_RUNS: "false"
+      # Regression tolerance in native 0..1 units (0.02 = 2pp / 0.02 MRR).
+      EVAL_GATE_TOLERANCE: "0.02"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Guard — require OPENAI_API_KEY (skip on forks)
+        id: guard
+        run: |
+          if [ -z "${OPENAI_API_KEY:-}" ]; then
+            echo "should_run=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::No OPENAI_API_KEY (likely a fork PR) — skipping the eval gate."
+          else
+            echo "should_run=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install uv
+        if: steps.guard.outputs.should_run == 'true'
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: latest
+
+      - name: Set up Python
+        if: steps.guard.outputs.should_run == 'true'
+        run: uv python install 3.11
+
+      - name: Install dependencies
+        if: steps.guard.outputs.should_run == 'true'
+        run: uv sync --frozen --extra dev
+
+      - name: Wait for Postgres and apply schema
+        if: steps.guard.outputs.should_run == 'true'
+        run: |
+          until pg_isready -h localhost -p 5432 -U postgres; do sleep 1; done
+          uv run python scripts/apply_init_sql.py
+          uv run alembic upgrade head
+
+      - name: Seed eval corpus
+        if: steps.guard.outputs.should_run == 'true'
+        run: uv run python scripts/seed_eval_corpus.py
+
+      - name: Run evaluation
+        if: steps.guard.outputs.should_run == 'true'
+        run: uv run python eval/run_eval.py
+
+      - name: Compare against baseline
+        id: compare
+        if: steps.guard.outputs.should_run == 'true'
+        run: |
+          set +e
+          uv run python eval/compare_eval.py \
+            --baseline eval/baseline.json \
+            --current eval/summary.json \
+            --tolerance "${EVAL_GATE_TOLERANCE}" \
+            --allow-missing-baseline \
+            --output eval/comment.md
+          echo "exit_code=$?" >> "$GITHUB_OUTPUT"
+
+      - name: Post / update PR comment
+        if: steps.guard.outputs.should_run == 'true' && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const body = fs.readFileSync('backend/eval/comment.md', 'utf8');
+            const marker = '<!-- eval-regression-gate -->';
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+            const { data: comments } = await github.rest.issues.listComments({ owner, repo, issue_number });
+            const existing = comments.find(c => c.body && c.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body });
+            } else {
+              await github.rest.issues.createComment({ owner, repo, issue_number, body });
+            }
+
+      - name: Upload eval artifacts
+        if: steps.guard.outputs.should_run == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: eval-gate
+          path: |
+            backend/eval/summary.json
+            backend/eval/report.md
+            backend/eval/comment.md
+
+      - name: Fail on regression
+        if: steps.guard.outputs.should_run == 'true'
+        run: |
+          if [ "${{ steps.compare.outputs.exit_code }}" != "0" ]; then
+            echo "::error::Eval regression gate failed — see the PR comment for the delta table."
+            exit 1
+          fi
+          echo "Eval gate passed."

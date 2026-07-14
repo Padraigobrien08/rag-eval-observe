@@ -16,7 +16,8 @@ export const Response = memo(
       {...props}
     />
   ),
-  (prevProps, nextProps) => prevProps.children === nextProps.children
+  (prevProps, nextProps) =>
+    prevProps.children === nextProps.children && prevProps.components === nextProps.components
 )
 
 Response.displayName = 'Response'

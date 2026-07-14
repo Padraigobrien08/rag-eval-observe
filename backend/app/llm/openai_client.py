@@ -1,5 +1,6 @@
 import asyncio
 import json
+import time
 from collections.abc import AsyncIterator
 from dataclasses import dataclass
 from typing import Any
@@ -8,6 +9,7 @@ import httpx
 import structlog
 
 from app.core.config import settings
+from app.core.tracing import observe_stage, record_stage_latency
 
 logger = structlog.get_logger()
 
@@ -315,12 +317,23 @@ class OpenAIClient:
                 "input": batch,
             }
 
-            response_data = await self._request_with_retry(
-                method="POST",
-                url=url,
-                json_data=json_data,
-                operation="create_embeddings",
-            )
+            with observe_stage(
+                "embedding",
+                span_name="openai.embedding",
+                **{
+                    "gen_ai.system": "openai",
+                    "gen_ai.request.model": model_name,
+                    "gen_ai.embedding.batch_size": len(batch),
+                },
+            ) as emb_span:
+                response_data = await self._request_with_retry(
+                    method="POST",
+                    url=url,
+                    json_data=json_data,
+                    operation="create_embeddings",
+                )
+                usage_preview = response_data.get("usage") or {}
+                emb_span.set("gen_ai.usage.total_tokens", usage_preview.get("total_tokens"))
 
             # Parse response
             embeddings_data = response_data.get("data", [])
@@ -387,23 +400,37 @@ class OpenAIClient:
         if max_tokens:
             json_data["max_tokens"] = max_tokens
 
-        response_data = await self._request_with_retry(
-            method="POST",
-            url=url,
-            json_data=json_data,
-            operation="create_chat_completion",
-        )
+        with observe_stage(
+            "chat_completion",
+            span_name="openai.chat",
+            **{
+                "gen_ai.system": "openai",
+                "gen_ai.request.model": model_name,
+                "gen_ai.request.temperature": temperature,
+            },
+        ) as chat_span:
+            response_data = await self._request_with_retry(
+                method="POST",
+                url=url,
+                json_data=json_data,
+                operation="create_chat_completion",
+            )
 
-        # Parse response
-        choices = response_data.get("choices", [])
-        if not choices:
-            raise OpenAIError("No choices in chat completion response")
+            # Parse response
+            choices = response_data.get("choices", [])
+            if not choices:
+                raise OpenAIError("No choices in chat completion response")
 
-        choice = choices[0]
-        message = choice.get("message", {})
-        usage_data = response_data.get("usage")
+            choice = choices[0]
+            message = choice.get("message", {})
+            usage_data = response_data.get("usage")
 
-        token_usage = self._parse_token_usage(usage_data)
+            token_usage = self._parse_token_usage(usage_data)
+            chat_span.set("gen_ai.response.finish_reason", choice.get("finish_reason"))
+            if token_usage:
+                chat_span.set("gen_ai.usage.prompt_tokens", token_usage.prompt_tokens)
+                chat_span.set("gen_ai.usage.completion_tokens", token_usage.completion_tokens)
+                chat_span.set("gen_ai.usage.total_tokens", token_usage.total_tokens)
 
         # Record token usage metrics
         if token_usage:
@@ -456,55 +483,67 @@ class OpenAIClient:
         read_timeout = max(float(self.timeout), 120.0)
         timeout = httpx.Timeout(self.timeout, read=read_timeout)
 
-        async with httpx.AsyncClient(timeout=timeout) as client:
-            async with client.stream(
-                "POST",
-                url,
-                headers=self.headers,
-                json=json_data,
-            ) as response:
-                if response.status_code == 429:
-                    body = (await response.aread()).decode("utf-8", errors="replace")
-                    raise OpenAIRateLimitError(f"Rate limited: {body}")
-                if response.status_code >= 400:
-                    body = (await response.aread()).decode("utf-8", errors="replace")
-                    if 500 <= response.status_code < 600:
-                        raise OpenAITransientError(f"OpenAI error {response.status_code}: {body}")
-                    raise OpenAIError(f"OpenAI error {response.status_code}: {body}")
+        # NOTE: no long-lived span here — spanning an async generator across
+        # ``yield`` boundaries can detach the OTel context on partial consumption
+        # (client disconnect). We record stage latency manually instead; the
+        # server span from FastAPIInstrumentor still covers the stream.
+        stream_start = time.perf_counter()
+        try:
+            async with httpx.AsyncClient(timeout=timeout) as client:
+                async with client.stream(
+                    "POST",
+                    url,
+                    headers=self.headers,
+                    json=json_data,
+                ) as response:
+                    if response.status_code == 429:
+                        body = (await response.aread()).decode("utf-8", errors="replace")
+                        raise OpenAIRateLimitError(f"Rate limited: {body}")
+                    if response.status_code >= 400:
+                        body = (await response.aread()).decode("utf-8", errors="replace")
+                        if 500 <= response.status_code < 600:
+                            raise OpenAITransientError(
+                                f"OpenAI error {response.status_code}: {body}"
+                            )
+                        raise OpenAIError(f"OpenAI error {response.status_code}: {body}")
 
-                async for line in response.aiter_lines():
-                    if not line.startswith("data:"):
-                        continue
-                    data = line[len("data:") :].strip()
-                    if data == "[DONE]":
-                        break
-                    try:
-                        chunk = json.loads(data)
-                    except json.JSONDecodeError:
-                        continue
+                    async for line in response.aiter_lines():
+                        if not line.startswith("data:"):
+                            continue
+                        data = line[len("data:") :].strip()
+                        if data == "[DONE]":
+                            break
+                        try:
+                            chunk = json.loads(data)
+                        except json.JSONDecodeError:
+                            continue
 
-                    for choice in chunk.get("choices") or []:
-                        delta = choice.get("delta") or {}
-                        content = delta.get("content")
-                        if content:
-                            yield content
+                        for choice in chunk.get("choices") or []:
+                            delta = choice.get("delta") or {}
+                            content = delta.get("content")
+                            if content:
+                                yield content
 
-                    usage_data = chunk.get("usage")
-                    if usage_data:
-                        token_usage = self._parse_token_usage(usage_data)
-                        if token_usage:
-                            try:
-                                from app.core.metrics import get_metrics
+                        usage_data = chunk.get("usage")
+                        if usage_data:
+                            token_usage = self._parse_token_usage(usage_data)
+                            if token_usage:
+                                try:
+                                    from app.core.metrics import get_metrics
 
-                                metrics = get_metrics()
-                                metrics.record_chat_tokens(
-                                    prompt_tokens=token_usage.prompt_tokens,
-                                    completion_tokens=token_usage.completion_tokens,
-                                    total_tokens=token_usage.total_tokens,
-                                )
-                            except Exception:
-                                pass
-                            yield token_usage
+                                    metrics = get_metrics()
+                                    metrics.record_chat_tokens(
+                                        prompt_tokens=token_usage.prompt_tokens,
+                                        completion_tokens=token_usage.completion_tokens,
+                                        total_tokens=token_usage.total_tokens,
+                                    )
+                                except Exception:
+                                    pass
+                                yield token_usage
+        finally:
+            record_stage_latency(
+                "chat_completion_stream", (time.perf_counter() - stream_start) * 1000.0
+            )
 
 
 # Global client instance (can be overridden for testing)

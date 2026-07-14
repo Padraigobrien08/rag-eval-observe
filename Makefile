@@ -1,4 +1,4 @@
-.PHONY: dev lint test typecheck format db migrate seed eval
+.PHONY: dev lint test typecheck format db migrate seed eval eval-compare eval-baseline
 
 # Development
 dev:
@@ -36,6 +36,18 @@ seed:
 # Evaluation
 eval:
 	cd backend && uv run python eval/run_eval.py
+
+# Compare the latest run (eval/summary.json) against the pinned baseline; the
+# same gate CI runs on PRs. Exits non-zero on a Hit@5/MRR regression.
+eval-compare:
+	cd backend && uv run python eval/compare_eval.py \
+		--baseline eval/baseline.json --current eval/summary.json --allow-missing-baseline
+
+# Promote the latest run to the pinned baseline (do this on main after a change
+# you accept as the new reference), then commit backend/eval/baseline.json.
+eval-baseline:
+	cp backend/eval/summary.json backend/eval/baseline.json
+	@echo "Updated backend/eval/baseline.json — commit it to move the baseline."
 
 # API (Python FastAPI)
 api:

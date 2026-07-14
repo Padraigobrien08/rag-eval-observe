@@ -21,17 +21,31 @@ import {
 import { getMetrics } from '@/lib/api/client'
 import { estimateDashboardTokenCostUsd } from '@/lib/openai-pricing'
 
+interface Percentiles {
+  p50_ms: number
+  p95_ms: number
+  p99_ms: number
+}
+
 interface RouteMetrics {
   request_count: number
   status_counts: Record<string, number>
   latency_buckets: Record<string, number>
   avg_latency_ms: number
   total_latency_ms: number
+  percentiles?: Percentiles
+}
+
+interface StageMetrics {
+  count: number
+  avg_latency_ms: number
+  percentiles: Percentiles
 }
 
 interface MetricsData {
   uptime_seconds: number
   routes: Record<string, RouteMetrics>
+  stages?: Record<string, StageMetrics>
   token_usage: {
     embedding_prompt_tokens: number
     embedding_total_tokens: number
@@ -40,6 +54,15 @@ interface MetricsData {
     chat_total_tokens: number
   }
   note: string
+}
+
+// Human-friendly labels for the RAG pipeline stage keys emitted by the backend.
+const STAGE_LABELS: Record<string, string> = {
+  retrieve: 'Retrieve',
+  embedding: 'Embedding (OpenAI)',
+  chat_completion: 'Chat completion (OpenAI)',
+  chat_completion_stream: 'Chat completion (stream)',
+  generate: 'Generate',
 }
 
 function formatUptime(seconds: number): string {
@@ -296,6 +319,16 @@ export default function MetricsPage() {
                     {queryRoute.avg_latency_ms.toFixed(2)}ms
                   </span>
                 </div>
+                {queryRoute.percentiles && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Latency p50 / p95 / p99</span>
+                    <span className="text-lg font-semibold">
+                      {queryRoute.percentiles.p50_ms.toFixed(0)} /{' '}
+                      {queryRoute.percentiles.p95_ms.toFixed(0)} /{' '}
+                      {queryRoute.percentiles.p99_ms.toFixed(0)}ms
+                    </span>
+                  </div>
+                )}
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">Total Latency</span>
                   <span className="text-lg font-semibold">
@@ -358,6 +391,58 @@ export default function MetricsPage() {
                     </div>
                   )
                 })}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* RAG Pipeline Stages */}
+        {metrics.stages && Object.keys(metrics.stages).length > 0 && (
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle>RAG Pipeline Stages</CardTitle>
+              <CardDescription>
+                Per-stage latency percentiles from OpenTelemetry-instrumented spans (embed →
+                retrieve → generate). Scrape <code>/metrics/prometheus</code> for
+                histogram_quantile() and a full trace waterfall in Tempo/Jaeger.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b text-muted-foreground text-left">
+                      <th className="pb-2 font-medium">Stage</th>
+                      <th className="pb-2 font-medium text-right">Count</th>
+                      <th className="pb-2 font-medium text-right">Avg</th>
+                      <th className="pb-2 font-medium text-right">p50</th>
+                      <th className="pb-2 font-medium text-right">p95</th>
+                      <th className="pb-2 font-medium text-right">p99</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {Object.entries(metrics.stages).map(([stage, s]) => (
+                      <tr key={stage} className="border-b last:border-b-0">
+                        <td className="py-2 font-medium text-foreground">
+                          {STAGE_LABELS[stage] ?? stage}
+                        </td>
+                        <td className="py-2 text-right tabular-nums">{s.count.toLocaleString()}</td>
+                        <td className="py-2 text-right tabular-nums">
+                          {s.avg_latency_ms.toFixed(0)}ms
+                        </td>
+                        <td className="py-2 text-right tabular-nums">
+                          {s.percentiles.p50_ms.toFixed(0)}ms
+                        </td>
+                        <td className="py-2 text-right tabular-nums">
+                          {s.percentiles.p95_ms.toFixed(0)}ms
+                        </td>
+                        <td className="py-2 text-right tabular-nums">
+                          {s.percentiles.p99_ms.toFixed(0)}ms
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </CardContent>
           </Card>

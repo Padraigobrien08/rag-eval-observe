@@ -181,6 +181,14 @@ async def add_request_id_and_timing(request: Request, call_next):
     structlog.contextvars.clear_contextvars()
     structlog.contextvars.bind_contextvars(request_id=request_id)
 
+    # Correlate logs with the active trace (no-op when OTel is disabled), so a
+    # log line, its distributed trace, and the query audit row all share an id.
+    from app.core.tracing import current_trace_id
+
+    trace_id = current_trace_id()
+    if trace_id:
+        structlog.contextvars.bind_contextvars(trace_id=trace_id)
+
     # Process request
     response = await call_next(request)
 

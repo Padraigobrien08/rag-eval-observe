@@ -36,6 +36,16 @@ Read the full product argument in **[docs/THESIS.md](./docs/THESIS.md)**.
 
 _Screenshots from the live deployment. The chat streams from the FastAPI RAG backend; the observability pages read the same Postgres._
 
+## Trace every answer
+
+A RAG answer is a **pipeline, not a single call**. Every request emits an OpenTelemetry trace — one span per stage — so you can see exactly where latency and cost go, per request.
+
+[![RAG pipeline trace waterfall](./docs/images/observability/trace-waterfall.png)](./docs/OBSERVABILITY.md)
+
+_A 5.5s answer, decomposed: retrieval was 2.9s (**all** query embedding; the pgvector search was 32ms) and generation was 2.6s (all the LLM). A single `latency_ms` number would only say "slow" — the trace says "two OpenAI calls, not your retrieval." Different fix._
+
+Latency **percentiles (p50/p95/p99) per route and per pipeline stage** are exposed at `/metrics` and as Prometheus histograms for `histogram_quantile()` in Grafana. Bring the whole trace stack (Tempo + Prometheus + Grafana) up with one command — see **[docs/OBSERVABILITY.md](./docs/OBSERVABILITY.md)**.
+
 ## Developer setup
 
 See **[DEVELOPMENT.md](./DEVELOPMENT.md)** for the full local workflow (Postgres, migrate, seed, API, web, tests, Playwright, Alembic).
@@ -45,6 +55,7 @@ See **[DEVELOPMENT.md](./DEVELOPMENT.md)** for the full local workflow (Postgres
 | Doc                                                | Purpose                                                            |
 | -------------------------------------------------- | ------------------------------------------------------------------ |
 | **[docs/THESIS.md](./docs/THESIS.md)**             | Sharp product story: **eval regression as a first-class workflow** |
+| **[docs/OBSERVABILITY.md](./docs/OBSERVABILITY.md)** | **Pipeline tracing + latency percentiles** — what I built and what it revealed |
 | **[docs/BENCHMARKS.md](./docs/BENCHMARKS.md)**     | Reproducible harness procedure + case-study template               |
 | **[docs/HARDENING.md](./docs/HARDENING.md)**       | **`API_KEY`**, rate limits, CORS, **multi-tenant posture**         |
 | **[docs/RUNBOOK.md](./docs/RUNBOOK.md)**           | Health checks, incidents, rollback, escalation                     |
@@ -105,9 +116,11 @@ Choose from multiple RAG models optimized for different scenarios:
 
 ### 📊 Observability & Monitoring
 
+- **Pipeline tracing**: OpenTelemetry spans per RAG stage (`rag.retrieve` → `openai.embedding` / `db.vector_search` → `rag.generate` → `openai.chat`) — a full trace waterfall per request. See **[docs/OBSERVABILITY.md](./docs/OBSERVABILITY.md)**
+- **Real percentiles**: p50/p95/p99 per route **and per pipeline stage**, exported as Prometheus histograms for `histogram_quantile()`
 - **Metrics Dashboard**: Real-time system metrics including uptime, request counts, latency, and token usage
 - **Health Checks**: Built-in health endpoints for monitoring and orchestration
-- **Structured Logging**: Request IDs and detailed error logging for debugging
+- **Structured Logging**: Request IDs + `trace_id` correlation and detailed error logging for debugging
 - **Cost Tracking**: Monitor API costs with token usage breakdowns
 
 ### 🧪 Evaluation Framework

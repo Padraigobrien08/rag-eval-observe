@@ -15,6 +15,7 @@ from typing import Any
 
 import structlog
 
+from app.core.tracing import span
 from app.db.session import get_db_pool
 from app.llm.openai_client import OpenAIError, get_openai_client
 from app.rag.types import RetrievedChunk, RetrieveError
@@ -117,31 +118,32 @@ class VectorSimilarityStrategy(RetrievalStrategy):
         params.append(top_k)
 
         try:
-            async with pool.acquire() as conn:
-                rows = await conn.fetch(base_query, *params)
+            with span("db.vector_search", **{"rag.top_k": top_k, "db.system": "postgresql"}):
+                async with pool.acquire() as conn:
+                    rows = await conn.fetch(base_query, *params)
 
-                results = []
-                for row in rows:
-                    results.append(
-                        RetrievedChunk(
-                            chunk_id=row["chunk_id"],
-                            document_id=row["document_id"],
-                            title=row["title"],
-                            source=row["source"],
-                            chunk_index=row["chunk_index"],
-                            content=row["content"],
-                            score=float(row["similarity"]),
-                        )
+            results = []
+            for row in rows:
+                results.append(
+                    RetrievedChunk(
+                        chunk_id=row["chunk_id"],
+                        document_id=row["document_id"],
+                        title=row["title"],
+                        source=row["source"],
+                        chunk_index=row["chunk_index"],
+                        content=row["content"],
+                        score=float(row["similarity"]),
                     )
-
-                logger.info(
-                    "Vector similarity retrieval completed",
-                    query_length=len(query),
-                    top_k=top_k,
-                    results_count=len(results),
                 )
 
-                return results
+            logger.info(
+                "Vector similarity retrieval completed",
+                query_length=len(query),
+                top_k=top_k,
+                results_count=len(results),
+            )
+
+            return results
 
         except Exception as e:
             logger.error("Vector similarity retrieval error", error=str(e), exc_info=True)

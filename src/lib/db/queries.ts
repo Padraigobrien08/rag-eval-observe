@@ -185,7 +185,9 @@ export async function getChatById({ id }: { id: string }) {
 
 export async function saveMessages({ messages }: { messages: DBMessage[] }) {
   try {
-    return await db.insert(message).values(messages)
+    // Idempotent by id: on regenerate the AI SDK re-sends the existing user
+    // message, which would otherwise collide on the primary key.
+    return await db.insert(message).values(messages).onConflictDoNothing()
   } catch {
     throw new ChatSDKError('bad_request:database', 'Failed to save messages')
   }
@@ -200,5 +202,30 @@ export async function getMessagesByChatId({ id }: { id: string }) {
       .orderBy(asc(message.createdAt))
   } catch {
     throw new ChatSDKError('bad_request:database', 'Failed to get messages by chat id')
+  }
+}
+
+export async function getMessageById({ id }: { id: string }) {
+  try {
+    const [row] = await db.select().from(message).where(eq(message.id, id))
+    return row ?? null
+  } catch {
+    throw new ChatSDKError('bad_request:database', 'Failed to get message by id')
+  }
+}
+
+export async function deleteMessagesByChatIdAfterTimestamp({
+  chatId,
+  timestamp,
+}: {
+  chatId: string
+  timestamp: Date
+}) {
+  try {
+    return await db
+      .delete(message)
+      .where(and(eq(message.chatId, chatId), gt(message.createdAt, timestamp)))
+  } catch {
+    throw new ChatSDKError('bad_request:database', 'Failed to delete messages')
   }
 }
