@@ -67,3 +67,8 @@ htmlcov/
 Thumbs.db
 
 docker-compose.override.yml
+
+# Eval run artifacts (baseline.json IS committed; these are regenerated per run)
+backend/eval/report.md
+backend/eval/summary.json
+backend/eval/comment.md
