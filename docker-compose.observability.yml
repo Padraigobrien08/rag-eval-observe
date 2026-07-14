@@ -28,6 +28,14 @@ services:
       sh -c "uv sync --extra otel &&
              uv run uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
 
+  # Only started with `--profile full`. Mask node_modules with an anonymous
+  # volume so a host (macOS) install never leaks into the Linux container —
+  # same trap as the api service's .venv.
+  web:
+    profiles: ["full"]
+    volumes:
+      - /workspace/node_modules
+
   tempo:
     image: grafana/tempo:2.6.1
     container_name: rag-tempo
