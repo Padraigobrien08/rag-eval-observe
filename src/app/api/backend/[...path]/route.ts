@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-// Backend URL - server-side only (no NEXT_PUBLIC_ prefix needed)
-const base = process.env.AZURE_API_BASE_URL || 'http://localhost:8000'
+// Backend URL - server-side only (no NEXT_PUBLIC_ prefix needed).
+// `BACKEND_API_BASE_URL` is canonical; `AZURE_API_BASE_URL` is a back-compat fallback.
+const base =
+  process.env.BACKEND_API_BASE_URL || process.env.AZURE_API_BASE_URL || 'http://localhost:8000'
 
 type RouteContext = { params: Promise<{ path: string[] }> }
 
@@ -67,7 +69,7 @@ async function proxyRequest(request: NextRequest, pathSegments: string[]) {
         : {}),
     }
 
-    const backendApiKey = process.env.AZURE_API_BACKEND_KEY?.trim()
+    const backendApiKey = (process.env.BACKEND_API_KEY || process.env.AZURE_API_BACKEND_KEY)?.trim()
     if (backendApiKey) {
       headers['x-api-key'] = backendApiKey
     }

@@ -184,7 +184,7 @@ backend; the template UI adapts to it rather than calling an LLM directly.
 - Render — FastAPI backend hosting
 - Neon — managed Postgres + pgvector
 
-> The live demo runs on Vercel + Render + Neon. The backend is portable — see [AZURE_DEPLOY.md](./AZURE_DEPLOY.md) for an Azure Container Apps path, or [DEPLOYMENT.md](./DEPLOYMENT.md) for Docker Compose.
+> The live demo runs on Vercel + Render + Neon. The backend is portable — see [DEPLOYMENT.md](./DEPLOYMENT.md) for Docker Compose, or [docs/AZURE_DEPLOY.md](./docs/AZURE_DEPLOY.md) for an Azure Container Apps path.
 
 ## Quick Start
 
@@ -289,8 +289,8 @@ CHUNK_OVERLAP=200
 ### Frontend
 
 ```env
-# Backend API URL (server-side proxy)
-AZURE_API_BASE_URL=http://localhost:8000
+# Backend API URL (server-side proxy) — the FastAPI origin
+BACKEND_API_BASE_URL=http://localhost:8000
 ```
 
 See [ENV_VARS.md](./ENV_VARS.md) for complete environment variable documentation.
@@ -384,12 +384,12 @@ The live demo runs on **Vercel (frontend) + Render (backend) + Neon (Postgres)**
 ### Frontend (Vercel)
 
 1. Connect your repository to Vercel
-2. Set `AZURE_API_BASE_URL` to your backend's base URL (despite the name, this is just the FastAPI origin the Next.js proxy forwards to) and `POSTGRES_URL` / `AUTH_SECRET`
+2. Set `BACKEND_API_BASE_URL` to your backend's base URL (the FastAPI origin the Next.js proxy forwards to) and `POSTGRES_URL` / `AUTH_SECRET`
 3. Deploy automatically
 
 ### Backend (Render, Azure, or any container host)
 
-The FastAPI backend is a standard container — deploy it anywhere. See [AZURE_DEPLOY.md](./AZURE_DEPLOY.md) for an Azure Container Apps walkthrough, or [DEPLOYMENT.md](./DEPLOYMENT.md) for the general guide.
+The FastAPI backend is a standard container — deploy it anywhere. See [DEPLOYMENT.md](./DEPLOYMENT.md) for the general guide, or [docs/AZURE_DEPLOY.md](./docs/AZURE_DEPLOY.md) for an Azure Container Apps walkthrough.
 
 ### Docker Compose
 
@@ -498,7 +498,7 @@ rag-eval-observability/
 
 - **[README.md](./README.md)** - This file (overview and quick start)
 - **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Production deployment guide
-- **[AZURE_DEPLOY.md](./AZURE_DEPLOY.md)** - Azure-specific deployment
+- **[docs/AZURE_DEPLOY.md](./docs/AZURE_DEPLOY.md)** - Azure-specific deployment (optional/legacy)
 - **[ENV_VARS.md](./ENV_VARS.md)** - Environment variables reference
 - **[QUICKSTART.md](./QUICKSTART.md)** - Quick start guide
 - **[CONTRIBUTING.md](./CONTRIBUTING.md)** - Contribution guidelines

@@ -12,7 +12,7 @@ jobs:
     env:
       PW_INTEGRATION: '1'
       PLAYWRIGHT_BASE_URL: http://127.0.0.1:4173
-      AZURE_API_BASE_URL: http://127.0.0.1:8000
+      BACKEND_API_BASE_URL: http://127.0.0.1:8000
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/e2edb
       POSTGRES_URL: postgresql://postgres:postgres@localhost:5432/e2edb
       OPENAI_API_KEY: test-key-not-used
@@ -92,7 +92,7 @@ jobs:
       - name: Build Next.js
         run: pnpm build
         env:
-          AZURE_API_BASE_URL: http://127.0.0.1:8000
+          BACKEND_API_BASE_URL: http://127.0.0.1:8000
 
       - name: Start Next.js
         run: |
@@ -107,7 +107,7 @@ jobs:
           echo "Next failed to start"
           exit 1
         env:
-          AZURE_API_BASE_URL: http://127.0.0.1:8000
+          BACKEND_API_BASE_URL: http://127.0.0.1:8000
 
       - name: Install Playwright Chromium
         run: pnpm exec playwright install --with-deps chromium

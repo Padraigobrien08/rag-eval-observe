@@ -49,7 +49,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      AZURE_API_BASE_URL: http://api:8000
+      BACKEND_API_BASE_URL: http://api:8000
     command:
       - bash
       - -lc
