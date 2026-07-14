@@ -68,6 +68,16 @@ class TestOpenAIClientInitialization:
             with pytest.raises(ValueError, match="OpenAI API key is required"):
                 OpenAIClient()
 
+    def test_init_strips_whitespace_from_api_key(self):
+        """A key with stray whitespace/newlines (e.g. a copy-pasted secret) is
+        sanitized so it can't produce an 'Illegal header value' at request time."""
+        client = OpenAIClient(api_key="  sk-proj-AB\ncd12\r34-XYZ\n")
+        assert client.api_key == "sk-proj-ABcd1234-XYZ"
+        # The Authorization header must be a legal (control-char-free) value.
+        client.headers["Authorization"].encode("latin-1")
+        assert "\n" not in client.headers["Authorization"]
+        assert "\r" not in client.headers["Authorization"]
+
 
 class TestEmbeddings:
     """Test embedding functionality."""
