@@ -105,7 +105,6 @@ jobs:
             --baseline eval/baseline.json \
             --current eval/summary.json \
             --tolerance "${EVAL_GATE_TOLERANCE}" \
-            --allow-missing-baseline \
             --output eval/comment.md
           echo "exit_code=$?" >> "$GITHUB_OUTPUT"
 

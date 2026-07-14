@@ -60,8 +60,11 @@ make eval-baseline   # copy summary.json -> baseline.json
 git add backend/eval/baseline.json && git commit -m "eval: move baseline"
 ```
 
-Until a baseline exists, the gate runs in **bootstrap** mode: it reports the
-current metrics and passes instead of failing.
+A baseline is committed (`git_sha` records the code state its metrics reflect),
+so the CI gate always compares against it — it will **not** silently pass when
+the baseline is absent. If `baseline.json` is ever missing, the CI job fails
+loudly rather than no-opping. (The local `make eval-compare` keeps
+`--allow-missing-baseline` for convenience while iterating on a branch.)
 
 Tune the gate with `EVAL_GATE_TOLERANCE` (workflow env) or
 `compare_eval.py --tolerance` / `--gated hit_at_5,mrr` locally.

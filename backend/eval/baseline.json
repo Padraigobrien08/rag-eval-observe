@@ -1,0 +1,310 @@
+{
+  "generated_at": "2026-07-14T14:06:33Z",
+  "git_sha": "83b84d879dd9549c797d727ff88b3d5f11954976",
+  "config": {
+    "embedding_model": "text-embedding-3-small",
+    "chat_model": "gpt-4o-mini",
+    "dataset": "dataset.jsonl",
+    "total_cases": 48,
+    "use_llm_judge": false
+  },
+  "metrics": {
+    "hit_at_1": 0.7083333333333334,
+    "hit_at_3": 0.7916666666666666,
+    "hit_at_5": 0.7916666666666666,
+    "hit_at_8": 0.7916666666666666,
+    "mrr": 0.7465277777777777,
+    "llm_judge_correctness_rate": null,
+    "llm_judge_faithfulness_rate": null
+  },
+  "cases": [
+    {
+      "case_id": "case-1",
+      "query": "What is Retrieval-Augmented Generation?",
+      "hit_at_5": true,
+      "mrr": 1.0
+    },
+    {
+      "case_id": "case-2",
+      "query": "How do vector embeddings work?",
+      "hit_at_5": true,
+      "mrr": 1.0
+    },
+    {
+      "case_id": "case-3",
+      "query": "What are the different chunking strategies?",
+      "hit_at_5": false,
+      "mrr": 0.0
+    },
+    {
+      "case_id": "case-4",
+      "query": "What is HNSW index?",
+      "hit_at_5": true,
+      "mrr": 1.0
+    },
+    {
+      "case_id": "case-5",
+      "query": "How do you evaluate RAG systems?",
+      "hit_at_5": true,
+      "mrr": 1.0
+    },
+    {
+      "case_id": "case-6",
+      "query": "What is cosine similarity?",
+      "hit_at_5": true,
+      "mrr": 1.0
+    },
+    {
+      "case_id": "case-7",
+      "query": "What are the benefits of RAG?",
+      "hit_at_5": true,
+      "mrr": 1.0
+    },
+    {
+      "case_id": "case-8",
+      "query": "What embedding models are popular?",
+      "hit_at_5": true,
+      "mrr": 1.0
+    },
+    {
+      "case_id": "case-9",
+      "query": "How does overlap work in chunking?",
+      "hit_at_5": false,
+      "mrr": 0.0
+    },
+    {
+      "case_id": "case-10",
+      "query": "What is IVFFLAT index?",
+      "hit_at_5": true,
+      "mrr": 1.0
+    },
+    {
+      "case_id": "case-11",
+      "query": "What metrics measure answer quality?",
+      "hit_at_5": true,
+      "mrr": 1.0
+    },
+    {
+      "case_id": "case-12",
+      "query": "How does RAG combine retrieval and generation?",
+      "hit_at_5": true,
+      "mrr": 1.0
+    },
+    {
+      "case_id": "case-13",
+      "query": "What is semantic chunking?",
+      "hit_at_5": false,
+      "mrr": 0.0
+    },
+    {
+      "case_id": "case-14",
+      "query": "What is the difference between HNSW and IVFFLAT?",
+      "hit_at_5": true,
+      "mrr": 1.0
+    },
+    {
+      "case_id": "case-15",
+      "query": "What is precision at K?",
+      "hit_at_5": true,
+      "mrr": 1.0
+    },
+    {
+      "case_id": "case-16",
+      "query": "How do you measure embedding similarity?",
+      "hit_at_5": true,
+      "mrr": 1.0
+    },
+    {
+      "case_id": "case-17",
+      "query": "What are the phases of RAG?",
+      "hit_at_5": true,
+      "mrr": 1.0
+    },
+    {
+      "case_id": "case-18",
+      "query": "What is paragraph-based chunking?",
+      "hit_at_5": false,
+      "mrr": 0.0
+    },
+    {
+      "case_id": "case-19",
+      "query": "What is hybrid retrieval?",
+      "hit_at_5": true,
+      "mrr": 0.5
+    },
+    {
+      "case_id": "case-20",
+      "query": "What is answer relevance?",
+      "hit_at_5": true,
+      "mrr": 1.0
+    },
+    {
+      "case_id": "case-21",
+      "query": "How do embeddings capture meaning?",
+      "hit_at_5": true,
+      "mrr": 1.0
+    },
+    {
+      "case_id": "case-22",
+      "query": "What is the retrieval phase in RAG?",
+      "hit_at_5": true,
+      "mrr": 1.0
+    },
+    {
+      "case_id": "case-23",
+      "query": "What is sentence-based chunking?",
+      "hit_at_5": false,
+      "mrr": 0.0
+    },
+    {
+      "case_id": "case-24",
+      "query": "What is mean reciprocal rank?",
+      "hit_at_5": true,
+      "mrr": 1.0
+    },
+    {
+      "case_id": "case-25",
+      "query": "What are the dimensions of OpenAI embeddings?",
+      "hit_at_5": true,
+      "mrr": 1.0
+    },
+    {
+      "case_id": "case-26",
+      "query": "How does RAG reduce hallucinations?",
+      "hit_at_5": true,
+      "mrr": 1.0
+    },
+    {
+      "case_id": "case-27",
+      "query": "What is fixed-size chunking?",
+      "hit_at_5": false,
+      "mrr": 0.0
+    },
+    {
+      "case_id": "case-28",
+      "query": "What is context utilization?",
+      "hit_at_5": true,
+      "mrr": 0.3333333333333333
+    },
+    {
+      "case_id": "case-29",
+      "query": "How do you measure retrieval completeness?",
+      "hit_at_5": true,
+      "mrr": 1.0
+    },
+    {
+      "case_id": "case-30",
+      "query": "What is the generation phase in RAG?",
+      "hit_at_5": true,
+      "mrr": 1.0
+    },
+    {
+      "case_id": "case-31",
+      "query": "What are best practices for chunking?",
+      "hit_at_5": false,
+      "mrr": 0.0
+    },
+    {
+      "case_id": "case-32",
+      "query": "What is ROUGE score?",
+      "hit_at_5": true,
+      "mrr": 1.0
+    },
+    {
+      "case_id": "case-33",
+      "query": "How do embeddings enable similarity search?",
+      "hit_at_5": true,
+      "mrr": 1.0
+    },
+    {
+      "case_id": "case-34",
+      "query": "What makes RAG systems transparent?",
+      "hit_at_5": true,
+      "mrr": 1.0
+    },
+    {
+      "case_id": "case-35",
+      "query": "What is the optimal chunk size?",
+      "hit_at_5": false,
+      "mrr": 0.0
+    },
+    {
+      "case_id": "case-36",
+      "query": "What is BLEU score used for?",
+      "hit_at_5": true,
+      "mrr": 1.0
+    },
+    {
+      "case_id": "case-37",
+      "query": "How do you train embedding models?",
+      "hit_at_5": true,
+      "mrr": 1.0
+    },
+    {
+      "case_id": "case-38",
+      "query": "What use cases is RAG effective for?",
+      "hit_at_5": true,
+      "mrr": 1.0
+    },
+    {
+      "case_id": "case-39",
+      "query": "What is semantic similarity?",
+      "hit_at_5": true,
+      "mrr": 1.0
+    },
+    {
+      "case_id": "case-40",
+      "query": "What is the difference between precision and recall?",
+      "hit_at_5": true,
+      "mrr": 1.0
+    },
+    {
+      "case_id": "case-41",
+      "query": "How do you handle large documents in RAG?",
+      "hit_at_5": false,
+      "mrr": 0.0
+    },
+    {
+      "case_id": "case-42",
+      "query": "What is the cosine distance operator?",
+      "hit_at_5": true,
+      "mrr": 0.5
+    },
+    {
+      "case_id": "case-43",
+      "query": "What is human evaluation?",
+      "hit_at_5": true,
+      "mrr": 1.0
+    },
+    {
+      "case_id": "case-44",
+      "query": "What is the purpose of chunk overlap?",
+      "hit_at_5": false,
+      "mrr": 0.0
+    },
+    {
+      "case_id": "case-45",
+      "query": "What is the generation phase?",
+      "hit_at_5": true,
+      "mrr": 1.0
+    },
+    {
+      "case_id": "case-46",
+      "query": "What are sentence transformers?",
+      "hit_at_5": true,
+      "mrr": 1.0
+    },
+    {
+      "case_id": "case-47",
+      "query": "What is exact search?",
+      "hit_at_5": true,
+      "mrr": 1.0
+    },
+    {
+      "case_id": "case-48",
+      "query": "What is context utilization metric?",
+      "hit_at_5": true,
+      "mrr": 0.5
+    }
+  ]
+}
