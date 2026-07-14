@@ -201,7 +201,9 @@ async def evaluate_case(case: EvaluationCase, use_llm_judge: bool = False) -> Ev
     """Evaluate a single case."""
     try:
         # Retrieve chunks
-        retrieved_chunks = await retrieve(query=case.query, top_k=8)
+        # TEMP / DO NOT MERGE — deliberately degraded (top_k 8 -> 1) to prove the
+        # eval regression gate blocks a Hit@5 / MRR drop in CI. Revert before merge.
+        retrieved_chunks = await retrieve(query=case.query, top_k=1)
 
         # Extract retrieved sources
         retrieved_sources = [chunk.source for chunk in retrieved_chunks if chunk.source]
