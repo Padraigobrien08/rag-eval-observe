@@ -188,20 +188,39 @@ backend; the template UI adapts to it rather than calling an LLM directly.
 
 ## Quick Start
 
-### Prerequisites
+### Fastest path — Docker Compose
+
+Brings up Postgres, the FastAPI backend, and the web app together:
+
+```bash
+git clone https://github.com/Padraigobrien08/rag-eval-observe.git
+cd rag-eval-observe
+cp .env.example .env
+# edit .env: set OPENAI_API_KEY=sk-...
+docker compose up -d
+
+# verify the backend is healthy
+curl http://localhost:8000/api/v1/health
+```
+
+Then open the web app at http://localhost:3000. For the full contributor workflow (hot-reload servers, migrations, seeding, tests, Playwright), use the manual setup below or see **[DEVELOPMENT.md](./DEVELOPMENT.md)**.
+
+### Manual setup (for development)
+
+#### Prerequisites
 
 - Node.js 18+ and [pnpm](https://pnpm.io/)
 - Python 3.11+ and [uv](https://github.com/astral-sh/uv)
 - Docker and Docker Compose
 - OpenAI API key
 
-### Installation
+#### Installation
 
 1. **Clone the repository:**
 
    ```bash
-   git clone https://github.com/your-username/rag-eval-observability.git
-   cd rag-eval-observability
+   git clone https://github.com/Padraigobrien08/rag-eval-observe.git
+   cd rag-eval-observe
    ```
 
 2. **Install dependencies:**
@@ -496,15 +515,12 @@ rag-eval-observability/
 
 ## Documentation
 
-- **[README.md](./README.md)** - This file (overview and quick start)
-- **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Production deployment guide
-- **[docs/AZURE_DEPLOY.md](./docs/AZURE_DEPLOY.md)** - Azure-specific deployment (optional/legacy)
-- **[ENV_VARS.md](./ENV_VARS.md)** - Environment variables reference
-- **[QUICKSTART.md](./QUICKSTART.md)** - Quick start guide
-- **[CONTRIBUTING.md](./CONTRIBUTING.md)** - Contribution guidelines
-- **[CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md)** - Code of conduct
-- **[backend/README.md](./backend/README.md)** - Backend API documentation
-- **[docs/API_CONTRACT.md](./docs/API_CONTRACT.md)** - API contract specification
+**[docs/README.md](./docs/README.md) is the full index.** The essentials:
+
+- **Get started:** [Quick Start](#quick-start) (above) · [DEVELOPMENT.md](./DEVELOPMENT.md) (local workflow) · [ENV_VARS.md](./ENV_VARS.md) (configuration)
+- **Understand it:** [docs/THESIS.md](./docs/THESIS.md) (the product argument) · [docs/OBSERVABILITY.md](./docs/OBSERVABILITY.md) · [docs/API_CONTRACT.md](./docs/API_CONTRACT.md) · [backend/README.md](./backend/README.md)
+- **Ship & operate:** [DEPLOYMENT.md](./DEPLOYMENT.md) · [docs/RUNBOOK.md](./docs/RUNBOOK.md) · [docs/SLOS.md](./docs/SLOS.md) · [docs/HARDENING.md](./docs/HARDENING.md) · [docs/THREAT_MODEL.md](./docs/THREAT_MODEL.md)
+- **Contribute:** [CONTRIBUTING.md](./CONTRIBUTING.md) · [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md)
 
 ## Contributing
 
