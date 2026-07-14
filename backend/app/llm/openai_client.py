@@ -79,7 +79,10 @@ class OpenAIClient:
             max_retries: Maximum retry attempts (defaults to settings.OPENAI_MAX_RETRIES)
             timeout: Request timeout in seconds (defaults to settings.OPENAI_TIMEOUT)
         """
-        self.api_key = api_key or settings.OPENAI_API_KEY
+        # Strip ALL whitespace (incl. embedded newlines / carriage returns). A
+        # stray line break from a copy-pasted key or secret makes an illegal HTTP
+        # header value ("Illegal header value"); keys never contain whitespace.
+        self.api_key = "".join((api_key or settings.OPENAI_API_KEY or "").split())
         self.embedding_model = embedding_model or settings.OPENAI_EMBEDDING_MODEL
         self.chat_model = chat_model or settings.OPENAI_CHAT_MODEL
         self.max_retries = max_retries or settings.OPENAI_MAX_RETRIES
