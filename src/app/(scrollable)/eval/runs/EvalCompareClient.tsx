@@ -123,6 +123,81 @@ function rankOf(retrieved: string[], expected: string): number | null {
   return i === -1 ? null : i + 1
 }
 
+// Worst-to-best score: lower rank is better; "not retrieved" (null) is worst of all.
+const rankScore = (r: number | null, scale: number) => (r == null ? scale + 1 : r)
+
+/**
+ * RankShift — a lane showing where one expected source sat in the retrieved list
+ * for run A (hollow) vs run B (filled), connected by a segment tinted for the
+ * direction of movement. The far right of the lane is "not retrieved". This turns
+ * "#1 → not retrieved" from a table cell into a movement you can see.
+ */
+function RankShift({
+  rankA,
+  rankB,
+  scale,
+}: {
+  rankA: number | null
+  rankB: number | null
+  scale: number
+}) {
+  // Map a rank to a left %: the ranked zone is [4%, 82%]; a miss parks at 94%.
+  const pos = (r: number | null) => {
+    if (r == null) return 94
+    const c = Math.min(Math.max(r, 1), scale)
+    return 4 + ((c - 1) / Math.max(1, scale - 1)) * 78
+  }
+  const la = pos(rankA)
+  const lb = pos(rankB)
+  const dir =
+    rankScore(rankB, scale) > rankScore(rankA, scale)
+      ? 'worse'
+      : rankScore(rankB, scale) < rankScore(rankA, scale)
+        ? 'better'
+        : 'same'
+  const connector =
+    dir === 'worse'
+      ? 'bg-rose-500/60 dark:bg-rose-400/50'
+      : dir === 'better'
+        ? 'bg-emerald-500/60 dark:bg-emerald-400/50'
+        : 'bg-border'
+  const dot =
+    dir === 'worse'
+      ? 'bg-rose-500 dark:bg-rose-400'
+      : dir === 'better'
+        ? 'bg-emerald-500 dark:bg-emerald-400'
+        : 'bg-foreground'
+  const left = Math.min(la, lb)
+  const width = Math.abs(lb - la)
+  return (
+    <div className="relative h-6 w-full" aria-hidden>
+      <div className="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-border" />
+      {/* boundary before the "not retrieved" zone */}
+      <div
+        className="absolute top-1/2 h-2.5 w-px -translate-y-1/2 bg-border"
+        style={{ left: '88%' }}
+      />
+      {width > 0.5 && (
+        <div
+          className={cn('absolute top-1/2 h-[3px] -translate-y-1/2 rounded-full', connector)}
+          style={{ left: `${left}%`, width: `${width}%` }}
+        />
+      )}
+      <span
+        className="absolute top-1/2 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full border border-muted-foreground bg-background"
+        style={{ left: `${la}%` }}
+      />
+      <span
+        className={cn(
+          'absolute top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full ring-2 ring-background',
+          dot
+        )}
+        style={{ left: `${lb}%` }}
+      />
+    </div>
+  )
+}
+
 // ---------- Verdict (the hero) ----------
 
 type Verdict = { kind: 'regression' | 'improvement' | 'stable'; dHit5: number; dMrr: number }
@@ -264,43 +339,62 @@ function ChangedCaseRow({ row }: { row: DiffRow }) {
         <div className="pb-3 pl-11 pr-2 text-xs">
           {canDiff ? (
             <div className="rounded-md border border-border bg-muted/30 p-3">
-              <p className="mb-2 text-muted-foreground">
-                Why: rank of each expected source in the retrieved list (A → B).
-              </p>
-              <table className="w-full">
-                <thead>
-                  <tr className="text-left text-[11px] text-muted-foreground">
-                    <th className="pb-1 pr-3 font-medium">Expected source</th>
-                    <th className="pb-1 pr-3 text-right font-medium">Rank in A</th>
-                    <th className="pb-1 text-right font-medium">Rank in B</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {expected.map(src => {
-                    const ra = rankOf(ca!.retrieved_sources, src)
-                    const rb = rankOf(cb!.retrieved_sources, src)
-                    const lost = ra != null && rb == null
-                    const gained = ra == null && rb != null
-                    return (
-                      <tr key={src} className="border-t border-border/60">
-                        <td className="py-1 pr-3 font-mono">{src}</td>
-                        <td className="py-1 pr-3 text-right font-mono tabular-nums">
-                          {ra == null ? '—' : `#${ra}`}
-                        </td>
-                        <td
-                          className={cn(
-                            'py-1 text-right font-mono tabular-nums',
-                            lost && TONE_TEXT.rose,
-                            gained && TONE_TEXT.emerald
-                          )}
-                        >
-                          {rb == null ? 'not retrieved' : `#${rb}`}
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
+              <div className="mb-3 flex items-center justify-between text-[11px] text-muted-foreground">
+                <span>Where each expected source ranked in retrieval</span>
+                <span className="flex items-center gap-3">
+                  <span className="flex items-center gap-1.5">
+                    <span className="h-2 w-2 rounded-full border border-muted-foreground bg-background" />
+                    A
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <span className="h-2 w-2 rounded-full bg-foreground" />B
+                  </span>
+                </span>
+              </div>
+              <div className="space-y-2.5">
+                {expected.map(src => {
+                  const ra = rankOf(ca!.retrieved_sources, src)
+                  const rb = rankOf(cb!.retrieved_sources, src)
+                  const scale = Math.max(
+                    8,
+                    ca!.retrieved_sources.length,
+                    cb!.retrieved_sources.length
+                  )
+                  const dir =
+                    rankScore(rb, scale) > rankScore(ra, scale)
+                      ? 'worse'
+                      : rankScore(rb, scale) < rankScore(ra, scale)
+                        ? 'better'
+                        : 'same'
+                  return (
+                    <div
+                      key={src}
+                      className="grid grid-cols-[minmax(6rem,10rem)_1fr_auto] items-center gap-3"
+                    >
+                      <span className="truncate font-mono text-[11px] text-foreground" title={src}>
+                        {src}
+                      </span>
+                      <RankShift rankA={ra} rankB={rb} scale={scale} />
+                      <span
+                        className={cn(
+                          'shrink-0 font-mono text-[11px] tabular-nums',
+                          dir === 'worse'
+                            ? TONE_TEXT.rose
+                            : dir === 'better'
+                              ? TONE_TEXT.emerald
+                              : 'text-muted-foreground'
+                        )}
+                      >
+                        {ra == null ? 'miss' : `#${ra}`} → {rb == null ? 'miss' : `#${rb}`}
+                      </span>
+                    </div>
+                  )
+                })}
+              </div>
+              <div className="mt-2 flex justify-between pl-[calc(6rem+0.75rem)] text-[10px] text-muted-foreground/70">
+                <span>rank #1</span>
+                <span>not retrieved</span>
+              </div>
             </div>
           ) : (
             <p className="text-muted-foreground">
@@ -313,13 +407,114 @@ function ChangedCaseRow({ row }: { row: DiffRow }) {
   )
 }
 
+// Presentational results view — takes two loaded runs, renders the verdict, stat
+// tiles, and per-case retrieval diff. Kept data-free so it can be previewed.
+export function EvalCompareResults({ a, b }: { a: EvalRunDetail; b: EvalRunDetail }) {
+  const [showAll, setShowAll] = useState(false)
+  const comparable = a.dataset_path === b.dataset_path
+  const aligned = useMemo(() => buildCaseIdAlignment(a, b), [a, b])
+  const verdict = useMemo(() => (comparable ? computeVerdict(a, b) : null), [comparable, a, b])
+
+  return (
+    <>
+      {/* Run identity — compact */}
+      <div className="grid gap-3 sm:grid-cols-2">
+        {[
+          { run: a, tag: 'A', role: 'baseline' },
+          { run: b, tag: 'B', role: 'candidate' },
+        ].map(({ run, tag, role }) => (
+          <div
+            key={tag}
+            className="flex items-center justify-between rounded-lg border border-border bg-card px-3 py-2"
+          >
+            <div className="min-w-0">
+              <p className="text-xs font-medium text-foreground">
+                {tag} · {role}
+              </p>
+              <p className="truncate font-mono text-[11px] text-muted-foreground">{run.id}</p>
+              <p className="text-[11px] text-muted-foreground">{run.created_at}</p>
+            </div>
+            <Button variant="link" className="h-auto shrink-0 p-0 text-xs" asChild>
+              <Link href={`/eval/runs?id=${encodeURIComponent(run.id)}`}>Open</Link>
+            </Button>
+          </div>
+        ))}
+      </div>
+
+      {!comparable ? (
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Not comparable</AlertTitle>
+          <AlertDescription className="text-sm">
+            These runs use different datasets ({a.dataset_path} vs {b.dataset_path}), so per-case
+            ids don&apos;t line up. Pick two runs on the same dataset to see a verdict and per-case
+            diff.
+          </AlertDescription>
+        </Alert>
+      ) : (
+        <>
+          {verdict ? <VerdictBanner verdict={verdict} /> : null}
+
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <StatTile label="Hit@1" a={a.hit_at_1} b={b.hit_at_1} kind="pct" />
+            <StatTile label="Hit@5" a={a.hit_at_5} b={b.hit_at_5} kind="pct" gated />
+            <StatTile label="MRR" a={a.mrr} b={b.mrr} kind="ratio" gated />
+          </div>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0">
+              <div>
+                <CardTitle className="text-base">
+                  {aligned.changed.length === 0
+                    ? 'No cases changed'
+                    : `${aligned.changed.length} case${aligned.changed.length === 1 ? '' : 's'} changed`}
+                </CardTitle>
+                {aligned.onlyA + aligned.onlyB > 0 ? (
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    Coverage differs: {aligned.onlyA} only in A, {aligned.onlyB} only in B.
+                  </p>
+                ) : null}
+              </div>
+              {aligned.changed.length > 0 || showAll ? (
+                <Button variant="outline" size="sm" onClick={() => setShowAll(v => !v)}>
+                  {showAll ? 'Show changes only' : `Show all ${aligned.rows.length}`}
+                </Button>
+              ) : null}
+            </CardHeader>
+            <CardContent>
+              {(() => {
+                const list = showAll ? aligned.rows : aligned.changed
+                if (list.length === 0) {
+                  return (
+                    <p className="py-4 text-sm text-muted-foreground">
+                      Both runs scored every case identically — retrieval is deterministic, so an
+                      unchanged system reproduces exactly. Expand a change to see the retrieval diff
+                      that explains it.
+                    </p>
+                  )
+                }
+                return (
+                  <div className="-my-1">
+                    {list.map(row => (
+                      <ChangedCaseRow key={row.caseId} row={row} />
+                    ))}
+                  </div>
+                )
+              })()}
+            </CardContent>
+          </Card>
+        </>
+      )}
+    </>
+  )
+}
+
 export default function EvalCompareClient({ runIdA, runIdB }: { runIdA: string; runIdB: string }) {
   const router = useRouter()
   const [a, setA] = useState<EvalRunDetail | null>(null)
   const [b, setB] = useState<EvalRunDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [showAll, setShowAll] = useState(false)
 
   useEffect(() => {
     if (!runIdA || !runIdB || runIdA === runIdB) {
@@ -346,13 +541,6 @@ export default function EvalCompareClient({ runIdA, runIdB }: { runIdA: string; 
       cancelled = true
     }
   }, [runIdA, runIdB])
-
-  const comparable = !!a && !!b && a.dataset_path === b.dataset_path
-  const aligned = useMemo(() => (a && b ? buildCaseIdAlignment(a, b) : null), [a, b])
-  const verdict = useMemo(
-    () => (comparable && a && b ? computeVerdict(a, b) : null),
-    [comparable, a, b]
-  )
 
   return (
     <div className="min-h-screen bg-background pb-12 pt-6 md:pb-16 md:pt-8">
@@ -394,100 +582,7 @@ export default function EvalCompareClient({ runIdA, runIdB }: { runIdA: string; 
           </Alert>
         )}
 
-        {a && b && !loading && (
-          <>
-            {/* Run identity — compact */}
-            <div className="grid gap-3 sm:grid-cols-2">
-              {[
-                { run: a, tag: 'A', role: 'baseline' },
-                { run: b, tag: 'B', role: 'candidate' },
-              ].map(({ run, tag, role }) => (
-                <div
-                  key={tag}
-                  className="flex items-center justify-between rounded-lg border border-border bg-card px-3 py-2"
-                >
-                  <div className="min-w-0">
-                    <p className="text-xs font-medium text-foreground">
-                      {tag} · {role}
-                    </p>
-                    <p className="truncate font-mono text-[11px] text-muted-foreground">{run.id}</p>
-                    <p className="text-[11px] text-muted-foreground">{run.created_at}</p>
-                  </div>
-                  <Button variant="link" className="h-auto shrink-0 p-0 text-xs" asChild>
-                    <Link href={`/eval/runs?id=${encodeURIComponent(run.id)}`}>Open</Link>
-                  </Button>
-                </div>
-              ))}
-            </div>
-
-            {!comparable ? (
-              <Alert variant="destructive">
-                <AlertTriangle className="h-4 w-4" />
-                <AlertTitle>Not comparable</AlertTitle>
-                <AlertDescription className="text-sm">
-                  These runs use different datasets ({a.dataset_path} vs {b.dataset_path}), so
-                  per-case ids don&apos;t line up. Pick two runs on the same dataset to see a
-                  verdict and per-case diff.
-                </AlertDescription>
-              </Alert>
-            ) : (
-              <>
-                {verdict ? <VerdictBanner verdict={verdict} /> : null}
-
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                  <StatTile label="Hit@1" a={a.hit_at_1} b={b.hit_at_1} kind="pct" />
-                  <StatTile label="Hit@5" a={a.hit_at_5} b={b.hit_at_5} kind="pct" gated />
-                  <StatTile label="MRR" a={a.mrr} b={b.mrr} kind="ratio" gated />
-                </div>
-
-                {aligned ? (
-                  <Card>
-                    <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0">
-                      <div>
-                        <CardTitle className="text-base">
-                          {aligned.changed.length === 0
-                            ? 'No cases changed'
-                            : `${aligned.changed.length} case${aligned.changed.length === 1 ? '' : 's'} changed`}
-                        </CardTitle>
-                        {aligned.onlyA + aligned.onlyB > 0 ? (
-                          <p className="mt-0.5 text-xs text-muted-foreground">
-                            Coverage differs: {aligned.onlyA} only in A, {aligned.onlyB} only in B.
-                          </p>
-                        ) : null}
-                      </div>
-                      {aligned.changed.length > 0 || showAll ? (
-                        <Button variant="outline" size="sm" onClick={() => setShowAll(v => !v)}>
-                          {showAll ? 'Show changes only' : `Show all ${aligned.rows.length}`}
-                        </Button>
-                      ) : null}
-                    </CardHeader>
-                    <CardContent>
-                      {(() => {
-                        const list = showAll ? aligned.rows : aligned.changed
-                        if (list.length === 0) {
-                          return (
-                            <p className="py-4 text-sm text-muted-foreground">
-                              Both runs scored every case identically — retrieval is deterministic,
-                              so an unchanged system reproduces exactly. Expand a change to see the
-                              retrieval diff that explains it.
-                            </p>
-                          )
-                        }
-                        return (
-                          <div className="-my-1">
-                            {list.map(row => (
-                              <ChangedCaseRow key={row.caseId} row={row} />
-                            ))}
-                          </div>
-                        )
-                      })()}
-                    </CardContent>
-                  </Card>
-                ) : null}
-              </>
-            )}
-          </>
-        )}
+        {a && b && !loading && <EvalCompareResults a={a} b={b} />}
       </div>
     </div>
   )

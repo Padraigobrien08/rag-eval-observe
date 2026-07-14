@@ -33,6 +33,8 @@ function mapCitations(raw: unknown): Citation[] {
       title: (c.title ?? null) as string | null,
       source: (c.source || '') as string,
       chunk_index: (c.chunk_index || c.chunkIndex || 0) as number,
+      content_snippet: (c.content_snippet ?? c.contentSnippet ?? undefined) as string | undefined,
+      score: (typeof c.score === 'number' ? c.score : undefined) as number | undefined,
     }
   })
 }

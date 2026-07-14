@@ -6,6 +6,24 @@ import type { Citation } from '@/lib/types'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
+/** Compact relevance meter — the retrieval score as a number plus a mono bar. */
+function ScoreMeter({ score }: { score: number }) {
+  const pct = Math.max(0, Math.min(1, score)) * 100
+  return (
+    <span
+      className="flex shrink-0 items-center gap-1.5"
+      title={`Retrieval score ${score.toFixed(3)}`}
+    >
+      <span className="h-1 w-10 overflow-hidden rounded-full bg-muted">
+        <span className="block h-full rounded-full bg-foreground/70" style={{ width: `${pct}%` }} />
+      </span>
+      <span className="font-mono text-[11px] tabular-nums text-muted-foreground">
+        {score.toFixed(2)}
+      </span>
+    </span>
+  )
+}
+
 export function MessageCitations({
   citations,
   open,
@@ -51,25 +69,41 @@ export function MessageCitations({
       </Button>
 
       {isOpen && (
-        <ol className="flex flex-col gap-1.5 rounded-lg border bg-muted/40 p-2 text-sm">
+        <ol className="flex flex-col gap-1 rounded-lg border bg-muted/30 p-1.5 text-sm">
           {citations.map((c, i) => (
             <li
               className={cn(
-                'flex items-start gap-2 rounded-md px-2 py-1.5 transition-colors',
-                highlightIndex === i && 'bg-accent ring-1 ring-ring'
+                'flex items-start gap-2.5 rounded-md px-2 py-2 transition-colors',
+                highlightIndex === i ? 'bg-accent ring-1 ring-ring' : 'hover:bg-muted/60'
               )}
               key={`${c.chunk_id}-${i}`}
               ref={el => {
                 itemRefs.current[i] = el
               }}
             >
-              <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded bg-background text-xs font-medium ring-1 ring-border">
+              <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded bg-background font-mono text-xs font-medium ring-1 ring-border">
                 {i + 1}
               </span>
-              <div className="min-w-0">
-                <div className="truncate font-medium">{c.title || c.source || 'Untitled'}</div>
-                {c.source && c.source !== c.title && (
-                  <div className="truncate text-muted-foreground text-xs">{c.source}</div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-baseline justify-between gap-2">
+                  <span className="truncate font-medium text-foreground">
+                    {c.title || c.source || 'Untitled'}
+                  </span>
+                  {typeof c.score === 'number' && <ScoreMeter score={c.score} />}
+                </div>
+                <div className="mt-0.5 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                  {c.source && c.source !== c.title && (
+                    <span className="truncate font-mono">{c.source}</span>
+                  )}
+                  {c.source && c.source !== c.title && (
+                    <span className="text-muted-foreground/40">·</span>
+                  )}
+                  <span className="shrink-0">chunk #{c.chunk_index}</span>
+                </div>
+                {c.content_snippet && (
+                  <p className="mt-1.5 line-clamp-3 rounded bg-background/70 px-2.5 py-1.5 text-xs leading-relaxed text-muted-foreground ring-1 ring-border/60">
+                    {c.content_snippet}
+                  </p>
                 )}
               </div>
             </li>

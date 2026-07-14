@@ -8,6 +8,10 @@ export type Citation = {
   title: string | null
   source: string
   chunk_index: number
+  /** The retrieved passage that grounds this citation (truncated by the backend). */
+  content_snippet?: string
+  /** Retrieval similarity score (higher is more relevant). */
+  score?: number
 }
 
 /** Per-message RAG observability captured from the backend `done` event. */

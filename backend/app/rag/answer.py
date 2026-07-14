@@ -520,6 +520,11 @@ def extract_citations(answer: str, chunks: list[RetrievedChunk]) -> list[dict[st
                     "title": chunk.title,
                     "source": chunk.source,
                     "chunk_index": chunk.chunk_index,
+                    # The retrieved passage that grounds this citation, so the UI can
+                    # show the evidence (not just the source name) and its relevance.
+                    "content_snippet": chunk.content[:240]
+                    + ("..." if len(chunk.content) > 240 else ""),
+                    "score": chunk.score,
                 }
             )
 

@@ -179,7 +179,7 @@ test.describe('eval & observability (mocked API)', () => {
 
   test('metrics page loads mocked counters', async ({ page }) => {
     await page.goto('/metrics')
-    await expect(page.getByRole('heading', { name: 'System Metrics' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Pipeline metrics' })).toBeVisible()
     await expect(page.getByRole('link', { name: 'Query logs' })).toBeVisible()
   })
 })
