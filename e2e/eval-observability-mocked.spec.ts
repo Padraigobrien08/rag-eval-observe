@@ -160,13 +160,15 @@ test.describe('eval & observability (mocked API)', () => {
     await expect(page.getByText('query-case-1')).toBeVisible()
   })
 
-  test('compare runs uses case id alignment', async ({ page }) => {
+  test('compare runs shows verdict and changed cases', async ({ page }) => {
+    // RUN_A (Hit@5 1.0) → RUN_B (Hit@5 0.5): case-1 regresses, case-2 improves.
     await page.goto(`/eval/runs?compare=${RUN_A}&to=${RUN_B}`)
     await expect(page.getByRole('heading', { name: 'Compare eval runs' })).toBeVisible()
-    await expect(page.getByText('aligned by case id')).toBeVisible()
+    // Verdict banner (gate logic: gated metric dropped beyond tolerance).
+    await expect(page.getByText('Regression', { exact: true })).toBeVisible()
+    // Changed-cases-only list, keyed by case_id.
+    await expect(page.getByText('2 cases changed')).toBeVisible()
     await expect(page.getByText('case-1').first()).toBeVisible()
-    await expect(page.getByText(/Run A-only: 0/)).toBeVisible()
-    await expect(page.getByText(/run B-only: 0/i)).toBeVisible()
   })
 
   test('query logs explorer loads mocked rows', async ({ page }) => {
