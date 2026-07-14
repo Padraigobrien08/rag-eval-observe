@@ -1,7 +1,14 @@
 import { createUIMessageStream, JsonToSseTransformStream } from 'ai'
 import { auth } from '@/app/(auth)/auth'
 import { estimateChatMessageCostUsd } from '@/lib/openai-pricing'
-import { getChatById, saveChat, saveMessages, touchChat } from '@/lib/db/queries'
+import {
+  deleteMessagesByChatIdAfterTimestamp,
+  getChatById,
+  getMessageById,
+  saveChat,
+  saveMessages,
+  touchChat,
+} from '@/lib/db/queries'
 import { ChatSDKError } from '@/lib/errors'
 import type { Citation, ChatMessage, Observability } from '@/lib/types'
 import { generateUUID, getTextFromMessage } from '@/lib/utils'
@@ -55,6 +62,16 @@ export async function POST(request: Request) {
       userId: session.user.id,
       title,
       visibility: selectedVisibilityType ?? 'private',
+    })
+  }
+
+  // Regenerate: the AI SDK re-sends an existing user message. Drop anything that
+  // trailed it (the superseded assistant answer) so the turn keeps one answer.
+  const existingUserMessage = await getMessageById({ id: message.id })
+  if (existingUserMessage) {
+    await deleteMessagesByChatIdAfterTimestamp({
+      chatId: id,
+      timestamp: existingUserMessage.createdAt,
     })
   }
 

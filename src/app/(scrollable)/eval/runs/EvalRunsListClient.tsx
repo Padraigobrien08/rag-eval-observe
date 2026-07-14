@@ -94,7 +94,7 @@ export default function EvalRunsListClient() {
   const canCompare = cmpA && cmpB && cmpA !== cmpB
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-muted to-background pb-12 pt-6 md:pb-16 md:pt-8">
+    <div className="min-h-screen bg-background pb-12 pt-6 md:pb-16 md:pt-8">
       <div className="mx-auto max-w-4xl space-y-8 px-4 md:px-8">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <Button variant="ghost" size="sm" onClick={() => router.push('/')}>
@@ -242,8 +242,8 @@ export default function EvalRunsListClient() {
                             className={cn(
                               'font-mono text-[10px]',
                               strong
-                                ? 'border-emerald-300 bg-emerald-50 text-emerald-900'
-                                : 'border-amber-200 bg-amber-50 text-amber-950'
+                                ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
+                                : 'border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300'
                             )}
                           >
                             Hit@5 {hit5.toFixed(0)}%

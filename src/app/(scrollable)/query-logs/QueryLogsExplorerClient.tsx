@@ -72,7 +72,7 @@ export default function QueryLogsExplorerClient() {
   const applyFilters = () => void load(0)
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-muted to-background pb-12 pt-6 md:pb-16 md:pt-8">
+    <div className="min-h-screen bg-background pb-12 pt-6 md:pb-16 md:pt-8">
       <div className="mx-auto max-w-6xl space-y-6 px-4 md:px-8">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <Button variant="ghost" size="sm" onClick={() => router.push('/')}>

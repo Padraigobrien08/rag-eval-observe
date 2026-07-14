@@ -72,3 +72,4 @@ docker-compose.override.yml
 backend/eval/report.md
 backend/eval/summary.json
 backend/eval/comment.md
+.pnpm-store/

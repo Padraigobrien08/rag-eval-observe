@@ -30,8 +30,8 @@ function HitPassBadge({ label, pass }: { label: string; pass: boolean }) {
       className={cn(
         'font-mono text-[10px] font-semibold',
         pass
-          ? 'border-emerald-300 bg-emerald-50 text-emerald-900'
-          : 'border-rose-200 bg-rose-50 text-rose-900'
+          ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
+          : 'border-rose-500/30 bg-rose-500/10 text-rose-700 dark:text-rose-300'
       )}
     >
       {label} {pass ? 'pass' : 'miss'}
@@ -70,7 +70,7 @@ function SourceChips({
             className={cn(
               'max-w-full truncate rounded-md border px-2 py-0.5 text-xs',
               tone === 'expected'
-                ? 'border-amber-200 bg-amber-50 text-amber-950'
+                ? 'border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300'
                 : 'border-border bg-card text-foreground'
             )}
             title={s}
@@ -99,7 +99,7 @@ function MetricTile({
       className={cn(
         'rounded-lg border p-3 sm:p-4',
         highlight === 'good'
-          ? 'border-emerald-200/80 bg-emerald-50/50'
+          ? 'border-emerald-500/30 bg-emerald-500/10'
           : 'border-border bg-background'
       )}
     >
@@ -140,7 +140,10 @@ function CaseCard({ c, index }: { c: EvalCaseResult; index: number }) {
             <HitPassBadge label="@5" pass={c.hit_at_5} />
             <HitPassBadge label="@8" pass={c.hit_at_8} />
             {!anyHit && (
-              <Badge variant="outline" className="border-rose-200 text-rose-800">
+              <Badge
+                variant="outline"
+                className="border-rose-500/30 text-rose-700 dark:text-rose-300"
+              >
                 No hit @8
               </Badge>
             )}
@@ -191,24 +194,24 @@ function CaseCard({ c, index }: { c: EvalCaseResult; index: number }) {
         {(c.llm_judge_correctness != null ||
           c.llm_judge_faithfulness != null ||
           (c.llm_judge_reasoning && c.llm_judge_reasoning.trim())) && (
-          <div className="rounded-lg border border-violet-200 bg-violet-50/50 p-3">
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-violet-900">
+          <div className="rounded-lg border border-violet-500/30 bg-violet-500/10 p-3">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
               LLM judge
             </p>
             <div className="flex flex-wrap gap-2">
               {c.llm_judge_correctness != null && (
-                <Badge variant="outline" className="border-violet-300 bg-card">
+                <Badge variant="outline" className="border-violet-500/40 bg-card">
                   Correctness: {c.llm_judge_correctness ? 'yes' : 'no'}
                 </Badge>
               )}
               {c.llm_judge_faithfulness != null && (
-                <Badge variant="outline" className="border-violet-300 bg-card">
+                <Badge variant="outline" className="border-violet-500/40 bg-card">
                   Faithfulness: {c.llm_judge_faithfulness ? 'yes' : 'no'}
                 </Badge>
               )}
             </div>
             {c.llm_judge_reasoning ? (
-              <p className="mt-2 text-xs leading-relaxed text-violet-950">
+              <p className="mt-2 text-xs leading-relaxed text-violet-700 dark:text-violet-300">
                 {c.llm_judge_reasoning}
               </p>
             ) : null}
@@ -263,7 +266,7 @@ export default function EvalRunDetailClient({ runId }: { runId: string }) {
   const hitTone = (p: number): 'good' | 'neutral' => (p >= 0.8 ? 'good' : 'neutral')
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-muted to-background pb-12 pt-6 md:pb-16 md:pt-8">
+    <div className="min-h-screen bg-background pb-12 pt-6 md:pb-16 md:pt-8">
       <div className="mx-auto max-w-5xl space-y-8 px-4 md:px-8">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-2">
@@ -348,7 +351,10 @@ export default function EvalRunDetailClient({ runId }: { runId: string }) {
                       {run.status}
                     </Badge>
                     {run.use_llm_judge ? (
-                      <Badge variant="outline" className="border-violet-300 text-violet-900">
+                      <Badge
+                        variant="outline"
+                        className="border-violet-500/40 text-violet-700 dark:text-violet-300"
+                      >
                         LLM judge on
                       </Badge>
                     ) : (
@@ -411,11 +417,11 @@ export default function EvalRunDetailClient({ runId }: { runId: string }) {
 
                 {(run.llm_judge_correctness_rate != null ||
                   run.llm_judge_faithfulness_rate != null) && (
-                  <div className="rounded-lg border border-violet-200 bg-violet-50/40 px-4 py-3">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-violet-900">
+                  <div className="rounded-lg border border-violet-500/30 bg-violet-500/10 px-4 py-3">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
                       Aggregate LLM judge
                     </p>
-                    <div className="mt-2 flex flex-wrap gap-4 text-sm text-violet-950">
+                    <div className="mt-2 flex flex-wrap gap-4 text-sm text-violet-700 dark:text-violet-300">
                       {run.llm_judge_correctness_rate != null && (
                         <span>
                           Correctness:{' '}

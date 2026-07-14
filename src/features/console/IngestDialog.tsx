@@ -38,6 +38,9 @@ interface Props {
   onSuccess?: () => void
 }
 
+/** Guard against oversized uploads that would stall extraction with no feedback. */
+const MAX_FILE_SIZE_BYTES = 15_000_000
+
 function humanizeStep(step: string): string {
   const [head, tail] = step.split(':', 2)
   const headKey = head.replace(/_to_max_\d+$/, '') // e.g. collapsed_blank_line_runs_to_max_2
@@ -407,17 +410,8 @@ export default function IngestDialog({ open, onOpenChange, onSuccess }: Props) {
   const [title, setTitle] = useState('')
   const [source, setSource] = useState('')
   const [text, setText] = useState('')
-
-  // Extract title from markdown when text changes (for manual paste)
-  useEffect(() => {
-    if (text && !title && text.trim().startsWith('#')) {
-      const extractedTitle = extractMarkdownTitle(text)
-      if (extractedTitle) {
-        setTitle(extractedTitle)
-      }
-    }
-  }, [text, title])
   const [isLoading, setIsLoading] = useState(false)
+  const [isExtracting, setIsExtracting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [showManualInput, setShowManualInput] = useState(false)
   const [isDragging, setIsDragging] = useState(false)
@@ -508,8 +502,15 @@ export default function IngestDialog({ open, onOpenChange, onSuccess }: Props) {
   }, [text, title])
 
   const handleFileSelect = async (file: File) => {
+    if (file.size > MAX_FILE_SIZE_BYTES) {
+      setError(
+        `File is too large (${(file.size / 1_000_000).toFixed(1)} MB). Maximum is ${MAX_FILE_SIZE_BYTES / 1_000_000} MB.`
+      )
+      return
+    }
     try {
       setError(null)
+      setIsExtracting(true)
       let fileText = ''
 
       // Determine file type and extract text accordingly
@@ -556,6 +557,8 @@ export default function IngestDialog({ open, onOpenChange, onSuccess }: Props) {
     } catch (err) {
       setError('Failed to read file')
       console.error(err)
+    } finally {
+      setIsExtracting(false)
     }
   }
 
@@ -729,15 +732,32 @@ export default function IngestDialog({ open, onOpenChange, onSuccess }: Props) {
         >
           {/* File upload area */}
           <div
+            role="button"
+            tabIndex={isExtracting ? -1 : 0}
+            aria-label="Upload a document: drag and drop a file here, or activate to browse"
+            aria-disabled={isExtracting}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
-            onClick={() => fileInputRef.current?.click()}
-            className={`border-2 border-dashed rounded-lg text-center transition-all cursor-pointer ${
-              isDragging
-                ? 'border-foreground bg-accent scale-[1.02]'
-                : 'border-border bg-muted/40 hover:border-foreground/30 hover:bg-muted'
-            }`}
+            onClick={() => {
+              if (!isExtracting) fileInputRef.current?.click()
+            }}
+            onKeyDown={e => {
+              if (isExtracting) return
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault()
+                fileInputRef.current?.click()
+              }
+            }}
+            className={cn(
+              'border-2 border-dashed rounded-lg text-center transition-all',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+              isExtracting
+                ? 'cursor-wait border-border bg-muted/40'
+                : isDragging
+                  ? 'cursor-pointer border-foreground bg-accent scale-[1.02]'
+                  : 'cursor-pointer border-border bg-muted/40 hover:border-foreground/30 hover:bg-muted'
+            )}
             style={{
               padding: '2.5rem',
               minHeight: '120px',
@@ -747,7 +767,12 @@ export default function IngestDialog({ open, onOpenChange, onSuccess }: Props) {
               justifyContent: 'center',
             }}
           >
-            {isDragging ? (
+            {isExtracting ? (
+              <p className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                <Loader2 className="h-5 w-5 animate-spin" />
+                Extracting text…
+              </p>
+            ) : isDragging ? (
               <p className="text-sm font-medium text-foreground">Drop file here</p>
             ) : (
               <>
@@ -756,7 +781,7 @@ export default function IngestDialog({ open, onOpenChange, onSuccess }: Props) {
                   Drag and drop a file here, or click to browse
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Supported: .txt, .md, .markdown, .json, .pdf, .docx
+                  Supported: .txt, .md, .markdown, .json, .pdf, .docx · up to 15 MB
                 </p>
               </>
             )}
