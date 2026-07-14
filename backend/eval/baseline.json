@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-07-14T14:06:33Z",
-  "git_sha": "83b84d879dd9549c797d727ff88b3d5f11954976",
+  "generated_at": "2026-07-14T15:12:13Z",
+  "git_sha": "e3a21b85f42c09e681bbaf683118cb22c650b0c4",
   "config": {
     "embedding_model": "text-embedding-3-small",
     "chat_model": "gpt-4o-mini",
@@ -9,11 +9,11 @@
     "use_llm_judge": false
   },
   "metrics": {
-    "hit_at_1": 0.7083333333333334,
-    "hit_at_3": 0.7916666666666666,
-    "hit_at_5": 0.7916666666666666,
-    "hit_at_8": 0.7916666666666666,
-    "mrr": 0.7465277777777777,
+    "hit_at_1": 0.9375,
+    "hit_at_3": 0.9791666666666666,
+    "hit_at_5": 1.0,
+    "hit_at_8": 1.0,
+    "mrr": 0.9635416666666666,
     "llm_judge_correctness_rate": null,
     "llm_judge_faithfulness_rate": null
   },
@@ -33,8 +33,8 @@
     {
       "case_id": "case-3",
       "query": "What are the different chunking strategies?",
-      "hit_at_5": false,
-      "mrr": 0.0
+      "hit_at_5": true,
+      "mrr": 1.0
     },
     {
       "case_id": "case-4",
@@ -69,8 +69,8 @@
     {
       "case_id": "case-9",
       "query": "How does overlap work in chunking?",
-      "hit_at_5": false,
-      "mrr": 0.0
+      "hit_at_5": true,
+      "mrr": 1.0
     },
     {
       "case_id": "case-10",
@@ -93,8 +93,8 @@
     {
       "case_id": "case-13",
       "query": "What is semantic chunking?",
-      "hit_at_5": false,
-      "mrr": 0.0
+      "hit_at_5": true,
+      "mrr": 1.0
     },
     {
       "case_id": "case-14",
@@ -123,8 +123,8 @@
     {
       "case_id": "case-18",
       "query": "What is paragraph-based chunking?",
-      "hit_at_5": false,
-      "mrr": 0.0
+      "hit_at_5": true,
+      "mrr": 1.0
     },
     {
       "case_id": "case-19",
@@ -153,8 +153,8 @@
     {
       "case_id": "case-23",
       "query": "What is sentence-based chunking?",
-      "hit_at_5": false,
-      "mrr": 0.0
+      "hit_at_5": true,
+      "mrr": 1.0
     },
     {
       "case_id": "case-24",
@@ -177,14 +177,14 @@
     {
       "case_id": "case-27",
       "query": "What is fixed-size chunking?",
-      "hit_at_5": false,
-      "mrr": 0.0
+      "hit_at_5": true,
+      "mrr": 1.0
     },
     {
       "case_id": "case-28",
       "query": "What is context utilization?",
       "hit_at_5": true,
-      "mrr": 0.3333333333333333
+      "mrr": 1.0
     },
     {
       "case_id": "case-29",
@@ -201,8 +201,8 @@
     {
       "case_id": "case-31",
       "query": "What are best practices for chunking?",
-      "hit_at_5": false,
-      "mrr": 0.0
+      "hit_at_5": true,
+      "mrr": 1.0
     },
     {
       "case_id": "case-32",
@@ -225,8 +225,8 @@
     {
       "case_id": "case-35",
       "query": "What is the optimal chunk size?",
-      "hit_at_5": false,
-      "mrr": 0.0
+      "hit_at_5": true,
+      "mrr": 1.0
     },
     {
       "case_id": "case-36",
@@ -261,8 +261,8 @@
     {
       "case_id": "case-41",
       "query": "How do you handle large documents in RAG?",
-      "hit_at_5": false,
-      "mrr": 0.0
+      "hit_at_5": true,
+      "mrr": 0.25
     },
     {
       "case_id": "case-42",
@@ -279,8 +279,8 @@
     {
       "case_id": "case-44",
       "query": "What is the purpose of chunk overlap?",
-      "hit_at_5": false,
-      "mrr": 0.0
+      "hit_at_5": true,
+      "mrr": 1.0
     },
     {
       "case_id": "case-45",
@@ -304,7 +304,7 @@
       "case_id": "case-48",
       "query": "What is context utilization metric?",
       "hit_at_5": true,
-      "mrr": 0.5
+      "mrr": 1.0
     }
   ]
 }
