@@ -46,6 +46,9 @@ services:
     working_dir: /workspace
     volumes:
       - .:/workspace
+      # Keep node_modules container-local so host (macOS) native binaries
+      # (esbuild/swc) don't shadow the Linux ones the container installs.
+      - /workspace/node_modules
     ports:
       - "3000:3000"
     environment:
