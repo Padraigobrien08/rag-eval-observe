@@ -176,6 +176,24 @@
   animation: citation-pulse 0.5s ease-in-out;
 }
 
+/*
+ * Strategy-benchmark bars: grow from zero on first paint with a strong ease-out,
+ * staggered via inline transition-delay. Entrance only — width is otherwise static.
+ */
+.strat-bar {
+  transition: width 0.7s cubic-bezier(0.23, 1, 0.32, 1);
+
+  @starting-style {
+    width: 0 !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .strat-bar {
+    transition: none;
+  }
+}
+
 .skeleton {
   * {
     pointer-events: none !important;
