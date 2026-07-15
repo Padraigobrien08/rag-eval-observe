@@ -2,9 +2,9 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { ArrowLeft, Loader2, RefreshCw, ScrollText } from 'lucide-react'
+import { Loader2, RefreshCw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { PageHeader } from '@/components/page-header'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
@@ -51,7 +51,6 @@ function Field({ label, value, mono }: { label: string; value: string; mono?: bo
 }
 
 export default function QueryLogsExplorerClient() {
-  const router = useRouter()
   const [logs, setLogs] = useState<QueryLogDetail[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -115,23 +114,10 @@ export default function QueryLogsExplorerClient() {
   return (
     <div className="min-h-screen bg-background pb-12 pt-6 md:pb-16 md:pt-8">
       <div className="mx-auto max-w-6xl space-y-6 px-4 md:px-8">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <Button variant="ghost" size="sm" onClick={() => router.push('/')}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Chat
-          </Button>
-          <div className="flex items-center gap-2 text-foreground">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-card shadow-sm ring-1 ring-border">
-              <ScrollText className="h-4 w-4 text-muted-foreground" />
-            </div>
-            <div>
-              <h1 className="text-lg font-semibold leading-tight">Query logs</h1>
-              <p className="text-xs text-muted-foreground">
-                Every RAG request, with latency and cost — the same rows chat and evals link to
-              </p>
-            </div>
-          </div>
-        </div>
+        <PageHeader
+          title="Query logs"
+          subtitle="Every RAG request, with latency and cost — the same rows chat and evals link to"
+        />
 
         {/* Filters — inline, not a card */}
         <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">

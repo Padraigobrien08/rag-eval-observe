@@ -9,6 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { ArrowLeft, RefreshCw, AlertCircle } from 'lucide-react'
 import { getMetrics } from '@/lib/api/client'
 import { MetricsView, type MetricsData } from '@/components/metrics/metrics-view'
+import { PageHeader } from '@/components/page-header'
 
 export default function MetricsPage() {
   const router = useRouter()
@@ -61,44 +62,33 @@ export default function MetricsPage() {
   return (
     <div className="min-h-screen bg-background px-6 py-10 sm:px-8">
       <div className="mx-auto max-w-5xl">
-        {/* Header */}
-        <div className="mb-10 flex flex-wrap items-end justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => router.push('/')}
-              aria-label="Back to chat"
-            >
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <div>
-              <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-                Pipeline metrics
-              </h1>
-              <p className="mt-0.5 text-sm text-muted-foreground">
-                Live counters from the FastAPI backend
-                <span className="mx-1.5 text-muted-foreground/40">·</span>
-                <span className="tabular-nums">updated {lastUpdated.toLocaleTimeString()}</span>
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" asChild>
-              <Link href="/query-logs">Query logs</Link>
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => void fetchMetrics()}
-              disabled={isLoading}
-              aria-label="Refresh metrics"
-            >
-              <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-              <span className="ml-2">Refresh</span>
-            </Button>
-          </div>
-        </div>
+        <PageHeader
+          title="Pipeline metrics"
+          subtitle={
+            <>
+              Live counters from the FastAPI backend
+              <span className="mx-1.5 text-muted-foreground/40">·</span>
+              <span className="tabular-nums">updated {lastUpdated.toLocaleTimeString()}</span>
+            </>
+          }
+          actions={
+            <>
+              <Button variant="outline" size="sm" asChild>
+                <Link href="/query-logs">Query logs</Link>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => void fetchMetrics()}
+                disabled={isLoading}
+                aria-label="Refresh metrics"
+              >
+                <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+                <span className="ml-2">Refresh</span>
+              </Button>
+            </>
+          }
+        />
 
         {isLoading && !metrics ? (
           <div className="space-y-12">
