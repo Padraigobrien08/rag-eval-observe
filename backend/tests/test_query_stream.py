@@ -27,11 +27,11 @@ async def test_query_stream_returns_sse_events():
 
     with (
         patch(
-            "app.api.routes.generate_answer_stream",
+            "app.api.routes.query.generate_answer_stream",
             side_effect=fake_answer_stream,
         ),
         patch(
-            "app.api.routes._prepare_rag_retrieval",
+            "app.api.routes.query._prepare_rag_retrieval",
             new_callable=AsyncMock,
             return_value=(None, [], "vector-similarity"),
         ),
@@ -66,16 +66,16 @@ async def test_query_stream_done_payload_includes_request_id_and_query_log_id():
 
     with (
         patch(
-            "app.api.routes.generate_answer_stream",
+            "app.api.routes.query.generate_answer_stream",
             side_effect=fake_answer_stream,
         ),
         patch(
-            "app.api.routes._prepare_rag_retrieval",
+            "app.api.routes.query._prepare_rag_retrieval",
             new_callable=AsyncMock,
             return_value=(None, [], "vector-similarity"),
         ),
         patch(
-            "app.api.routes.log_query",
+            "app.api.routes.query.log_query",
             new_callable=AsyncMock,
             return_value="test-query-log-row-id",
         ),

@@ -144,7 +144,7 @@ async def test_non_stream_query_includes_request_and_query_log_ids():
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
             with (
-                patch("app.api.routes._prepare_rag_retrieval", side_effect=fake_prep),
+                patch("app.api.routes.query._prepare_rag_retrieval", side_effect=fake_prep),
                 patch("app.rag.answer.generate_answer", side_effect=fake_answer),
             ):
                 r = await client.post("/api/v1/query", json={"query": "hello"})
