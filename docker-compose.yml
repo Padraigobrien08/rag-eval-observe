@@ -50,12 +50,16 @@ services:
       - "3000:3000"
     environment:
       BACKEND_API_BASE_URL: http://api:8000
+      # Drizzle (chat/auth) tables live in the same DB as the RAG tables.
+      POSTGRES_URL: postgresql://postgres:postgres@postgres:5432/ragdb
     command:
       - bash
       - -lc
       - |
         corepack enable && corepack prepare pnpm@9 --activate &&
-        cd /workspace && pnpm install && pnpm dev --hostname 0.0.0.0 --port 3000
+        cd /workspace && pnpm install &&
+        pnpm db:migrate &&
+        pnpm dev --hostname 0.0.0.0 --port 3000
     depends_on:
       api:
         condition: service_started

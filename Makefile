@@ -28,6 +28,7 @@ db:
 # Database schema (same SQL as docker/init; idempotent) + Alembic revisions
 migrate:
 	cd backend && uv run python scripts/apply_init_sql.py && uv run alembic upgrade head
+	pnpm db:migrate  # Drizzle chat/auth tables (User/Chat/Message_v2) — required for guest login
 
 # Database seeding (eval corpus + local demo sources; idempotent)
 seed:
