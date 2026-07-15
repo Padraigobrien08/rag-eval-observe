@@ -199,7 +199,10 @@ git clone https://github.com/Padraigobrien08/rag-eval-observe.git
 cd rag-eval-observe
 cp .env.example .env
 # edit .env: set OPENAI_API_KEY=sk-...
-docker compose up -d
+
+# Postgres + FastAPI + web app. The web container applies both migration sets
+# (backend RAG tables + Drizzle chat/auth tables) before it starts.
+docker compose --profile full up -d
 
 # verify the backend is healthy
 curl http://localhost:8000/api/v1/health
