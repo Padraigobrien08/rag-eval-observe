@@ -18,7 +18,7 @@
 ### 1. Navigate to project root
 
 ```bash
-cd /Users/padraigobrien/Desktop/rag-eval-observability
+cd path/to/rag-eval-observe
 ls  # Should see backend/Dockerfile
 ```
 

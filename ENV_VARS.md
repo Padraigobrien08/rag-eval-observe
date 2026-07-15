@@ -184,7 +184,7 @@ OPENAI_API_KEY=sk-proj-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ENVIRONMENT=production
 
 # REQUIRED - CORS (replace with your actual Vercel URL)
-CORS_ALLOW_ORIGINS=https://rag-eval-observability.vercel.app,https://rag-eval-observability-git-main-yourusername.vercel.app
+CORS_ALLOW_ORIGINS=https://your-app.vercel.app,https://your-app-git-main-yourusername.vercel.app
 ```
 
 ---

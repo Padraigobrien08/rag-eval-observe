@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Try the live demo
+    url: https://pob-rag-chat.xyz/
+    about: See retrieval, citations, per-answer latency/cost, and the eval/query-log pages in action.
+  - name: Security vulnerability
+    url: https://github.com/Padraigobrien08/rag-eval-observe/security/policy
+    about: Please report security issues privately per SECURITY.md — do not open a public issue.
+  - name: Documentation
+    url: https://github.com/Padraigobrien08/rag-eval-observe/tree/main/docs
+    about: Architecture, observability, benchmarks, hardening, runbook, and API contract.
