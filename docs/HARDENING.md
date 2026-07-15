@@ -10,9 +10,11 @@ When **`API_KEY`** is non-empty in backend settings:
   - **`Authorization: Bearer <API_KEY>`**, or
   - **`X-API-Key: <API_KEY>`**
 
-Implementation: `optional_api_key_middleware` in `backend/app/main.py`.
+Implementation: `optional_api_key_middleware` in `backend/app/main.py` (keys are compared with `secrets.compare_digest`, so a wrong key can't be recovered by timing).
 
-**Implication:** The Next.js app must send the key if your API is locked down — typically via your proxy or a server-side BFF; **do not** expose production keys in `NEXT_PUBLIC_*` bundles.
+**Recommended posture (trusted proxy).** Set `API_KEY` on the backend and the **same value** as `BACKEND_API_KEY` on the Next.js proxy. The proxy (`src/app/api/backend/[...path]/route.ts` and `src/app/(chat)/api/chat/route.ts`) injects it server-side as `X-API-Key`, so public visitors reach the app only through the proxy — which has its own guest auth and per-IP rate limits — while **direct requests to the FastAPI origin get `401`**. This keeps billed OpenAI calls off the open internet without breaking the demo.
+
+**Implication:** **do not** expose production keys in `NEXT_PUBLIC_*` bundles. Starting the backend with `ENVIRONMENT=production` and an empty `API_KEY` logs a warning so the open-by-default state is never silent.
 
 ## Rate limiting
 

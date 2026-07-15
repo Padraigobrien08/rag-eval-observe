@@ -482,14 +482,13 @@ We welcome contributions! Please see [CONTRIBUTING.md](./CONTRIBUTING.md) for gu
 
 ## Security
 
-**Important**: This project does not include authentication or authorization by default. The API endpoints are publicly accessible. For production deployments:
+The backend ships an **API-key gate** (`optional_api_key_middleware`). The recommended posture for any public deployment — including the live demo — is the **trusted-proxy pattern**:
 
-- Deploy behind a reverse proxy with authentication (e.g., nginx with basic auth, API gateway)
-- Or implement authentication middleware (see [SECURITY.md](./SECURITY.md) for examples)
-- Configure CORS to restrict origins
-- Use HTTPS in production
+- Set **`API_KEY`** on the FastAPI backend. Every `/api/v1/*` route except health/metrics then requires `Authorization: Bearer <key>` or `X-API-Key: <key>` (constant-time compared).
+- Set the **same value as `BACKEND_API_KEY`** on the Next.js proxy, which injects it server-side. Public visitors reach the app through the proxy (with its own guest auth + per-IP rate limits); **direct hits to the backend origin get `401`**, so the billed OpenAI calls aren't openly exposed.
+- Starting the backend in `ENVIRONMENT=production` with `API_KEY` unset logs a warning.
 
-See [SECURITY.md](./SECURITY.md) for comprehensive security considerations and recommendations.
+Left empty, the backend stays open for zero-config local dev. Also configure CORS (`CORS_ALLOW_ORIGINS`), keep keys out of `NEXT_PUBLIC_*` bundles, and terminate TLS at the proxy. See **[docs/HARDENING.md](./docs/HARDENING.md)** and [SECURITY.md](./SECURITY.md) for the full posture, threat model, and multi-tenant guidance.
 
 ## Star history
 
