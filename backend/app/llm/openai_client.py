@@ -126,7 +126,7 @@ class OpenAIClient:
             OpenAITransientError: On 5xx or timeout errors
             OpenAIError: On other errors
         """
-        last_exception = None
+        last_exception: Exception | None = None
 
         for attempt in range(self.max_retries + 1):
             try:

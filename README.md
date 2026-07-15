@@ -31,6 +31,8 @@ Most RAG demos stop at chat. This one is built to **close the loop**: change the
 - **🔍 Query-log explorer** — live traffic and eval failures share one mental model via `query_log_id`, so a regression in CI points at the same rows you can inspect in production.
 - **📤 Eval-as-code** — export JSON/CSV with `curl` patterns ([docs/EVAL_CI.md](./docs/EVAL_CI.md)) so pipelines can archive artifacts and gate merges.
 
+**See it actually catch a regression:** [a worked case study](./backend/eval/case_study/README.md) where ingesting four broad "summary" docs demotes the canonical source for 12 questions — MRR drops past tolerance and the CI gate blocks the merge (`exit 1`), while a Hit@5-only gate would have shipped it. Reproduce it with one script.
+
 Read the full product argument in **[docs/THESIS.md](./docs/THESIS.md)**.
 
 ## See it in action
@@ -69,71 +71,6 @@ See **[DEVELOPMENT.md](./DEVELOPMENT.md)** for the full local workflow (Postgres
 | **[docs/EVAL_CI.md](./docs/EVAL_CI.md)**           | **`curl` exports** and CI artifact patterns                        |
 
 Automated **accessibility** checks (axe-core) and broader **eval / query-log E2E** run in CI via Playwright (`e2e/a11y-core-pages.spec.ts`, `e2e/eval-observability-mocked.spec.ts`).
-
-## Overview
-
-RAG Eval Observability is a full-stack platform designed to help developers and researchers build, test, and deploy production-ready RAG systems. It combines a modern web interface with a robust backend API, providing everything needed to ingest documents, query knowledge bases, and monitor system performance.
-
-### Key Capabilities
-
-- **Multiple RAG Strategies**: Compare vector similarity search, hybrid search, reranking, and multi-query approaches
-- **Interactive Chat Interface**: ChatGPT-style UI with citations, document previews, and structured answers
-- **Document Management**: Upload and manage documents (text, PDF, DOCX) with chunk visualization
-- **Evaluation Framework**: Offline evaluation harness with retrieval metrics and LLM-judge support
-- **Production Observability**: Real-time metrics, health checks, and structured logging
-- **Enterprise Features**: Rate limiting, distributed deployments, and comprehensive error handling
-
-## Why RAG Eval Observability?
-
-Building production RAG systems requires more than just embedding and retrieval—you need tools to evaluate performance, monitor behavior, and iterate on improvements. This platform provides:
-
-- **Complete RAG Pipeline**: End-to-end implementation from document ingestion to answer generation
-- **Multiple Retrieval Strategies**: Experiment with different approaches to find what works best for your use case
-- **Production-Ready**: Built with scalability, observability, and reliability in mind
-- **Developer-Friendly**: Modern tech stack with TypeScript, FastAPI, and PostgreSQL
-- **Open Source**: Fully open source with MIT license for maximum flexibility
-
-## Features
-
-### 🔍 Advanced Retrieval Strategies
-
-Choose from multiple RAG models optimized for different scenarios:
-
-- **Vector Similarity Search**: Semantic search using cosine similarity on embeddings
-- **Hybrid Search**: Combines vector search with BM25 keyword matching for improved recall
-- **Reranking**: Uses a reranking model to improve retrieval accuracy
-- **Multi-Query RAG**: Generates multiple query variations for better coverage
-
-### 💬 Modern Chat Interface
-
-- **ChatGPT-Style UI**: Clean, responsive interface optimized for conversation
-- **Structured Answers**: Summary sections with expandable full answers
-- **Interactive Citations**: Clickable citation markers with document references
-- **Document Preview**: View document chunks directly from the sidebar
-- **Metadata Display**: Cost, latency, and RAG model information for each response
-
-### 📚 Document Management
-
-- **Multi-Format Support**: Upload text files, PDFs, and DOCX documents
-- **Automatic Chunking**: Intelligent document chunking with configurable overlap
-- **Chunk Visualization**: Preview how documents are split into chunks
-- **Document Deletion**: Remove documents with confirmation dialogs
-
-### 📊 Observability & Monitoring
-
-- **Pipeline tracing**: OpenTelemetry spans per RAG stage (`rag.retrieve` → `openai.embedding` / `db.vector_search` → `rag.generate` → `openai.chat`) — a full trace waterfall per request. See **[docs/OBSERVABILITY.md](./docs/OBSERVABILITY.md)**
-- **Real percentiles**: p50/p95/p99 per route **and per pipeline stage**, exported as Prometheus histograms for `histogram_quantile()`
-- **Metrics Dashboard**: Real-time system metrics including uptime, request counts, latency, and token usage
-- **Health Checks**: Built-in health endpoints for monitoring and orchestration
-- **Structured Logging**: Request IDs + `trace_id` correlation and detailed error logging for debugging
-- **Cost Tracking**: Monitor API costs with token usage breakdowns
-
-### 🧪 Evaluation Framework
-
-- **Offline Evaluation**: Test RAG performance without production traffic
-- **Retrieval Metrics**: Hit@K and Mean Reciprocal Rank (MRR) calculations
-- **LLM Judge**: Optional LLM-based evaluation for correctness and faithfulness
-- **Report Generation**: Automated evaluation reports with failure examples
 
 ## Architecture
 

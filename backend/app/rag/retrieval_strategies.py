@@ -11,6 +11,7 @@ This module provides different retrieval strategies:
 import json
 import re
 from abc import ABC, abstractmethod
+from collections.abc import Callable
 from typing import Any
 
 import structlog
@@ -91,7 +92,7 @@ class VectorSimilarityStrategy(RetrievalStrategy):
             WHERE c.embedding IS NOT NULL
         """
 
-        params = [embedding_str]
+        params: list[Any] = [embedding_str]
         param_index = 2
 
         # Apply filters
@@ -186,7 +187,7 @@ class HybridSearchStrategy(RetrievalStrategy):
 
         # Build filter conditions for vector query
         vector_filter_conditions = []
-        vector_params = [embedding_str]
+        vector_params: list[Any] = [embedding_str]
         vector_param_index = 2
 
         if filters:
@@ -229,7 +230,7 @@ class HybridSearchStrategy(RetrievalStrategy):
 
         # Build filter conditions for BM25 query (separate parameter list)
         bm25_filter_conditions = []
-        bm25_params = [query]  # $1 = query text
+        bm25_params: list[Any] = [query]  # $1 = query text
         bm25_param_index = 2
 
         if filters:
@@ -641,15 +642,15 @@ def get_retrieval_strategy(rag_model: str) -> RetrievalStrategy:
     Raises:
         ValueError: If rag_model is not supported
     """
-    strategies = {
+    strategies: dict[str, Callable[[], RetrievalStrategy]] = {
         "vector-similarity": VectorSimilarityStrategy,
         "hybrid-search": HybridSearchStrategy,
         "reranking": RerankingStrategy,
         "multi-query": MultiQueryStrategy,
     }
 
-    strategy_class = strategies.get(rag_model)
-    if not strategy_class:
+    strategy_factory = strategies.get(rag_model)
+    if not strategy_factory:
         raise ValueError(
             f"Unsupported RAG model: {rag_model}. Supported models: {', '.join(strategies.keys())}"
         )
@@ -657,6 +658,6 @@ def get_retrieval_strategy(rag_model: str) -> RetrievalStrategy:
     logger.info(
         "Creating retrieval strategy instance",
         rag_model=rag_model,
-        strategy_class=strategy_class.__name__,
+        strategy_class=getattr(strategy_factory, "__name__", rag_model),
     )
-    return strategy_class()
+    return strategy_factory()

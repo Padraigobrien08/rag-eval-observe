@@ -129,8 +129,8 @@ class TextChunker:
 
         chunks = []
         chunk_index = 0
-        current_chunk_content = []
-        current_metadata = {"heading_path": []}
+        current_chunk_content: list[str] = []
+        current_metadata: dict[str, Any] = {"heading_path": []}
         current_size = 0
 
         for section in sections:
@@ -219,8 +219,8 @@ class TextChunker:
         """Parse markdown into sections with heading paths."""
         sections = []
         lines = text.split("\n")
-        current_heading_path = []
-        current_content = []
+        current_heading_path: list[str] = []
+        current_content: list[str] = []
 
         for line in lines:
             # Check for heading (markdown headers: #, ##, ###, etc.)
