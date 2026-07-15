@@ -10,12 +10,15 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.6+-3178c6.svg?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Python](https://img.shields.io/badge/Python-3.11+-3776ab.svg?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
+[![GitHub stars](https://img.shields.io/github/stars/Padraigobrien08/rag-eval-observe?style=flat-square&logo=github&label=Star&color=0b0b0f)](https://github.com/Padraigobrien08/rag-eval-observe/stargazers)
 
 ![RAG Eval Observability — close the loop on RAG](./docs/images/social-preview.png)
 
 ### [Try the live demo →](https://pob-rag-chat.xyz/)
 
 _The live deployment is seeded with sample RAG documents — click an example query to see retrieval, citations, and per-answer latency/cost immediately._
+
+**If this shows you something useful about production RAG, a ⭐ helps other engineers find it.**
 
 </div>
 
@@ -549,6 +552,12 @@ We welcome contributions! Please see [CONTRIBUTING.md](./CONTRIBUTING.md) for gu
 - Use HTTPS in production
 
 See [SECURITY.md](./SECURITY.md) for comprehensive security considerations and recommendations.
+
+## Star history
+
+If you find this useful, starring the repo helps it reach other engineers working on production RAG.
+
+[![Star History Chart](https://api.star-history.com/svg?repos=Padraigobrien08/rag-eval-observe&type=Date)](https://star-history.com/#Padraigobrien08/rag-eval-observe&Date)
 
 ## License
 
