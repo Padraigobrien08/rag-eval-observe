@@ -24,6 +24,31 @@ After each run, capture from the API or UI:
 
 Use **`GET /api/v1/eval/runs/{id}/export?format=json`** in CI to store artifacts (see **[EVAL_CI.md](./EVAL_CI.md)**).
 
+## Worked case study: a regression the gate caught
+
+A **real, reproduced** run of the workflow — ingesting four broad "summary /
+glossary" documents silently demotes the canonical source for 12 questions, and
+the CI gate (`eval/compare_eval.py`) blocks the merge. Full write-up, artifacts,
+and a one-command reproduction: **[`backend/eval/case_study/`](../backend/eval/case_study/README.md)**.
+
+| Field | Value |
+| --- | --- |
+| Dataset | `backend/eval/dataset.jsonl` (78 cases) |
+| Embedding model | `text-embedding-3-small` |
+| Chat model | `gpt-4o-mini` |
+| Change under test | +4 distractor docs (`case_study/distractors/`) |
+| Hit@5 | 94.9% → 97.4% (within run noise) |
+| **MRR (gated)** | **0.840 → 0.812 (−0.028)** |
+| Hit@1 | 76.9% → 70.5% (−6.4pp) |
+| Rank-1 answers | 60 → 55 canonical sources |
+| Gate result | 🔴 **fails (exit 1)** — MRR beyond ±0.02 tolerance |
+
+The clean run reproduced the pinned baseline (`eval/baseline.json`) to within a
+case, so the delta is attributable to the distractors, not drift. The takeaway:
+**Hit@5 barely moved — a recall@k-only gate would have shipped this. MRR caught
+it** because it is sensitive to *where* the right document lands, not just whether
+it appears. This is why the gate keys on both.
+
 ## Case study template (fill in for your deployment)
 
 | Field | Example |

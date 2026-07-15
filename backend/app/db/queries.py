@@ -1,4 +1,5 @@
 import json
+from typing import Any
 
 import asyncpg
 import structlog
@@ -370,7 +371,7 @@ async def get_query_logs(
             FROM queries
             WHERE 1=1
         """
-        params = []
+        params: list[Any] = []
         param_count = 0
 
         if rag_model:
@@ -480,7 +481,7 @@ async def get_query_stats(
             FROM queries
             WHERE 1=1
         """
-        params = []
+        params: list[Any] = []
         param_count = 0
 
         if start_date:

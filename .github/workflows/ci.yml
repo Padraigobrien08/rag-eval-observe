@@ -90,8 +90,8 @@ jobs:
       - name: Install dependencies
         run: uv sync --frozen --extra dev
 
-      - name: Mypy (app/core)
-        run: uv run mypy app/core
+      - name: Mypy (app)
+        run: uv run mypy app
 
   test:
     runs-on: ubuntu-latest
@@ -144,5 +144,5 @@ jobs:
           uv run alembic upgrade head
 
       - name: Run tests
-        run: uv run pytest tests/ -v --cov=app --cov-report=xml --cov-fail-under=58
+        run: uv run pytest tests/ -v --cov=app --cov-report=xml --cov-fail-under=70
 

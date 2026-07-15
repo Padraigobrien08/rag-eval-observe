@@ -392,7 +392,7 @@ async def list_documents_endpoint(
         list_time = (time.time() - list_start) * 1000
 
         # Only fetch total count if explicitly requested (frontend doesn't need it)
-        count_time = 0
+        count_time = 0.0
         if include_total:
             count_start = time.time()
             total = await count_documents()
