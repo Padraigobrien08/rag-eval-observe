@@ -126,6 +126,59 @@ def calculate_mrr(retrieved_sources: list[str], expected_sources: list[str]) -> 
     return 0.0
 
 
+def _extract_json_object(text: str | None) -> dict[str, Any] | None:
+    """Best-effort extraction of the first JSON object from an LLM response.
+
+    Handles a pure-JSON response, an object wrapped in ```json fences or prose,
+    and — unlike a ``\\{[^}]+\\}`` regex — a ``}`` inside a string value (e.g. the
+    free-text ``reasoning`` field), by scanning for a *balanced* top-level object
+    while respecting string literals and escapes. Returns ``None`` if no object
+    parses.
+    """
+    if not text:
+        return None
+    s = text.strip()
+
+    # Fast path: the whole response is already a JSON object.
+    try:
+        obj = json.loads(s)
+        return obj if isinstance(obj, dict) else None
+    except json.JSONDecodeError:
+        pass
+
+    # Otherwise scan for the first balanced {...}, ignoring braces inside strings.
+    start = s.find("{")
+    while start != -1:
+        depth = 0
+        in_str = False
+        esc = False
+        for i in range(start, len(s)):
+            c = s[i]
+            if in_str:
+                if esc:
+                    esc = False
+                elif c == "\\":
+                    esc = True
+                elif c == '"':
+                    in_str = False
+            elif c == '"':
+                in_str = True
+            elif c == "{":
+                depth += 1
+            elif c == "}":
+                depth -= 1
+                if depth == 0:
+                    try:
+                        obj = json.loads(s[start : i + 1])
+                        if isinstance(obj, dict):
+                            return obj
+                    except json.JSONDecodeError:
+                        pass
+                    break  # this '{' didn't yield valid JSON; try the next one
+        start = s.find("{", start + 1)
+    return None
+
+
 async def llm_judge_correctness(
     query: str, answer: str, expected_answer_contains: list[str]
 ) -> dict[str, Any]:
@@ -170,12 +223,11 @@ Respond in JSON format:
             messages=messages, temperature=0.0, max_tokens=200
         )
 
-        # Parse JSON response
-        import re
-
-        json_match = re.search(r"\{[^}]+\}", response.content, re.DOTALL)
-        if json_match:
-            judgment = json.loads(json_match.group())
+        # Parse the JSON verdict. The model is asked for a flat object, but a `}`
+        # inside the free-text "reasoning" would truncate a naive regex — so use a
+        # balanced-brace extractor that ignores braces inside strings.
+        judgment = _extract_json_object(response.content)
+        if judgment is not None:
             return {
                 "correctness": judgment.get("correctness", False),
                 "faithfulness": judgment.get("faithfulness", False),
