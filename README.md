@@ -7,6 +7,7 @@
 [![Live demo](https://img.shields.io/badge/demo-pob--rag--chat.xyz-0b0b0f?style=flat-square&logo=vercel&logoColor=white)](https://pob-rag-chat.xyz/)
 [![CI](https://img.shields.io/github/actions/workflow/status/Padraigobrien08/rag-eval-observe/ci.yml?branch=main&style=flat-square&label=CI&logo=github)](https://github.com/Padraigobrien08/rag-eval-observe/actions/workflows/ci.yml)
 [![Eval gate](https://img.shields.io/github/actions/workflow/status/Padraigobrien08/rag-eval-observe/eval-gate.yml?style=flat-square&label=eval%20gate&logo=github)](https://github.com/Padraigobrien08/rag-eval-observe/actions/workflows/eval-gate.yml)
+[![Release](https://img.shields.io/github/v/release/Padraigobrien08/rag-eval-observe?style=flat-square&logo=github&label=release&color=0b0b0f)](https://github.com/Padraigobrien08/rag-eval-observe/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.6+-3178c6.svg?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Python](https://img.shields.io/badge/Python-3.11+-3776ab.svg?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
@@ -465,7 +466,7 @@ rag-eval-observability/
 - **Get started:** [Quick Start](#quick-start) (above) · [DEVELOPMENT.md](./DEVELOPMENT.md) (local workflow) · [ENV_VARS.md](./ENV_VARS.md) (configuration)
 - **Understand it:** [docs/THESIS.md](./docs/THESIS.md) (the product argument) · [docs/OBSERVABILITY.md](./docs/OBSERVABILITY.md) · [docs/API_CONTRACT.md](./docs/API_CONTRACT.md) · [backend/README.md](./backend/README.md)
 - **Ship & operate:** [DEPLOYMENT.md](./DEPLOYMENT.md) · [docs/RUNBOOK.md](./docs/RUNBOOK.md) · [docs/SLOS.md](./docs/SLOS.md) · [docs/HARDENING.md](./docs/HARDENING.md) · [docs/THREAT_MODEL.md](./docs/THREAT_MODEL.md)
-- **Contribute:** [CONTRIBUTING.md](./CONTRIBUTING.md) · [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md)
+- **Contribute:** [CONTRIBUTING.md](./CONTRIBUTING.md) · [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md) · [CHANGELOG.md](./CHANGELOG.md)
 
 ## Contributing
 
