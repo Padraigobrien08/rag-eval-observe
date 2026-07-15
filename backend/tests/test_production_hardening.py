@@ -360,3 +360,34 @@ class TestOptionalApiKey:
                     )
                     assert r.status_code == 200
                     assert r.json().get("answer") == "ok"
+
+    def test_query_rejects_wrong_key(self):
+        with patch.object(settings, "API_KEY", "integration-secret"):
+            client = TestClient(app)
+            r = client.post(
+                "/api/v1/query",
+                json={"query": "x", "top_k": 5},
+                headers={"X-API-Key": "wrong-secret"},
+            )
+            assert r.status_code == 401
+
+    def test_query_accepts_bearer_token(self):
+        from app.rag.answer import AnswerResponse
+
+        with patch.object(settings, "API_KEY", "integration-secret"):
+            client = TestClient(app)
+            with patch("app.rag.retrieve.retrieve", new_callable=AsyncMock) as mock_retrieve:
+                mock_retrieve.return_value = []
+                with patch("app.rag.answer.generate_answer", new_callable=AsyncMock) as mock_ans:
+                    mock_ans.return_value = AnswerResponse(
+                        answer="ok",
+                        citations=[],
+                        used_chunk_ids=[],
+                        latency_ms=1,
+                    )
+                    r = client.post(
+                        "/api/v1/query",
+                        json={"query": "x", "top_k": 5},
+                        headers={"Authorization": "Bearer integration-secret"},
+                    )
+                    assert r.status_code == 200

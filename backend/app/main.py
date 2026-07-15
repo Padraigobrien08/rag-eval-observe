@@ -1,3 +1,4 @@
+import secrets
 import time
 import uuid
 from contextlib import asynccontextmanager
@@ -23,6 +24,17 @@ async def lifespan(app: FastAPI):
     """Application lifespan events."""
     setup_logging()
     logger.info("Starting application", environment=settings.ENVIRONMENT)
+
+    # Loudly flag the abuse/cost hole: a production backend with no API key accepts
+    # unauthenticated requests straight to billed OpenAI calls.
+    if settings.is_production and not settings.API_KEY.strip():
+        logger.warning(
+            "API_KEY is not set in a production environment — the backend accepts "
+            "unauthenticated requests to billed endpoints. Set API_KEY here and "
+            "BACKEND_API_KEY on the frontend proxy so only the trusted frontend can "
+            "reach it. See docs/HARDENING.md.",
+        )
+
     await init_db_pool()
 
     # Initialize Redis rate limiter if enabled
@@ -103,7 +115,12 @@ async def optional_api_key_middleware(request: Request, call_next):
     if auth.lower().startswith("bearer "):
         bearer = auth[7:].strip()
     header_key = (request.headers.get("X-API-Key") or "").strip()
-    if bearer == settings.API_KEY or header_key == settings.API_KEY:
+
+    # Constant-time comparison so a wrong key can't be recovered by timing.
+    def _matches(candidate: str) -> bool:
+        return bool(candidate) and secrets.compare_digest(candidate, settings.API_KEY)
+
+    if _matches(bearer) or _matches(header_key):
         return await call_next(request)
 
     return JSONResponse(

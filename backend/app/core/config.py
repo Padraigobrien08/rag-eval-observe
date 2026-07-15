@@ -114,8 +114,15 @@ class Settings(BaseSettings):
     OTEL_ENABLED: bool = False
     OTEL_SERVICE_NAME: str = "rag-eval-backend"
 
-    # Optional API key for all /api/v1/* routes except health and metrics (empty = disabled)
+    # Optional API key for all /api/v1/* routes except health and metrics (empty = disabled).
+    # Recommended for any public deployment: set this on the backend and pass the same
+    # value as BACKEND_API_KEY on the frontend proxy. See docs/HARDENING.md.
     API_KEY: str = ""
+
+    @property
+    def is_production(self) -> bool:
+        """True when ENVIRONMENT indicates a production deployment."""
+        return self.ENVIRONMENT.strip().lower() in ("production", "prod")
 
     @property
     def cors_origins_list(self) -> list[str]:
