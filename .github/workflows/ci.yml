@@ -146,11 +146,3 @@ jobs:
       - name: Run tests
         run: uv run pytest tests/ -v --cov=app --cov-report=xml --cov-fail-under=58
 
-      - name: Upload coverage
-        uses: codecov/codecov-action@v3
-        with:
-          file: ./coverage.xml
-          flags: unittests
-          name: codecov-umbrella
-          fail_ci_if_error: false
-
