@@ -401,7 +401,7 @@ Edit `backend/eval/dataset.jsonl`:
 ## Project Structure
 
 ```
-rag-eval-observability/
+rag-eval-observe/
 ├── src/                          # Frontend (Next.js)
 │   ├── app/                     # App Router pages
 │   ├── features/                # Feature modules

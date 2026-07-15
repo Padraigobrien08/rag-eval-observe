@@ -1,0 +1,63 @@
+name: Bug report
+description: Something isn't working as documented
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug. Please fill in enough for it to be reproduced.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, and what happened instead?
+      placeholder: Calling POST /api/v1/query with … returned 500 instead of an answer.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: A minimal sequence — the exact request, query, or UI action.
+      placeholder: |
+        1. `docker compose --profile full up -d`
+        2. curl -X POST localhost:8000/api/v1/query -d '{"query":"…"}'
+        3. …
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      description: Which part of the stack?
+      options:
+        - Backend (FastAPI / RAG pipeline)
+        - Frontend (Next.js web app)
+        - Evaluation harness / CI eval gate
+        - Observability (tracing / metrics)
+        - Deployment / Docker
+        - Other / not sure
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs or trace
+      description: Backend logs, browser console, or a query-log / trace id. Redact secrets.
+      render: shell
+  - type: input
+    id: version
+    attributes:
+      label: Version / commit
+      description: Release tag (e.g. v0.1.0) or commit SHA.
+      placeholder: v0.1.0
+  - type: dropdown
+    id: environment
+    attributes:
+      label: How are you running it?
+      options:
+        - Docker Compose (local)
+        - Manual local dev (make api-dev / make dev)
+        - Deployed (Vercel + Render + Neon or similar)
+    validations:
+      required: true
