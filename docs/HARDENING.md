@@ -40,8 +40,65 @@ Allowed origins come from **`CORS_ALLOW_ORIGINS`** (comma-separated). Production
 2. **JWT / OIDC** at the edge, mapping `sub` → tenant; enforce in FastAPI dependencies on every mutating route.
 3. **Separate databases** per customer for the strongest isolation (ops cost highest).
 
+## Threat model (lightweight)
+
+Scope: default single-tenant deployment (chat + API + Postgres + optional Redis).
+A starting point for security review, not a formal certification.
+
+### Assets
+
+| Asset | Risk if compromised |
+| --- | --- |
+| **`OPENAI_API_KEY`** | Abusive usage, data sent to OpenAI under your billing |
+| **`DATABASE_URL`** | Full read/write to documents, chats, eval runs, query logs |
+| **`API_KEY`** (if set) | Unauthorized API access from any client that obtains the key |
+| User chat content | Confidentiality / compliance exposure |
+| Uploaded PDFs / docs | Malware storage, PII in object storage or DB |
+
+### Trust boundaries
+
+```mermaid
+flowchart LR
+  Browser[Browser]
+  Next[Next.js]
+  API[FastAPI]
+  DB[(Postgres)]
+  OAI[OpenAI API]
+
+  Browser --> Next
+  Browser --> API
+  Next --> API
+  API --> DB
+  API --> OAI
+```
+
+- **Browser ↔ Next:** static assets; user-visible data.
+- **Browser ↔ API:** direct calls when `API_BASE_URL` points at backend (or via Next proxy `/api/backend/...`).
+- **API ↔ OpenAI:** prompts, retrieved chunks, and completions leave your VPC according to OpenAI's data policies.
+
+### Mitigations (built-in)
+
+- **Optional API key** on mutating and sensitive read routes (see the top of this doc).
+- **Rate limiting** per IP (with Redis option for multi-instance).
+- **CORS** restriction to known web origins.
+- **TLS** at the edge (load balancer / Vercel / ingress) — not terminated in sample Dockerfiles alone.
+
+### Recommended additions for production
+
+1. **Secrets management** — vault or cloud secret manager; rotate **`API_KEY`** and DB credentials.
+2. **WAF / bot protection** on public API if exposed.
+3. **Encryption at rest** for managed Postgres and backups.
+4. **PII review** before sending user content to third-party LLMs.
+5. **Dependency scanning** — `pnpm audit`, `uv` / OSV for Python.
+
+### Out of scope (today)
+
+- Per-user authentication and authorization.
+- Field-level encryption in the database.
+- Automated DLP on uploads.
+
 ## Related reading
 
-- **[THREAT_MODEL.md](./THREAT_MODEL.md)** — assets and mitigations.
-- **[RUNBOOK.md](./RUNBOOK.md)** — incidents and health checks.
+- **[RUNBOOK.md](./RUNBOOK.md)** — incidents, health checks, and SLOs.
+- **[SECURITY.md](../SECURITY.md)** — security policy and vulnerability reporting.
 - **`ENV_VARS.md`** (repo root) — full variable list.
