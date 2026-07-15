@@ -59,7 +59,7 @@ class TestRetrieveBasic:
 
         with (
             patch(
-                "app.rag.retrieval_strategies.get_openai_client", return_value=mock_openai_client
+                "app.rag.retrieval_strategies.get_llm_client", return_value=mock_openai_client
             ),
             patch(
                 "app.rag.retrieval_strategies.get_db_pool", new=AsyncMock(return_value=mock_pool)
@@ -99,7 +99,7 @@ class TestRetrieveBasic:
 
         with (
             patch(
-                "app.rag.retrieval_strategies.get_openai_client", return_value=mock_openai_client
+                "app.rag.retrieval_strategies.get_llm_client", return_value=mock_openai_client
             ),
             patch(
                 "app.rag.retrieval_strategies.get_db_pool", new=AsyncMock(return_value=mock_pool)
@@ -131,7 +131,7 @@ class TestRetrieveBasic:
 
         with (
             patch(
-                "app.rag.retrieval_strategies.get_openai_client", return_value=mock_openai_client
+                "app.rag.retrieval_strategies.get_llm_client", return_value=mock_openai_client
             ),
             patch(
                 "app.rag.retrieval_strategies.get_db_pool", new=AsyncMock(return_value=mock_pool)
@@ -167,7 +167,7 @@ class TestRetrieveBasic:
 
         with (
             patch(
-                "app.rag.retrieval_strategies.get_openai_client", return_value=mock_openai_client
+                "app.rag.retrieval_strategies.get_llm_client", return_value=mock_openai_client
             ),
             patch(
                 "app.rag.retrieval_strategies.get_db_pool", new=AsyncMock(return_value=mock_pool)
@@ -234,7 +234,7 @@ class TestRetrieveOrdering:
 
         with (
             patch(
-                "app.rag.retrieval_strategies.get_openai_client", return_value=mock_openai_client
+                "app.rag.retrieval_strategies.get_llm_client", return_value=mock_openai_client
             ),
             patch(
                 "app.rag.retrieval_strategies.get_db_pool", new=AsyncMock(return_value=mock_pool)
@@ -278,7 +278,7 @@ class TestRetrieveOrdering:
 
         with (
             patch(
-                "app.rag.retrieval_strategies.get_openai_client", return_value=mock_openai_client
+                "app.rag.retrieval_strategies.get_llm_client", return_value=mock_openai_client
             ),
             patch(
                 "app.rag.retrieval_strategies.get_db_pool", new=AsyncMock(return_value=mock_pool)
@@ -315,7 +315,7 @@ class TestRetrieveErrors:
         mock_openai_client.create_embedding = AsyncMock(side_effect=OpenAIError("API error"))
 
         with patch(
-            "app.rag.retrieval_strategies.get_openai_client", return_value=mock_openai_client
+            "app.rag.retrieval_strategies.get_llm_client", return_value=mock_openai_client
         ):
             with pytest.raises(RetrieveError, match="Failed to generate embedding"):
                 await retrieve("test query", top_k=5)
@@ -335,7 +335,7 @@ class TestRetrieveErrors:
 
         with (
             patch(
-                "app.rag.retrieval_strategies.get_openai_client", return_value=mock_openai_client
+                "app.rag.retrieval_strategies.get_llm_client", return_value=mock_openai_client
             ),
             patch(
                 "app.rag.retrieval_strategies.get_db_pool", new=AsyncMock(return_value=mock_pool)
@@ -377,7 +377,7 @@ class TestRetrieveScoreMeaning:
 
         with (
             patch(
-                "app.rag.retrieval_strategies.get_openai_client", return_value=mock_openai_client
+                "app.rag.retrieval_strategies.get_llm_client", return_value=mock_openai_client
             ),
             patch(
                 "app.rag.retrieval_strategies.get_db_pool", new=AsyncMock(return_value=mock_pool)
@@ -413,7 +413,7 @@ class TestRetrieveScoreMeaning:
 
         with (
             patch(
-                "app.rag.retrieval_strategies.get_openai_client", return_value=mock_openai_client
+                "app.rag.retrieval_strategies.get_llm_client", return_value=mock_openai_client
             ),
             patch(
                 "app.rag.retrieval_strategies.get_db_pool", new=AsyncMock(return_value=mock_pool)
@@ -455,7 +455,7 @@ class TestRetrieveFilterValidation:
 
         with (
             patch(
-                "app.rag.retrieval_strategies.get_openai_client", return_value=mock_openai_client
+                "app.rag.retrieval_strategies.get_llm_client", return_value=mock_openai_client
             ),
             patch(
                 "app.rag.retrieval_strategies.get_db_pool", new=AsyncMock(return_value=mock_pool)
@@ -497,7 +497,7 @@ class TestRetrieveFilterValidation:
 
         with (
             patch(
-                "app.rag.retrieval_strategies.get_openai_client", return_value=mock_openai_client
+                "app.rag.retrieval_strategies.get_llm_client", return_value=mock_openai_client
             ),
             patch(
                 "app.rag.retrieval_strategies.get_db_pool", new=AsyncMock(return_value=mock_pool)
@@ -534,7 +534,7 @@ class TestRetrieveFilterValidation:
 
         with (
             patch(
-                "app.rag.retrieval_strategies.get_openai_client", return_value=mock_openai_client
+                "app.rag.retrieval_strategies.get_llm_client", return_value=mock_openai_client
             ),
             patch(
                 "app.rag.retrieval_strategies.get_db_pool", new=AsyncMock(return_value=mock_pool)

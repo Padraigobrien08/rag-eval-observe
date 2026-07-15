@@ -8,7 +8,7 @@ import structlog
 
 from app.core.config import settings
 from app.core.tracing import span
-from app.llm.openai_client import OpenAIError, TokenUsage, get_openai_client
+from app.llm.openai_client import OpenAIError, TokenUsage, get_llm_client
 from app.rag.types import RetrievedChunk
 
 logger = structlog.get_logger()
@@ -262,7 +262,7 @@ async def generate_answer(
         )
 
         # Call OpenAI chat completion
-        openai_client = get_openai_client()
+        openai_client = get_llm_client()
 
         # Adjust system message based on whether we have document list context
         if document_list_context:
@@ -412,7 +412,7 @@ async def generate_answer_stream(
             {"role": "user", "content": prompt},
         ]
 
-        openai_client = get_openai_client()
+        openai_client = get_llm_client()
         raw_parts: list[str] = []
         stream_usage: TokenUsage | None = None
         async for item in openai_client.stream_chat_completion(

@@ -6,7 +6,7 @@ import structlog
 
 from app.core.config import settings
 from app.db.session import get_db_pool
-from app.llm.openai_client import OpenAIError, get_openai_client
+from app.llm.openai_client import OpenAIError, get_llm_client
 from app.rag.adaptive_chunking import resolve_ingest_chunk_params
 from app.rag.chunking import TextChunker, merge_undersized_chunks
 from app.rag.preprocess import preprocess_ingest_text
@@ -267,7 +267,7 @@ async def ingest_document(
     )
 
     # Get embeddings for all chunks (batched)
-    openai_client = get_openai_client()
+    openai_client = get_llm_client()
     chunk_texts = [chunk.content for chunk in chunks]
 
     try:

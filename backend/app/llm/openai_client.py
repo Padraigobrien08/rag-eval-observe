@@ -10,6 +10,7 @@ import structlog
 
 from app.core.config import settings
 from app.core.tracing import observe_stage, record_stage_latency
+from app.llm.base import LLMClient
 
 logger = structlog.get_logger()
 
@@ -58,8 +59,13 @@ class OpenAITransientError(OpenAIError):
     pass
 
 
-class OpenAIClient:
-    """OpenAI API client with retry logic and error handling."""
+class OpenAIClient(LLMClient):
+    """OpenAI implementation of the provider-neutral ``LLMClient`` seam.
+
+    Adds retry logic, error normalization, tracing spans, and token accounting
+    on top of the raw OpenAI HTTP API. Subclassing ``LLMClient`` makes mypy
+    verify this stays a valid implementation of the pipeline's interface.
+    """
 
     def __init__(
         self,
@@ -553,15 +559,25 @@ class OpenAIClient:
 _client: OpenAIClient | None = None
 
 
+def get_llm_client() -> LLMClient:
+    """Get the process-wide LLM client (the provider-neutral seam).
+
+    Prefer this in pipeline code. To support another provider, branch here on a
+    settings value and return an alternative ``LLMClient`` implementation — no
+    call site changes required. See ``app/llm/base.py``.
+    """
+    return get_openai_client()
+
+
 def get_openai_client() -> OpenAIClient:
-    """Get or create global OpenAI client instance."""
+    """Get or create the global OpenAI client instance."""
     global _client
     if _client is None:
         _client = OpenAIClient()
     return _client
 
 
-def set_openai_client(client: OpenAIClient | None) -> None:
-    """Set global OpenAI client (useful for testing)."""
+def set_openai_client(client: LLMClient | None) -> None:
+    """Override the global LLM client (used by tests and benchmarks)."""
     global _client
-    _client = client
+    _client = client  # type: ignore[assignment]

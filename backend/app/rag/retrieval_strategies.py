@@ -18,7 +18,7 @@ import structlog
 
 from app.core.tracing import span
 from app.db.session import get_db_pool
-from app.llm.openai_client import OpenAIError, get_openai_client
+from app.llm.openai_client import OpenAIError, get_llm_client
 from app.rag.types import RetrievedChunk, RetrieveError
 
 logger = structlog.get_logger()
@@ -66,7 +66,7 @@ class VectorSimilarityStrategy(RetrievalStrategy):
 
         # Generate embedding for query
         try:
-            openai_client = get_openai_client()
+            openai_client = get_llm_client()
             embedding_response = await openai_client.create_embedding(query)
             query_embedding = embedding_response.embedding
         except OpenAIError as e:
@@ -171,7 +171,7 @@ class HybridSearchStrategy(RetrievalStrategy):
 
         # Generate embedding for query
         try:
-            openai_client = get_openai_client()
+            openai_client = get_llm_client()
             embedding_response = await openai_client.create_embedding(query)
             query_embedding = embedding_response.embedding
         except OpenAIError as e:
@@ -416,7 +416,7 @@ class RerankingStrategy(RetrievalStrategy):
                 "Reranking: applying reranker model",
                 candidates_count=len(candidates),
             )
-            openai_client = get_openai_client()
+            openai_client = get_llm_client()
 
             # Create a prompt for reranking
             rerank_prompt = f"""You are a relevance scorer. Given a query and a list of document chunks, rank them by relevance.
@@ -505,7 +505,7 @@ class MultiQueryStrategy(RetrievalStrategy):
         # Generate query variations using LLM
         logger.info("Multi-query: generating query variations", original_query=query)
         try:
-            openai_client = get_openai_client()
+            openai_client = get_llm_client()
 
             variation_prompt = f"""Generate 3 different variations of the following search query. Each variation should approach the question from a different angle or use different terminology.
 
