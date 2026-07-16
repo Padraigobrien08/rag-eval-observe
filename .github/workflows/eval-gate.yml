@@ -56,7 +56,7 @@ jobs:
       EVAL_GATE_TOLERANCE: "0.02"
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Guard — require OPENAI_API_KEY
         id: guard
@@ -121,7 +121,7 @@ jobs:
 
       - name: Post / update PR comment
         if: steps.guard.outputs.should_run == 'true' && github.event_name == 'pull_request'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const fs = require('fs');
@@ -139,7 +139,7 @@ jobs:
 
       - name: Upload eval artifacts
         if: steps.guard.outputs.should_run == 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: eval-gate
           path: |

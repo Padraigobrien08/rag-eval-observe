@@ -13,8 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   cron. The scheduled run existed only to spend OpenAI credits on a canary; on a
   self-hosted portfolio deployment that is opt-in, not a standing cost. Run it on
   demand from the Actions tab.
-- Standardised `actions/upload-artifact` on `@v4` across every workflow (the eval
-  workflows had drifted to `@v7`).
+- Upgraded all CI actions off the deprecated Node 20 runtime to their current
+  Node 24-native majors (`checkout@v7`, `upload-artifact@v7`, `download-artifact@v8`,
+  `github-script@v9`), clearing the GitHub Actions deprecation warnings.
 - Documented the `reranking` strategy's 200-char preview budget in code and in
   [docs/BENCHMARKS.md](docs/BENCHMARKS.md), so its benchmark row reads as a tunable
   cost/latency cap rather than a ceiling.
