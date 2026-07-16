@@ -56,7 +56,7 @@ jobs:
       EVAL_GATE_TOLERANCE: "0.02"
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Guard — require OPENAI_API_KEY
         id: guard

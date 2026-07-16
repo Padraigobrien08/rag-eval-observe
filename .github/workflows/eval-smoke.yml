@@ -38,7 +38,7 @@ jobs:
       EVAL_RECORD_CHAT: 'true'
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Require OpenAI API key
         env:
