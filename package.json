@@ -88,7 +88,7 @@
     "@axe-core/playwright": "^4.11.3",
     "@jest/globals": "^29.7.0",
     "@playwright/test": "^1.49.0",
-    "@tailwindcss/postcss": "^4.1.13",
+    "@tailwindcss/postcss": "^4.3.3",
     "@tailwindcss/typography": "^0.5.15",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",
