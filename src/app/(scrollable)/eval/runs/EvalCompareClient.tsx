@@ -17,53 +17,22 @@ import {
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { fetchEvalRunDetail, type EvalCaseResult, type EvalRunDetail } from '@/lib/api/client'
+import { fetchEvalRunDetail, type EvalRunDetail } from '@/lib/api/client'
 import { shortFetchError } from '@/lib/fetch-error'
 import { cn } from '@/lib/utils'
-
-// Mirror the CI gate (compare_eval.py): Hit@5 and MRR are gated; ±0.02 tolerance.
-const TOLERANCE = 0.02
-const EPS = 1e-6
-
-type RowStatus =
-  | 'same'
-  | 'hit5-regressed'
-  | 'hit5-improved'
-  | 'mrr-down'
-  | 'mrr-up'
-  | 'only-a'
-  | 'only-b'
-
-type DiffRow = {
-  caseId: string
-  ca: EvalCaseResult | undefined
-  cb: EvalCaseResult | undefined
-  status: RowStatus
-  dMrr: number | null
-}
-
-function classifyRow(ca: EvalCaseResult | undefined, cb: EvalCaseResult | undefined): RowStatus {
-  if (ca && !cb) return 'only-a'
-  if (!ca && cb) return 'only-b'
-  if (!ca || !cb) return 'same'
-  if (ca.hit_at_5 && !cb.hit_at_5) return 'hit5-regressed'
-  if (!ca.hit_at_5 && cb.hit_at_5) return 'hit5-improved'
-  const d = cb.mrr - ca.mrr
-  if (d < -EPS) return 'mrr-down'
-  if (d > EPS) return 'mrr-up'
-  return 'same'
-}
-
-// Severity order — regressions first, so the debugging payload is at the top.
-const STATUS_ORDER: Record<RowStatus, number> = {
-  'hit5-regressed': 0,
-  'mrr-down': 1,
-  'only-a': 2,
-  'hit5-improved': 3,
-  'mrr-up': 4,
-  'only-b': 5,
-  same: 6,
-}
+import {
+  EPS,
+  TOLERANCE,
+  buildCaseIdAlignment,
+  computeVerdict,
+  rankOf,
+  rankScore,
+  signedMrr,
+  signedPp,
+  type DiffRow,
+  type RowStatus,
+  type Verdict,
+} from '@/lib/eval-compare'
 
 const STATUS_META: Record<
   RowStatus,
@@ -84,47 +53,6 @@ const TONE_TEXT: Record<string, string> = {
   emerald: 'text-emerald-600 dark:text-emerald-400',
   muted: 'text-muted-foreground',
 }
-
-function buildCaseIdAlignment(a: EvalRunDetail, b: EvalRunDetail) {
-  const mapA = new Map(a.cases.map(c => [c.case_id, c]))
-  const mapB = new Map(b.cases.map(c => [c.case_id, c]))
-  const seen = new Set<string>()
-  const order: string[] = []
-  for (const c of [...a.cases, ...b.cases]) {
-    if (!seen.has(c.case_id)) {
-      seen.add(c.case_id)
-      order.push(c.case_id)
-    }
-  }
-  const rows: DiffRow[] = order.map(caseId => {
-    const ca = mapA.get(caseId)
-    const cb = mapB.get(caseId)
-    return { caseId, ca, cb, status: classifyRow(ca, cb), dMrr: ca && cb ? cb.mrr - ca.mrr : null }
-  })
-  // "changed" is real metric movement only — coverage-only rows (a case present
-  // in one run) are surfaced separately so they don't masquerade as regressions.
-  const changeStatuses: RowStatus[] = ['hit5-regressed', 'mrr-down', 'hit5-improved', 'mrr-up']
-  const changed = rows
-    .filter(r => changeStatuses.includes(r.status))
-    .sort((x, y) => STATUS_ORDER[x.status] - STATUS_ORDER[y.status])
-  const onlyA = rows.filter(r => r.status === 'only-a').length
-  const onlyB = rows.filter(r => r.status === 'only-b').length
-  return { rows, changed, onlyA, onlyB }
-}
-
-/** Rank (1-based) of an expected source within a retrieved list, mirroring the
- * harness's case-insensitive substring match; null when it was not retrieved. */
-function rankOf(retrieved: string[], expected: string): number | null {
-  const e = expected.toLowerCase()
-  const i = retrieved.findIndex(s => {
-    const t = s.toLowerCase()
-    return t.includes(e) || e.includes(t)
-  })
-  return i === -1 ? null : i + 1
-}
-
-// Worst-to-best score: lower rank is better; "not retrieved" (null) is worst of all.
-const rankScore = (r: number | null, scale: number) => (r == null ? scale + 1 : r)
 
 /**
  * RankShift — a lane showing where one expected source sat in the retrieved list
@@ -199,19 +127,6 @@ function RankShift({
 }
 
 // ---------- Verdict (the hero) ----------
-
-type Verdict = { kind: 'regression' | 'improvement' | 'stable'; dHit5: number; dMrr: number }
-
-function computeVerdict(a: EvalRunDetail, b: EvalRunDetail): Verdict {
-  const dHit5 = b.hit_at_5 - a.hit_at_5
-  const dMrr = b.mrr - a.mrr
-  if (dHit5 < -TOLERANCE || dMrr < -TOLERANCE) return { kind: 'regression', dHit5, dMrr }
-  if (dHit5 > TOLERANCE || dMrr > TOLERANCE) return { kind: 'improvement', dHit5, dMrr }
-  return { kind: 'stable', dHit5, dMrr }
-}
-
-const signedPp = (d: number) => `${d > 0 ? '+' : ''}${(d * 100).toFixed(1)}pp`
-const signedMrr = (d: number) => `${d > 0 ? '+' : ''}${d.toFixed(3)}`
 
 function VerdictBanner({ verdict }: { verdict: Verdict }) {
   const parts = [`Hit@5 ${signedPp(verdict.dHit5)}`, `MRR ${signedMrr(verdict.dMrr)}`].join(' · ')

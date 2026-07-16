@@ -1,0 +1,12 @@
+# Code owners for rag-eval-observe.
+# These owners are requested for review automatically on any PR that touches
+# matching paths. See https://docs.github.com/articles/about-code-owners
+
+# Default owner for everything in the repo.
+*                   @Padraigobrien08
+
+# Areas, called out explicitly so the intent survives future contributors.
+/backend/           @Padraigobrien08
+/src/               @Padraigobrien08
+/.github/           @Padraigobrien08
+/docs/              @Padraigobrien08

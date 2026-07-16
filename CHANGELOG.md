@@ -9,6 +9,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 _Nothing yet._
 
+## [1.0.0] - 2026-07-16
+
+Stable 1.0. The 0.1.0 feature set proved out end to end — chat, persisted evals,
+the `case_id` compare, the query log, and pipeline tracing — and this release
+hardens the engineering around it: the frontend logic layer is now tested and
+coverage-gated on both stacks, and the repo's community/release scaffolding is
+complete. No breaking API changes from 0.1.0.
+
+### Added
+
+- **Frontend unit + component tests** (Jest + React Testing Library): the
+  compare-by-`case_id` logic — run alignment, row classification, and the
+  regression verdict — is extracted into a pure `src/lib/eval-compare.ts` module
+  and tested directly, alongside cost estimation, CSV export escaping, error
+  mapping, and the compare view rendering. 3 → 45 passing tests.
+- **Coverage gate on the TypeScript logic layer** (`src/lib`) at a 60% floor,
+  matching the backend's existing 70% pytest floor.
+- **Self-hosted coverage badge** — CI computes combined frontend + backend line
+  coverage and publishes a shields.io endpoint to an orphan `badges` branch, with
+  no external service or account.
+- `CODEOWNERS` for automatic review assignment.
+
+### Changed
+
+- Extracted the eval-compare logic out of the client component with no behaviour
+  change, so the repo's flagship comparison is unit-testable in isolation and
+  stays in lock-step with the CI gate (`compare_eval.py`).
+- Marked the Azure Container Apps guide as legacy/optional; the maintained deploy
+  path is Vercel + Render + Neon ([DEPLOYMENT.md](./DEPLOYMENT.md)).
+
 ## [0.1.0] - 2026-07-15
 
 First tagged release. RAG chat over your documents, plus the parts most demos
@@ -70,5 +100,6 @@ per-answer query log, and pipeline-level tracing — one repo you can deploy.
   Azure Container Apps. Operational docs: runbook, SLOs, threat model, hardening,
   and API contract.
 
-[Unreleased]: https://github.com/Padraigobrien08/rag-eval-observe/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/Padraigobrien08/rag-eval-observe/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/Padraigobrien08/rag-eval-observe/compare/v0.1.0...v1.0.0
 [0.1.0]: https://github.com/Padraigobrien08/rag-eval-observe/releases/tag/v0.1.0

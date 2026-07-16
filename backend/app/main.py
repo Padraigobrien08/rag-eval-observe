@@ -60,7 +60,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="RAG Eval Observability API",
     description="FastAPI backend for RAG evaluation and observability",
-    version="0.1.0",
+    version="1.0.0",
     lifespan=lifespan,
 )
 
@@ -284,4 +284,4 @@ app.include_router(router, prefix="/api/v1")
 @app.get("/")
 async def root():
     """Root endpoint."""
-    return {"message": "RAG Eval Observability API", "version": "0.1.0"}
+    return {"message": "RAG Eval Observability API", "version": "1.0.0"}
