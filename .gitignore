@@ -13,6 +13,9 @@ docs/images/demo-frames/
 /blob-report/
 /playwright/.cache/
 
+# demo capture intermediates — the .gif is committed, the source video is not
+docs/images/*.webm
+
 # next.js
 /.next/
 /out/
