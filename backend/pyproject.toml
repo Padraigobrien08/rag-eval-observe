@@ -49,8 +49,34 @@ line-length = 100
 target-version = "py311"
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "N", "W", "UP"]
+# E/W pycodestyle, F pyflakes, I isort, N pep8-naming, UP pyupgrade,
+# B flake8-bugbear (real-bug patterns), C4 flake8-comprehensions,
+# ASYNC flake8-async (blocking calls in async defs), S flake8-bandit (security).
+select = ["E", "F", "I", "N", "W", "UP", "B", "C4", "ASYNC", "S"]
 ignore = ["E501"]
+
+[tool.ruff.lint.flake8-bugbear]
+# FastAPI's dependency-injection defaults (Query/Path/File/Depends/...) are
+# call-in-default by design, not the B008 foot-gun the rule targets.
+extend-immutable-calls = [
+    "fastapi.Query",
+    "fastapi.Path",
+    "fastapi.Body",
+    "fastapi.File",
+    "fastapi.Form",
+    "fastapi.Header",
+    "fastapi.Depends",
+    "fastapi.Cookie",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Asserts are the idiom under test; bandit's S101 is noise there.
+"tests/**" = ["S101"]
+# S608 flags the dynamic-SQL f-strings in the hybrid retriever, but every
+# interpolated fragment is a $N placeholder or static SQL — all user values are
+# bound as asyncpg parameters (vector_params / bm25_params), so there is no
+# injection surface. noqa can't sit on a triple-quoted opening line, hence here.
+"app/rag/retrieval_strategies.py" = ["S608"]
 
 [tool.black]
 line-length = 100

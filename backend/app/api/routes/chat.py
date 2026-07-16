@@ -75,7 +75,7 @@ async def patch_chat_thread_endpoint(thread_id: str, body: ChatThreadUpdate) -> 
     if not updated:
         raise HTTPException(status_code=404, detail="Thread not found")
     full = await get_chat_thread(thread_id)
-    assert full is not None
+    assert full is not None  # noqa: S101 - just fetched after a successful update
     return ChatThreadResponse(
         id=full["id"],
         title=full["title"],
@@ -154,7 +154,7 @@ async def append_chat_message_endpoint(
         raise HTTPException(
             status_code=400,
             detail="Invalid query_log_id: no matching queries row",
-        )
+        ) from None
     return ChatMessageResponse(
         id=m["id"],
         thread_id=m["thread_id"],

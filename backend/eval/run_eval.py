@@ -423,7 +423,7 @@ async def _persist_eval_turn_to_db(
         thread_slot["id"] = row["id"]
 
     tid = thread_slot["id"]
-    assert tid is not None
+    assert tid is not None  # noqa: S101 - thread just created above always has an id
 
     await append_chat_message(
         tid,
@@ -555,7 +555,7 @@ async def run_evaluation():
 
         # Generate and save report
         report = generate_report(summary, results)
-        with open(report_path, "w") as f:
+        with open(report_path, "w") as f:  # noqa: ASYNC230 - one-shot report write in a CLI eval run, not a server path
             f.write(report)
 
         # Machine-readable summary for the CI regression gate (compare_eval.py).

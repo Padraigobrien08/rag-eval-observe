@@ -71,7 +71,7 @@ async def search_chunks_endpoint(
         raise HTTPException(
             status_code=400,
             detail=str(e),
-        )
+        ) from e
 
     except Exception as e:
         from app.llm.openai_client import OpenAIError
@@ -85,7 +85,7 @@ async def search_chunks_endpoint(
             raise HTTPException(
                 status_code=503,
                 detail="Failed to generate embedding",
-            )
+            ) from e
 
         logger.error(
             "Search error",
@@ -96,4 +96,4 @@ async def search_chunks_endpoint(
         raise HTTPException(
             status_code=500,
             detail="Internal server error",
-        )
+        ) from e

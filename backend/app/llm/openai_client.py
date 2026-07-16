@@ -1,4 +1,5 @@
 import asyncio
+import contextlib
 import json
 import time
 from collections.abc import AsyncIterator
@@ -365,7 +366,8 @@ class OpenAIClient(LLMClient):
 
             # Record token usage metrics
             if token_usage:
-                try:
+                # Don't fail the request if metrics recording fails.
+                with contextlib.suppress(Exception):
                     from app.core.metrics import get_metrics
 
                     metrics = get_metrics()
@@ -373,9 +375,6 @@ class OpenAIClient(LLMClient):
                         prompt_tokens=token_usage.prompt_tokens,
                         total_tokens=token_usage.total_tokens,
                     )
-                except Exception:
-                    # Don't fail if metrics recording fails
-                    pass
 
         return all_responses
 
@@ -444,7 +443,8 @@ class OpenAIClient(LLMClient):
 
         # Record token usage metrics
         if token_usage:
-            try:
+            # Don't fail the request if metrics recording fails.
+            with contextlib.suppress(Exception):
                 from app.core.metrics import get_metrics
 
                 metrics = get_metrics()
@@ -453,9 +453,6 @@ class OpenAIClient(LLMClient):
                     completion_tokens=token_usage.completion_tokens,
                     total_tokens=token_usage.total_tokens,
                 )
-            except Exception:
-                # Don't fail if metrics recording fails
-                pass
 
         return ChatCompletionResponse(
             content=message.get("content", ""),
@@ -538,7 +535,8 @@ class OpenAIClient(LLMClient):
                         if usage_data:
                             token_usage = self._parse_token_usage(usage_data)
                             if token_usage:
-                                try:
+                                # Don't fail streaming if metrics recording fails.
+                                with contextlib.suppress(Exception):
                                     from app.core.metrics import get_metrics
 
                                     metrics = get_metrics()
@@ -547,8 +545,6 @@ class OpenAIClient(LLMClient):
                                         completion_tokens=token_usage.completion_tokens,
                                         total_tokens=token_usage.total_tokens,
                                     )
-                                except Exception:
-                                    pass
                                 yield token_usage
         finally:
             record_stage_latency(

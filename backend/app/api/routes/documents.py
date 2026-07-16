@@ -101,7 +101,7 @@ async def list_documents_endpoint(
         raise HTTPException(
             status_code=500,
             detail="Internal server error",
-        )
+        ) from e
 
 
 @router.get("/documents/{document_id}", response_model=DocumentResponse)
@@ -194,7 +194,7 @@ async def get_document_chunks_endpoint(
         raise HTTPException(
             status_code=500,
             detail="Internal server error",
-        )
+        ) from e
 
 
 @router.delete("/documents/{document_id}")
@@ -247,4 +247,4 @@ async def delete_document_endpoint(
         raise HTTPException(
             status_code=500,
             detail="Internal server error",
-        )
+        ) from e

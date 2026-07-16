@@ -253,7 +253,7 @@ class HybridSearchStrategy(RetrievalStrategy):
         bm25_params.append(fetch_k)
 
         # BM25 keyword search query (using PostgreSQL full-text search)
-        bm25_query = f"""
+        bm25_query = f"""  # noqa: S608
             SELECT
                 c.id as chunk_id,
                 c.document_id,

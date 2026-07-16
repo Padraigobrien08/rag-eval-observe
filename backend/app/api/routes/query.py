@@ -253,7 +253,7 @@ async def query_endpoint(
             raise HTTPException(
                 status_code=429,
                 detail="OpenAI API rate limit exceeded. Please wait a moment and try again.",
-            )
+            ) from e
 
         # Log the actual error for debugging
         logger.error(
@@ -269,7 +269,7 @@ async def query_endpoint(
         raise HTTPException(
             status_code=500,
             detail=f"Retrieval error: {str(e)}",
-        )
+        ) from e
 
     except AnswerError as e:
         # Check if the underlying error is a rate limit error
@@ -286,7 +286,7 @@ async def query_endpoint(
             raise HTTPException(
                 status_code=429,
                 detail="OpenAI API rate limit exceeded. Please wait a moment and try again.",
-            )
+            ) from e
 
         logger.error(
             "Answer generation error",
@@ -301,7 +301,7 @@ async def query_endpoint(
         raise HTTPException(
             status_code=500,
             detail=f"Answer generation error: {str(e)}",
-        )
+        ) from e
 
     except Exception as e:
         logger.error(
@@ -313,7 +313,7 @@ async def query_endpoint(
         raise HTTPException(
             status_code=500,
             detail="Internal server error during query",
-        )
+        ) from e
 
 
 @router.post("/query/stream")
@@ -360,7 +360,7 @@ async def query_stream_endpoint(
             raise HTTPException(
                 status_code=429,
                 detail="OpenAI API rate limit exceeded. Please wait a moment and try again.",
-            )
+            ) from e
         logger.error(
             "Retrieval error",
             request_id=request_id,
@@ -372,7 +372,7 @@ async def query_stream_endpoint(
         raise HTTPException(
             status_code=500,
             detail=f"Retrieval error: {str(e)}",
-        )
+        ) from e
 
     async def event_gen() -> AsyncIterator[str]:
         try:

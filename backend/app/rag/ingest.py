@@ -153,7 +153,7 @@ async def ingest_document(
     replace_existing = bool(existing and settings.INGEST_REPLACE_IF_EXISTS)
 
     if replace_existing:
-        assert existing is not None
+        assert existing is not None  # noqa: S101 - guarded by replace_existing above
         document_id = str(existing["id"])
         versioned_source = source
         logger.info(
@@ -345,7 +345,9 @@ async def ingest_document(
                     )
 
                 # Insert chunks
-                for i, (chunk, embedding_response) in enumerate(zip(chunks, embedding_responses)):
+                for i, (chunk, embedding_response) in enumerate(
+                    zip(chunks, embedding_responses, strict=True)
+                ):
                     embedding = embedding_response.embedding
                     embedding_str = "[" + ",".join(map(str, embedding)) + "]"
 

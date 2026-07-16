@@ -39,7 +39,7 @@ async def create_chat_thread(title: str | None = None) -> dict[str, Any]:
             """,
             title,
         )
-        assert row is not None
+        assert row is not None  # noqa: S101 - INSERT ... RETURNING always yields a row
         return _thread_row(row)
 
 
@@ -189,7 +189,7 @@ async def append_chat_message(
                         thread_id,
                         snippet,
                     )
-        assert row is not None
+        assert row is not None  # noqa: S101 - INSERT ... RETURNING always yields a row
         return _message_row(row)
 
 

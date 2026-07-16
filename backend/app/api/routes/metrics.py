@@ -33,7 +33,7 @@ async def get_metrics_endpoint(request: Request) -> dict[str, Any]:
         raise HTTPException(
             status_code=500,
             detail="Failed to retrieve metrics",
-        )
+        ) from e
 
 
 @router.get("/metrics/prometheus", response_class=PlainTextResponse)
@@ -53,4 +53,4 @@ async def get_metrics_prometheus_endpoint(request: Request) -> str:
         raise HTTPException(
             status_code=500,
             detail="Failed to export metrics",
-        )
+        ) from e
