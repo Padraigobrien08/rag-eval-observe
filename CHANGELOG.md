@@ -7,7 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-_Nothing yet._
+### Changed
+
+- **`eval-smoke` is now manual-only** (`workflow_dispatch`) instead of a weekly
+  cron. The scheduled run existed only to spend OpenAI credits on a canary; on a
+  self-hosted portfolio deployment that is opt-in, not a standing cost. Run it on
+  demand from the Actions tab.
+- Standardised `actions/upload-artifact` on `@v4` across every workflow (the eval
+  workflows had drifted to `@v7`).
+- Documented the `reranking` strategy's 200-char preview budget in code and in
+  [docs/BENCHMARKS.md](docs/BENCHMARKS.md), so its benchmark row reads as a tunable
+  cost/latency cap rather than a ceiling.
+- Multi-query retrieval now logs raw query text at `debug`; `info`-level logs
+  carry counts and lengths only.
+
+### Added
+
+- Dependabot coverage for the backend Docker base image (`docker` ecosystem).
 
 ## [1.0.0] - 2026-07-16
 
