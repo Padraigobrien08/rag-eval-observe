@@ -7,6 +7,7 @@
 [![Live demo](https://img.shields.io/badge/demo-pob--rag--chat.xyz-0b0b0f?style=flat-square&logo=vercel&logoColor=white)](https://pob-rag-chat.xyz/)
 [![CI](https://img.shields.io/github/actions/workflow/status/Padraigobrien08/rag-eval-observe/ci.yml?branch=main&style=flat-square&label=CI&logo=github)](https://github.com/Padraigobrien08/rag-eval-observe/actions/workflows/ci.yml)
 [![Eval gate](https://img.shields.io/github/actions/workflow/status/Padraigobrien08/rag-eval-observe/eval-gate.yml?style=flat-square&label=eval%20gate&logo=github)](https://github.com/Padraigobrien08/rag-eval-observe/actions/workflows/eval-gate.yml)
+[![codecov](https://img.shields.io/codecov/c/github/Padraigobrien08/rag-eval-observe?style=flat-square&logo=codecov&label=coverage)](https://codecov.io/gh/Padraigobrien08/rag-eval-observe)
 [![Release](https://img.shields.io/github/v/release/Padraigobrien08/rag-eval-observe?style=flat-square&logo=github&label=release&color=0b0b0f)](https://github.com/Padraigobrien08/rag-eval-observe/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.6+-3178c6.svg?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
@@ -35,20 +36,20 @@ The full product argument is in **[docs/THESIS.md](./docs/THESIS.md)**.
 
 The repo ships four retrieval strategies. Rather than assert which is "best," it **measures** them — the same harness that gates CI produces this table. Run it yourself with `uv run python eval/benchmark_strategies.py`.
 
-| Strategy | Hit@1 | Hit@5 | MRR | Retrieval latency p50 / p95 | Cost / 1k queries | OpenAI calls (embed / chat) |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| `vector-similarity` | 76.9% | 94.9% | **0.840** | 227 ms / 331 ms | $0.0002 | 1 / 0.0 |
-| `hybrid-search` | 75.6% | 94.9% | 0.825 | 220 ms / 292 ms | $0.0002 | 1 / 0.0 |
-| `reranking` | 73.1% | **98.7%** | 0.831 | 1119 ms / 1599 ms | $0.2361 | 1 / 1.0 |
-| `multi-query` | 73.1% | 94.9% | 0.827 | 2089 ms / 2906 ms | $0.0372 | 4 / 1.0 |
+| Strategy            | Hit@1 |     Hit@5 |       MRR | Retrieval latency p50 / p95 | Cost / 1k queries | OpenAI calls (embed / chat) |
+| ------------------- | ----: | --------: | --------: | --------------------------: | ----------------: | --------------------------: |
+| `vector-similarity` | 76.9% |     94.9% | **0.840** |             227 ms / 331 ms |           $0.0002 |                     1 / 0.0 |
+| `hybrid-search`     | 75.6% |     94.9% |     0.825 |             220 ms / 292 ms |           $0.0002 |                     1 / 0.0 |
+| `reranking`         | 73.1% | **98.7%** |     0.831 |           1119 ms / 1599 ms |           $0.2361 |                     1 / 1.0 |
+| `multi-query`       | 73.1% |     94.9% |     0.827 |           2089 ms / 2906 ms |           $0.0372 |                     4 / 1.0 |
 
 _78-case bundled corpus, `text-embedding-3-small` + `gpt-4o-mini`, `top_k=8`. Retrieval-stage latency and cost only (generation is strategy-independent). Cost is measured OpenAI token usage at current public rates. Reproduce: [docs/BENCHMARKS.md](./docs/BENCHMARKS.md)._
 
-The point isn't a leaderboard — it's that **"which retriever should I use?" is a question you answer with numbers from your own corpus.** And there's no free lunch: on this corpus plain vector similarity has the **best MRR and top-1 precision** and is **~1000× cheaper** than reranking; reranking buys **+3.8pp Hit@5 recall for ~5× the latency** (it reshuffles the top-k, helping recall but *hurting* Hit@1); multi-query doesn't pay off at all. Change the embeddings, chunking, or `top_k` and these move — so you re-measure.
+The point isn't a leaderboard — it's that **"which retriever should I use?" is a question you answer with numbers from your own corpus.** And there's no free lunch: on this corpus plain vector similarity has the **best MRR and top-1 precision** and is **~1000× cheaper** than reranking; reranking buys **+3.8pp Hit@5 recall for ~5× the latency** (it reshuffles the top-k, helping recall but _hurting_ Hit@1); multi-query doesn't pay off at all. Change the embeddings, chunking, or `top_k` and these move — so you re-measure.
 
 ## See it catch a regression
 
-A RAG system rarely *breaks* — it quietly *degrades*. This repo makes that a **merge-blocking CI check**, the same way a failing unit test is.
+A RAG system rarely _breaks_ — it quietly _degrades_. This repo makes that a **merge-blocking CI check**, the same way a failing unit test is.
 
 In [a worked case study](./backend/eval/case_study/README.md), ingesting four broad "summary" docs demotes the canonical source for 12 questions. **Hit@5 barely moves — a recall@k-only gate would ship it — but MRR drops past tolerance and the eval gate fails the PR (`exit 1`).** Reproduce it with one script.
 
@@ -124,14 +125,14 @@ Then open **http://localhost:3000**. For the full contributor workflow — hot-r
 
 ## API
 
-| Endpoint                        | Method | Description                            |
-| ------------------------------- | ------ | -------------------------------------- |
-| `/api/v1/health`                | GET    | Health check and database connectivity |
-| `/api/v1/query`                 | POST   | Query the RAG system (`rag_model` selects the retriever) |
-| `/api/v1/ingest`                | POST   | Ingest documents (text, PDF, DOCX)     |
-| `/api/v1/documents`             | GET    | List documents                         |
-| `/api/v1/eval/runs`             | GET    | List / compare persisted eval runs     |
-| `/api/v1/metrics`               | GET    | Latency percentiles per route + stage  |
+| Endpoint            | Method | Description                                              |
+| ------------------- | ------ | -------------------------------------------------------- |
+| `/api/v1/health`    | GET    | Health check and database connectivity                   |
+| `/api/v1/query`     | POST   | Query the RAG system (`rag_model` selects the retriever) |
+| `/api/v1/ingest`    | POST   | Ingest documents (text, PDF, DOCX)                       |
+| `/api/v1/documents` | GET    | List documents                                           |
+| `/api/v1/eval/runs` | GET    | List / compare persisted eval runs                       |
+| `/api/v1/metrics`   | GET    | Latency percentiles per route + stage                    |
 
 Interactive OpenAPI docs at `http://localhost:8000/docs`. Full contract: [docs/API_CONTRACT.md](./docs/API_CONTRACT.md) · [backend/README.md](./backend/README.md).
 
@@ -160,7 +161,7 @@ See **[docs/HARDENING.md](./docs/HARDENING.md)** and [SECURITY.md](./SECURITY.md
 
 ## Contributing
 
-Contributions welcome — see [CONTRIBUTING.md](./CONTRIBUTING.md). The short version: fork, branch, make changes, run `make lint && make test`, open a PR. CI runs lint, typecheck, unit tests, a build, Playwright E2E (incl. axe-core accessibility), and the eval regression gate.
+Contributions welcome — see [CONTRIBUTING.md](./CONTRIBUTING.md). The short version: fork, branch, make changes, run `make lint && make test`, open a PR. CI runs lint, typecheck, unit tests (Jest on the TypeScript logic layer + pytest on the backend, both under a coverage gate), a build, Playwright E2E (incl. axe-core accessibility), and the eval regression gate.
 
 ## License
 

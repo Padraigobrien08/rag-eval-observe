@@ -1,1 +1,2 @@
-// Jest setup file
+// Jest setup file — registers @testing-library/jest-dom matchers (toBeInTheDocument, etc.)
+import '@testing-library/jest-dom'

@@ -31,7 +31,15 @@ jobs:
         run: pnpm typecheck
 
       - name: Unit tests (Jest)
-        run: pnpm exec jest --ci
+        run: pnpm exec jest --ci --coverage
+
+      - name: Upload frontend coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          files: ./coverage/lcov.info
+          flags: frontend
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Build
         run: pnpm build
@@ -56,7 +64,7 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v7
         with:
-          version: "latest"
+          version: 'latest'
 
       - name: Set up Python
         run: uv python install 3.11
@@ -82,7 +90,7 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v7
         with:
-          version: "latest"
+          version: 'latest'
 
       - name: Set up Python
         run: uv python install 3.11
@@ -127,7 +135,7 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v7
         with:
-          version: "latest"
+          version: 'latest'
 
       - name: Set up Python
         run: uv python install 3.11
@@ -146,3 +154,10 @@ jobs:
       - name: Run tests
         run: uv run pytest tests/ -v --cov=app --cov-report=xml --cov-fail-under=70
 
+      - name: Upload backend coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          files: ./backend/coverage.xml
+          flags: backend
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
