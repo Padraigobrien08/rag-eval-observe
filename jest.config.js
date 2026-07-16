@@ -28,6 +28,8 @@ const customJestConfig = {
   coverageThreshold: {
     global: { statements: 60, branches: 60, functions: 60, lines: 60 },
   },
+  // json-summary feeds the self-hosted coverage badge (scripts/coverage-badge.mjs in CI).
+  coverageReporters: ['text', 'lcov', 'json-summary'],
 }
 
 module.exports = createJestConfig(customJestConfig)

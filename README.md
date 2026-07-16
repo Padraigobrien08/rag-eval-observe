@@ -7,7 +7,7 @@
 [![Live demo](https://img.shields.io/badge/demo-pob--rag--chat.xyz-0b0b0f?style=flat-square&logo=vercel&logoColor=white)](https://pob-rag-chat.xyz/)
 [![CI](https://img.shields.io/github/actions/workflow/status/Padraigobrien08/rag-eval-observe/ci.yml?branch=main&style=flat-square&label=CI&logo=github)](https://github.com/Padraigobrien08/rag-eval-observe/actions/workflows/ci.yml)
 [![Eval gate](https://img.shields.io/github/actions/workflow/status/Padraigobrien08/rag-eval-observe/eval-gate.yml?style=flat-square&label=eval%20gate&logo=github)](https://github.com/Padraigobrien08/rag-eval-observe/actions/workflows/eval-gate.yml)
-[![codecov](https://img.shields.io/codecov/c/github/Padraigobrien08/rag-eval-observe?style=flat-square&logo=codecov&label=coverage)](https://codecov.io/gh/Padraigobrien08/rag-eval-observe)
+[![Coverage](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Padraigobrien08/rag-eval-observe/badges/coverage.json&style=flat-square)](https://github.com/Padraigobrien08/rag-eval-observe/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/Padraigobrien08/rag-eval-observe?style=flat-square&logo=github&label=release&color=0b0b0f)](https://github.com/Padraigobrien08/rag-eval-observe/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.6+-3178c6.svg?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)

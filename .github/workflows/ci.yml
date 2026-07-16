@@ -33,13 +33,12 @@ jobs:
       - name: Unit tests (Jest)
         run: pnpm exec jest --ci --coverage
 
-      - name: Upload frontend coverage to Codecov
-        uses: codecov/codecov-action@v5
+      - name: Upload frontend coverage summary
+        uses: actions/upload-artifact@v4
         with:
-          files: ./coverage/lcov.info
-          flags: frontend
-          fail_ci_if_error: false
-          token: ${{ secrets.CODECOV_TOKEN }}
+          name: coverage-frontend
+          path: coverage/coverage-summary.json
+          if-no-files-found: error
 
       - name: Build
         run: pnpm build
@@ -154,10 +153,63 @@ jobs:
       - name: Run tests
         run: uv run pytest tests/ -v --cov=app --cov-report=xml --cov-fail-under=70
 
-      - name: Upload backend coverage to Codecov
-        uses: codecov/codecov-action@v5
+      - name: Upload backend coverage report
+        uses: actions/upload-artifact@v4
         with:
-          files: ./backend/coverage.xml
-          flags: backend
-          fail_ci_if_error: false
-          token: ${{ secrets.CODECOV_TOKEN }}
+          name: coverage-backend
+          path: backend/coverage.xml
+          if-no-files-found: error
+
+  # Self-hosted coverage badge — no external service. Combines frontend + backend
+  # line coverage into a shields.io endpoint JSON and publishes it to the orphan
+  # `badges` branch (read by the README badge). Runs only on push to main; the
+  # `badges` branch is not a CI trigger, so this never loops.
+  coverage-badge:
+    runs-on: ubuntu-latest
+    needs: [frontend, test]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download frontend coverage
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-frontend
+          path: cov/frontend
+
+      - name: Download backend coverage
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-backend
+          path: cov/backend
+
+      - name: Compute badge JSON
+        run: node scripts/coverage-badge.mjs cov/frontend/coverage-summary.json cov/backend/coverage.xml > coverage.json
+
+      - name: Publish to badges branch
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          tmp=$(mktemp -d)
+          remote="https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          if git clone --depth 1 --branch badges "$remote" "$tmp" 2>/dev/null; then
+            cd "$tmp"
+          else
+            git clone --depth 1 "$remote" "$tmp"
+            cd "$tmp"
+            git checkout --orphan badges
+            git rm -rf . >/dev/null 2>&1 || true
+          fi
+          cp "$GITHUB_WORKSPACE/coverage.json" coverage.json
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add coverage.json
+          if git diff --cached --quiet; then
+            echo "coverage badge unchanged"
+          else
+            git commit -m "chore: update coverage badge [skip ci]"
+            git push origin HEAD:badges
+          fi
