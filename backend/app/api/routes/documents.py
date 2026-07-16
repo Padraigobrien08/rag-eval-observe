@@ -36,7 +36,7 @@ async def list_documents_endpoint(
     limit: int = Query(100, ge=1, le=1000),
     offset: int = Query(0, ge=0),
     include_total: bool = Query(False, description="Include total count (slower)"),
-):
+) -> DocumentListResponse:
     """List documents with pagination."""
     import time
 
@@ -108,7 +108,7 @@ async def list_documents_endpoint(
 async def get_document_endpoint(
     request: Request,
     document_id: str,
-):
+) -> DocumentResponse:
     """Get a document by ID."""
     document = await get_document_by_id(document_id)
     if not document:
@@ -129,7 +129,7 @@ async def get_document_endpoint(
 @router.get("/documents/{document_id}/original")
 async def get_document_original_endpoint(
     document_id: str,
-):
+) -> Response:
     """Serve stored original binary (e.g. PDF) for inline preview."""
     document = await get_document_by_id(document_id)
     if not document:
@@ -158,7 +158,7 @@ async def get_document_original_endpoint(
 async def get_document_chunks_endpoint(
     request: Request,
     document_id: str,
-):
+) -> list[ChunkResponse]:
     """Get all chunks for a document."""
     request_id = getattr(request.state, "request_id", "unknown")
 
@@ -201,7 +201,7 @@ async def get_document_chunks_endpoint(
 async def delete_document_endpoint(
     request: Request,
     document_id: str,
-):
+) -> JSONResponse:
     """Delete a document and all its chunks."""
     request_id = getattr(request.state, "request_id", "unknown")
 

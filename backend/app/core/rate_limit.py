@@ -27,7 +27,7 @@ class RateLimiter:
         """
         self.max_requests = max_requests or settings.RATE_LIMIT_REQUESTS
         self.window_seconds = window_seconds or settings.RATE_LIMIT_WINDOW
-        self.requests: dict[str, list] = defaultdict(list)
+        self.requests: dict[str, list[float]] = defaultdict(list)
 
     def is_allowed(self, identifier: str) -> tuple[bool, int]:
         """

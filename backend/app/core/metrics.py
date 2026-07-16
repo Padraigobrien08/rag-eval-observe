@@ -1,6 +1,7 @@
 import time
 from collections import defaultdict
 from dataclasses import dataclass, field
+from typing import Any
 
 import structlog
 
@@ -159,7 +160,7 @@ def _escape_label(value: str) -> str:
 class MetricsCollector:
     """In-memory metrics collector."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize metrics collector."""
         self.route_metrics: dict[str, RouteMetrics] = {}
         # Per-stage latency histograms for the RAG pipeline (retrieve, embedding,
@@ -224,7 +225,7 @@ class MetricsCollector:
         self.token_usage["chat_completion_tokens"] += completion_tokens
         self.token_usage["chat_total_tokens"] += total_tokens
 
-    def get_metrics(self) -> dict:
+    def get_metrics(self) -> dict[str, Any]:
         """
         Get all metrics as a dictionary.
 

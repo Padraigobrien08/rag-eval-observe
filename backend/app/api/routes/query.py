@@ -114,7 +114,7 @@ async def _prepare_rag_retrieval(
 async def query_endpoint(
     request: Request,
     query_request: QueryRequest,
-):
+) -> QueryResponse:
     """Query the RAG system with natural language question."""
     request_id = getattr(request.state, "request_id", "unknown")
 
@@ -320,7 +320,7 @@ async def query_endpoint(
 async def query_stream_endpoint(
     request: Request,
     query_request: QueryRequest,
-):
+) -> StreamingResponse:
     """Stream RAG answer as Server-Sent Events (JSON lines in `data:` fields)."""
     request_id = getattr(request.state, "request_id", "unknown")
 

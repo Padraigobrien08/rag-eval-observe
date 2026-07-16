@@ -42,7 +42,7 @@ def log_request(
     method: str,
     status_code: int,
     latency_ms: int,
-    **kwargs,
+    **kwargs: object,
 ) -> None:
     """
     Log HTTP request with structured fields.

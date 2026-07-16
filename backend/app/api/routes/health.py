@@ -12,7 +12,7 @@ router = APIRouter()
 
 
 @router.get("/health", response_model=HealthResponse)
-async def health_check(request: Request):
+async def health_check(request: Request) -> HealthResponse:
     """Health check endpoint with database connectivity."""
     request_id = getattr(request.state, "request_id", "unknown")
     db_connected = await check_db_connection()

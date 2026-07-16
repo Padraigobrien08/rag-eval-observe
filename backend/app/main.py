@@ -1,12 +1,14 @@
 import secrets
 import time
 import uuid
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 import structlog
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from starlette.middleware.base import RequestResponseEndpoint
 
 from app.api.routes import router
 from app.core.config import settings
@@ -20,7 +22,7 @@ logger = structlog.get_logger()
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """Application lifespan events."""
     setup_logging()
     logger.info("Starting application", environment=settings.ENVIRONMENT)
@@ -103,7 +105,9 @@ app.add_middleware(
 
 
 @app.middleware("http")
-async def optional_api_key_middleware(request: Request, call_next):
+async def optional_api_key_middleware(
+    request: Request, call_next: RequestResponseEndpoint
+) -> Response:
     """When API_KEY is set, require Authorization: Bearer <key> or X-API-Key header."""
     if not settings.API_KEY.strip():
         return await call_next(request)
@@ -135,7 +139,7 @@ async def optional_api_key_middleware(request: Request, call_next):
 
 
 @app.middleware("http")
-async def rate_limit_middleware(request: Request, call_next):
+async def rate_limit_middleware(request: Request, call_next: RequestResponseEndpoint) -> Response:
     """Rate limiting middleware."""
     # Skip rate limiting for health, metrics endpoints, and OPTIONS (CORS preflight)
     if (
@@ -190,7 +194,9 @@ async def rate_limit_middleware(request: Request, call_next):
 
 
 @app.middleware("http")
-async def add_request_id_and_timing(request: Request, call_next):
+async def add_request_id_and_timing(
+    request: Request, call_next: RequestResponseEndpoint
+) -> Response:
     """Add request ID and timing to all requests."""
     # Get or generate request ID
     request_id = request.headers.get("X-Request-ID")
@@ -248,7 +254,7 @@ async def add_request_id_and_timing(request: Request, call_next):
 
 
 @app.exception_handler(Exception)
-async def global_exception_handler(request: Request, exc: Exception):
+async def global_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     """Global exception handler with structured logging."""
     request_id = getattr(request.state, "request_id", "unknown")
     logger.error(
@@ -282,6 +288,6 @@ app.include_router(router, prefix="/api/v1")
 
 
 @app.get("/")
-async def root():
+async def root() -> dict[str, str]:
     """Root endpoint."""
     return {"message": "RAG Eval Observability API", "version": "1.0.0"}

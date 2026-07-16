@@ -150,7 +150,8 @@ class OpenAIClient(LLMClient):
 
                     # Success
                     if response.status_code == 200:
-                        return response.json()
+                        data: dict[str, Any] = response.json()
+                        return data
 
                     # Rate limit (429) - handle carefully
                     if response.status_code == 429:

@@ -9,7 +9,7 @@ from app.db.session import get_db_pool
 logger = structlog.get_logger()
 
 
-async def get_document_by_id(document_id: str) -> dict | None:
+async def get_document_by_id(document_id: str) -> dict[str, Any] | None:
     """Get a document by ID."""
     pool = await get_db_pool()
     async with pool.acquire() as conn:
@@ -74,7 +74,7 @@ async def search_chunks(
     query_embedding: list[float],
     top_k: int = 5,
     document_id: str | None = None,
-) -> list[dict]:
+) -> list[dict[str, Any]]:
     """Search for similar chunks using vector similarity."""
     pool = await get_db_pool()
     embedding_str = "[" + ",".join(map(str, query_embedding)) + "]"
@@ -125,7 +125,7 @@ async def search_chunks(
         ]
 
 
-async def get_chunks_by_document_id(document_id: str) -> list[dict]:
+async def get_chunks_by_document_id(document_id: str) -> list[dict[str, Any]]:
     """Get all chunks for a document."""
     pool = await get_db_pool()
     async with pool.acquire() as conn:
@@ -151,7 +151,7 @@ async def get_chunks_by_document_id(document_id: str) -> list[dict]:
         ]
 
 
-async def list_documents(limit: int = 100, offset: int = 0) -> list[dict]:
+async def list_documents(limit: int = 100, offset: int = 0) -> list[dict[str, Any]]:
     """List documents with pagination."""
     import asyncio
     import time
@@ -274,7 +274,7 @@ async def log_query(
     client_ip: str | None = None,
     user_agent: str | None = None,
     latency_ms: int | None = None,
-    token_usage: dict | None = None,
+    token_usage: dict[str, Any] | None = None,
     citations_count: int = 0,
     answer_length: int | None = None,
 ) -> str | None:
@@ -348,7 +348,7 @@ async def get_query_logs(
     rag_model: str | None = None,
     start_date: str | None = None,
     end_date: str | None = None,
-) -> list[dict]:
+) -> list[dict[str, Any]]:
     """
     Get query logs with optional filtering.
 
@@ -418,7 +418,7 @@ async def get_query_logs(
         ]
 
 
-async def get_query_log_by_id(query_id: str) -> dict | None:
+async def get_query_log_by_id(query_id: str) -> dict[str, Any] | None:
     """Return one row from ``queries`` by primary key, or None."""
     pool = await get_db_pool()
     async with pool.acquire() as conn:
@@ -461,7 +461,7 @@ async def get_query_log_by_id(query_id: str) -> dict | None:
 async def get_query_stats(
     start_date: str | None = None,
     end_date: str | None = None,
-) -> dict:
+) -> dict[str, Any]:
     """
     Get aggregated query statistics.
 

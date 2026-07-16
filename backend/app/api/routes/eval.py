@@ -1,5 +1,6 @@
 import csv
 import io
+from typing import Any
 
 import structlog
 from fastapi import APIRouter, HTTPException, Query
@@ -18,7 +19,7 @@ logger = structlog.get_logger()
 router = APIRouter()
 
 
-def _row_to_eval_run_detail(row: dict) -> EvalRunDetailResponse:
+def _row_to_eval_run_detail(row: dict[str, Any]) -> EvalRunDetailResponse:
     r = {**row}
     cases_raw = r.pop("cases", [])
     err = r.pop("error_message", None)
@@ -98,7 +99,7 @@ def _eval_run_detail_to_csv(detail: EvalRunDetailResponse) -> str:
 async def eval_runs_list_endpoint(
     limit: int = Query(50, ge=1, le=200),
     offset: int = Query(0, ge=0),
-):
+) -> EvalRunListResponse:
     """List persisted RAG eval harness runs (newest first)."""
     rows = await list_eval_runs(limit=limit, offset=offset)
     return EvalRunListResponse(runs=[EvalRunSummaryResponse(**row) for row in rows])
@@ -108,7 +109,7 @@ async def eval_runs_list_endpoint(
 async def eval_run_export_endpoint(
     run_id: str,
     format: str = Query("json", description="Export as json or csv"),
-):
+) -> Response:
     """Download one persisted eval run (full detail) for archival or CI artifacts."""
     fmt = format.lower().strip()
     if fmt not in ("json", "csv"):
@@ -135,7 +136,7 @@ async def eval_run_export_endpoint(
 
 
 @router.get("/eval/runs/{run_id}", response_model=EvalRunDetailResponse)
-async def eval_run_detail_endpoint(run_id: str):
+async def eval_run_detail_endpoint(run_id: str) -> EvalRunDetailResponse:
     """Return one eval run with all per-case results."""
     row = await get_eval_run(run_id)
     if not row:
