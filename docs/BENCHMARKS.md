@@ -37,6 +37,13 @@ trade-off you resolve against *your* corpus and *your* latency/cost budget — w
 is the whole reason the harness exists. Re-run it after any change to embeddings,
 chunking, or `top_k` and the numbers move.
 
+> **On the `reranking` row.** The LLM reranker scores each candidate on a
+> **200-char preview** of its content, not the full chunk (see
+> `RerankingStrategy.retrieve` in `backend/app/rag/retrieval_strategies.py`). That
+> is a deliberate cost/latency cap — it keeps the rerank prompt small — and it
+> bounds how much the reranker can lift precision here. It is a tunable knob, not a
+> ceiling: widen the preview budget to trade cost for accuracy, then re-measure.
+
 ## Setup (golden path)
 
 1. Postgres + migrations (`make migrate` or equivalent).

@@ -425,6 +425,11 @@ Query: {query}
 
 Chunks:
 """
+            # Rank on a 200-char preview of each chunk, not the full text. This is a
+            # deliberate cost/latency tradeoff: it keeps the rerank prompt small (and
+            # cheap) at the expense of some ranking signal, which is part of why this
+            # strategy's precision numbers in the benchmark table aren't higher. Raise
+            # this budget to trade cost for accuracy. See docs/BENCHMARKS.md.
             for i, chunk in enumerate(candidates, start=1):
                 rerank_prompt += f"\n[{i}] {chunk.content[:200]}...\n"
 
@@ -502,8 +507,9 @@ class MultiQueryStrategy(RetrievalStrategy):
     ) -> list[RetrievedChunk]:
         """Retrieve chunks using multi-query strategy."""
         logger.info("MultiQueryStrategy.retrieve called", query_length=len(query), top_k=top_k)
-        # Generate query variations using LLM
-        logger.info("Multi-query: generating query variations", original_query=query)
+        # Generate query variations using LLM. Raw query text is logged at debug
+        # only — info-level logs carry counts/lengths, not user query strings.
+        logger.debug("Multi-query: generating query variations", original_query=query)
         try:
             openai_client = get_llm_client()
 
@@ -541,8 +547,9 @@ Return ONLY a JSON array of 3 query strings. Example: ["query 1", "query 2", "qu
             # Add original query
             all_queries = [query] + query_variations
 
-            logger.info(
-                "Generated query variations",
+            logger.info("Generated query variations", variations_count=len(query_variations))
+            logger.debug(
+                "Query variation text",
                 original_query=query,
                 variations=query_variations,
             )
@@ -558,7 +565,6 @@ Return ONLY a JSON array of 3 query strings. Example: ["query 1", "query 2", "qu
         logger.info(
             "Multi-query: retrieving for each query variation",
             query_count=len(all_queries),
-            queries=all_queries,
         )
         vector_strategy = VectorSimilarityStrategy()
 
@@ -569,7 +575,7 @@ Return ONLY a JSON array of 3 query strings. Example: ["query 1", "query 2", "qu
 
         for i, q in enumerate(all_queries, start=1):
             try:
-                logger.info(
+                logger.debug(
                     "Multi-query: retrieving for query variation",
                     variation_number=i,
                     query=q,

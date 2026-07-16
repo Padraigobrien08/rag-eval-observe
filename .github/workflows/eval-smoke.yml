@@ -1,9 +1,7 @@
-# Cheap eval run: small case count. Weekly + manual.
+# Cheap eval run: small case count. Manual only (run on demand from the Actions tab).
 name: Eval smoke
 
 on:
-  schedule:
-    - cron: '0 6 * * 1'
   workflow_dispatch:
 
 jobs:
@@ -42,13 +40,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Require OpenAI API key (scheduled runs)
-        if: github.event_name == 'schedule'
+      - name: Require OpenAI API key
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
           if [ -z "${OPENAI_API_KEY:-}" ]; then
-            echo "::error::Scheduled eval-smoke needs the OPENAI_API_KEY repository secret. Add it under Settings → Secrets, or disable the schedule in eval-smoke.yml."
+            echo "::error::eval-smoke needs the OPENAI_API_KEY repository secret. Add it under Settings → Secrets and variables → Actions."
             exit 1
           fi
 
@@ -78,7 +75,7 @@ jobs:
         run: uv run python eval/run_eval.py
 
       - name: Upload report
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v4
         with:
           name: eval-smoke-report
           path: backend/eval/report.md
