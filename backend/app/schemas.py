@@ -8,7 +8,7 @@ class HealthResponse(BaseModel):
 
     ok: bool
     db: bool
-    version: str = "0.1.0"
+    version: str = "1.0.0"
 
 
 class ChunkResponse(BaseModel):

@@ -1,5 +1,12 @@
 # Azure Container Apps Deployment Guide
 
+> **Legacy / optional.** The project no longer deploys to Azure — the live demo
+> runs on **Vercel + Render + Neon** (see [DEPLOYMENT.md](../DEPLOYMENT.md)). This
+> guide is kept because the backend is a standard container and the Azure path
+> still works, but it is not part of the maintained deployment story and may lag
+> behind the current stack. For a supported deploy, start with
+> [DEPLOYMENT.md](../DEPLOYMENT.md).
+
 ## Prerequisites
 
 1. Azure CLI installed and logged in:
@@ -230,11 +237,12 @@ This outputs the URL. Add `https://` in front of it.
 ### Step 3: Verify Connection
 
 Test the health endpoint:
+
 ```bash
 curl https://your-azure-url/api/v1/health
 ```
 
-Should return: `{"ok":true,"db":true,"version":"0.1.0"}`
+Should return: `{"ok":true,"db":true,"version":"1.0.0"}`
 
 ## Testing Backend Connection
 

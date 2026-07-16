@@ -14,4 +14,4 @@ async def test_health_endpoint():
         data = response.json()
         assert "ok" in data
         assert "db" in data
-        assert data["version"] == "0.1.0"
+        assert data["version"] == "1.0.0"
