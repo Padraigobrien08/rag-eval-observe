@@ -52,6 +52,10 @@ A RAG system rarely *breaks* — it quietly *degrades*. This repo makes that a *
 
 In [a worked case study](./backend/eval/case_study/README.md), ingesting four broad "summary" docs demotes the canonical source for 12 questions. **Hit@5 barely moves — a recall@k-only gate would ship it — but MRR drops past tolerance and the eval gate fails the PR (`exit 1`).** Reproduce it with one script.
 
+![Comparing two eval runs by case_id — the regression verdict fires and a flipped case shows the canonical source falling from #1 to not-retrieved](./docs/images/eval-regression-flow.gif)
+
+_The in-app compare view, keyed by `case_id`: the candidate run trips the **Regression** verdict (a gated metric past ±2pp), and expanding a flipped case shows the canonical source falling from **#1 → not retrieved** — the same signal the CI gate blocks on._
+
 ## See it in action
 
 |                                   Query-log explorer                                    |                                 System metrics                                 |
