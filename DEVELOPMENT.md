@@ -101,7 +101,7 @@ Set `OPENAI_API_KEY` in your environment before starting. The web service uses `
 ## Tests
 
 ```bash
-cd backend && uv sync --extra dev && uv run pytest tests/ -q --cov=app --cov-fail-under=58
+cd backend && uv sync --extra dev && uv run pytest tests/ -q --cov=app --cov-fail-under=73
 pnpm exec jest --ci
 pnpm typecheck
 pnpm lint
