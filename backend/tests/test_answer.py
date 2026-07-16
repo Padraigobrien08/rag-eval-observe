@@ -201,7 +201,7 @@ class TestGenerateAnswer:
         )
         mock_openai_client.create_chat_completion = AsyncMock(return_value=mock_completion)
 
-        with patch("app.rag.answer.get_openai_client", return_value=mock_openai_client):
+        with patch("app.rag.answer.get_llm_client", return_value=mock_openai_client):
             result = await generate_answer("What is RAG?", chunks)
 
             assert isinstance(result, AnswerResponse)
@@ -223,7 +223,7 @@ class TestGenerateAnswer:
         )
         mock_openai_client.create_chat_completion = AsyncMock(return_value=mock_completion)
 
-        with patch("app.rag.answer.get_openai_client", return_value=mock_openai_client):
+        with patch("app.rag.answer.get_llm_client", return_value=mock_openai_client):
             result = await generate_answer("What is RAG?", [])
 
             assert "don't know" in result.answer.lower()
@@ -250,7 +250,7 @@ class TestGenerateAnswer:
         mock_openai_client = AsyncMock()
         mock_openai_client.create_chat_completion = AsyncMock(side_effect=OpenAIError("API error"))
 
-        with patch("app.rag.answer.get_openai_client", return_value=mock_openai_client):
+        with patch("app.rag.answer.get_llm_client", return_value=mock_openai_client):
             with pytest.raises(AnswerError, match="Failed to generate answer"):
                 await generate_answer("Test query", chunks)
 
@@ -286,7 +286,7 @@ class TestGenerateAnswer:
         )
         mock_openai_client.create_chat_completion = AsyncMock(return_value=mock_completion)
 
-        with patch("app.rag.answer.get_openai_client", return_value=mock_openai_client):
+        with patch("app.rag.answer.get_llm_client", return_value=mock_openai_client):
             result = await generate_answer("Test query", chunks)
 
             assert len(result.citations) == 2
@@ -321,7 +321,7 @@ class TestGenerateAnswerStream:
         mock_openai_client = AsyncMock()
         mock_openai_client.stream_chat_completion = mock_stream
 
-        with patch("app.rag.answer.get_openai_client", return_value=mock_openai_client):
+        with patch("app.rag.answer.get_llm_client", return_value=mock_openai_client):
             events = []
             async for ev in generate_answer_stream(
                 "What is RAG?",

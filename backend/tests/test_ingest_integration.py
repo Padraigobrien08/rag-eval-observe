@@ -42,7 +42,7 @@ async def test_ingest_document_integration():
 
     with (
         patch("app.rag.ingest.get_db_pool", new=AsyncMock(return_value=mock_pool)),
-        patch("app.rag.ingest.get_openai_client") as mock_openai,
+        patch("app.rag.ingest.get_llm_client") as mock_openai,
     ):
         # Mock OpenAI client
         mock_client = AsyncMock()
@@ -118,7 +118,7 @@ async def test_ingest_replace_if_exists_reuses_document_id_and_deletes_chunks():
     with (
         patch.object(app_settings, "INGEST_REPLACE_IF_EXISTS", True),
         patch("app.rag.ingest.get_db_pool", new=AsyncMock(return_value=mock_pool)),
-        patch("app.rag.ingest.get_openai_client") as mock_openai,
+        patch("app.rag.ingest.get_llm_client") as mock_openai,
     ):
         mock_client = AsyncMock()
         mock_openai.return_value = mock_client
@@ -177,7 +177,7 @@ async def test_ingest_idempotency():
 
     with (
         patch("app.rag.ingest.get_db_pool", new=AsyncMock(return_value=mock_pool)),
-        patch("app.rag.ingest.get_openai_client") as mock_openai,
+        patch("app.rag.ingest.get_llm_client") as mock_openai,
     ):
         mock_client = AsyncMock()
         mock_openai.return_value = mock_client
@@ -218,7 +218,7 @@ async def test_ingest_markdown():
 
     with (
         patch("app.rag.ingest.get_db_pool", new=AsyncMock(return_value=mock_pool)),
-        patch("app.rag.ingest.get_openai_client") as mock_openai,
+        patch("app.rag.ingest.get_llm_client") as mock_openai,
     ):
         mock_client = AsyncMock()
         mock_openai.return_value = mock_client
@@ -270,7 +270,7 @@ async def test_ingest_transaction_rollback_on_error():
 
     with (
         patch("app.rag.ingest.get_db_pool", new=AsyncMock(return_value=mock_pool)),
-        patch("app.rag.ingest.get_openai_client") as mock_openai,
+        patch("app.rag.ingest.get_llm_client") as mock_openai,
     ):
         mock_client = AsyncMock()
         mock_openai.return_value = mock_client
@@ -333,7 +333,7 @@ async def test_ingest_embedding_failure():
 
     with (
         patch("app.rag.ingest.get_db_pool", new=AsyncMock(return_value=mock_pool)),
-        patch("app.rag.ingest.get_openai_client") as mock_openai,
+        patch("app.rag.ingest.get_llm_client") as mock_openai,
     ):
         from app.llm.openai_client import OpenAIError
 

@@ -34,7 +34,8 @@ function PureSuggestedActions({ chatId, sendMessage }: SuggestedActionsProps) {
             animate={{ opacity: 1, y: 0 }}
             className={cn(
               'group flex flex-col gap-2.5 rounded-xl border border-border bg-card/40 p-3.5 text-left',
-              'transition-colors hover:border-foreground/25 hover:bg-accent/50',
+              'transition-[transform,border-color,background-color] duration-150 ease-out',
+              'hover:border-foreground/25 hover:bg-accent/50 active:scale-[0.985]',
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background'
             )}
             initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 10 }}

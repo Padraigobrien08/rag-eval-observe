@@ -27,16 +27,14 @@ This index maps every doc so you can find the right one fast.
 | --- | --- |
 | [DEPLOYMENT.md](../DEPLOYMENT.md) | Production deployment (Vercel + container backend + Postgres) |
 | [AZURE_DEPLOY.md](./AZURE_DEPLOY.md) | Azure Container Apps path (optional/legacy) |
-| [RUNBOOK.md](./RUNBOOK.md) | Health checks, incidents, rollback, escalation |
-| [SLOS.md](./SLOS.md) | Example availability / latency SLOs |
+| [RUNBOOK.md](./RUNBOOK.md) | Health checks, incidents, rollback, escalation, and example SLOs |
 | [EVAL_CI.md](./EVAL_CI.md) | Eval exports, CI artifacts, and the regression gate |
 
 ## Security & hardening
 
 | Doc | What it covers |
 | --- | --- |
-| [HARDENING.md](./HARDENING.md) | `API_KEY`, rate limits, CORS, multi-tenant posture |
-| [THREAT_MODEL.md](./THREAT_MODEL.md) | Assets, trust boundaries, mitigations |
+| [HARDENING.md](./HARDENING.md) | `API_KEY`, rate limits, CORS, multi-tenant posture, and the threat model |
 | [SECURITY.md](../SECURITY.md) | Security policy and vulnerability reporting |
 
 ## Contribute

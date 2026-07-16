@@ -25,9 +25,9 @@ async def search_chunks_endpoint(
 
     try:
         # Generate embedding for the query
-        from app.llm.openai_client import get_openai_client
+        from app.llm.openai_client import get_llm_client
 
-        openai_client = get_openai_client()
+        openai_client = get_llm_client()
         embedding_response = await openai_client.create_embedding(search_request.query)
         query_embedding = embedding_response.embedding
 

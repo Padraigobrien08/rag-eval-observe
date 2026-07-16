@@ -68,6 +68,9 @@ function PureChatHeader({
           <Link href="/eval/runs">Eval</Link>
         </Button>
         <Button asChild size="sm" variant="ghost">
+          <Link href="/strategies">Strategies</Link>
+        </Button>
+        <Button asChild size="sm" variant="ghost">
           <Link href="/metrics">Metrics</Link>
         </Button>
         <ConnectionStatus className="ml-1 hidden lg:inline" />
@@ -91,6 +94,9 @@ function PureChatHeader({
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
             <Link href="/eval/runs">Eval</Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link href="/strategies">Strategies</Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
             <Link href="/metrics">Metrics</Link>

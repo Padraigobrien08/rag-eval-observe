@@ -220,7 +220,7 @@ class TestIDontKnowBehavior:
         mock_completion.finish_reason = "stop"
         mock_openai_client.create_chat_completion = AsyncMock(return_value=mock_completion)
 
-        with patch("app.rag.answer.get_openai_client", return_value=mock_openai_client):
+        with patch("app.rag.answer.get_llm_client", return_value=mock_openai_client):
             result = await generate_answer("What is RAG?", [])
 
             assert "don't know" in result.answer.lower()
