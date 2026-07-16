@@ -57,11 +57,9 @@ class _Span:
             return
         if not isinstance(value, (str, bool, int, float)):
             value = str(value)
-        try:
+        # Instrumentation must never break the request path.
+        with contextlib.suppress(Exception):
             self._span.set_attribute(key, value)
-        except Exception:
-            # Instrumentation must never break the request path.
-            pass
 
 
 @contextlib.contextmanager
@@ -111,13 +109,11 @@ def observe_stage(
 
 
 def record_stage_latency(stage: str, latency_ms: float) -> None:
-    try:
+    # Metrics recording must never break the request path.
+    with contextlib.suppress(Exception):
         from app.core.metrics import get_metrics
 
         get_metrics().record_stage(stage, latency_ms)
-    except Exception:
-        # Metrics recording must never break the request path.
-        pass
 
 
 def current_trace_id() -> str | None:

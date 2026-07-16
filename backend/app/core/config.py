@@ -107,7 +107,7 @@ class Settings(BaseSettings):
     CORS_ALLOW_ORIGINS: str = ""  # Override CORS_ORIGINS if set
 
     # Server
-    HOST: str = "0.0.0.0"
+    HOST: str = "0.0.0.0"  # noqa: S104 - binds all interfaces by design (containerized service)
     PORT: int = 8000
 
     # OpenTelemetry (install backend with: uv sync --extra otel)

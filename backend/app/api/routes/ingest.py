@@ -27,7 +27,9 @@ def _decode_optional_ingest_original(req: IngestRequest) -> tuple[bytes | None, 
     try:
         raw = base64.b64decode(req.original_file_base64, validate=True)
     except Exception:
-        raise HTTPException(status_code=400, detail="original_file_base64 is not valid base64")
+        raise HTTPException(
+            status_code=400, detail="original_file_base64 is not valid base64"
+        ) from None
     if len(raw) > settings.MAX_INGEST_ORIGINAL_FILE_BYTES:
         raise HTTPException(
             status_code=413,
@@ -114,7 +116,7 @@ async def ingest_document_endpoint(
         raise HTTPException(
             status_code=413,
             detail=str(e),
-        )
+        ) from e
 
     except IngestError as e:
         logger.error(
@@ -126,7 +128,7 @@ async def ingest_document_endpoint(
         raise HTTPException(
             status_code=500,
             detail=str(e),
-        )
+        ) from e
 
     except Exception as e:
         logger.error(
@@ -138,7 +140,7 @@ async def ingest_document_endpoint(
         raise HTTPException(
             status_code=500,
             detail="Internal server error during ingestion",
-        )
+        ) from e
 
 
 @router.post("/extract-text")
@@ -186,7 +188,7 @@ async def extract_text_endpoint(
                     raise HTTPException(
                         status_code=500,
                         detail="PDF extraction library not installed. Please install PyPDF2 or pdfplumber.",
-                    )
+                    ) from None
         elif file_extension == "docx":
             try:
                 from docx import Document
@@ -199,7 +201,7 @@ async def extract_text_endpoint(
                 raise HTTPException(
                     status_code=500,
                     detail="DOCX extraction library not installed. Please install python-docx.",
-                )
+                ) from None
 
         if not text:
             raise HTTPException(
@@ -230,4 +232,4 @@ async def extract_text_endpoint(
         raise HTTPException(
             status_code=500,
             detail=f"Failed to extract text from file: {str(e)}",
-        )
+        ) from e

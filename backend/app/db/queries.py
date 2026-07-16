@@ -240,7 +240,7 @@ async def list_documents(limit: int = 100, offset: int = 0) -> list[dict[str, An
             return result
     except TimeoutError as e:
         logger.error("Database operation timed out", error=str(e))
-        raise RuntimeError(f"Database query timed out: {str(e)}")
+        raise RuntimeError(f"Database query timed out: {str(e)}") from e
     except Exception as e:
         logger.error("list_documents error", error=str(e), exc_info=True)
         raise

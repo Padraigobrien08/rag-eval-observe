@@ -93,7 +93,7 @@ def compare(
     cur_metrics = current.get("metrics", {})
 
     rows: list[MetricRow] = []
-    for key, label, kind in METRICS:
+    for key, label, _kind in METRICS:
         b = base_metrics.get(key)
         c = cur_metrics.get(key)
         delta = (c - b) if (b is not None and c is not None) else None
@@ -213,7 +213,7 @@ def _bootstrap_markdown(current: dict[str, Any]) -> str:
         "| Metric | Value |",
         "| --- | ---: |",
     ]
-    for key, label, kind in METRICS:
+    for key, label, _kind in METRICS:
         v = cur_metrics.get(key)
         if v is None:
             continue

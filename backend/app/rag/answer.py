@@ -506,7 +506,7 @@ def extract_citations(answer: str, chunks: list[RetrievedChunk]) -> list[dict[st
 
     # Find all citation numbers in answer
     matches = re.findall(citation_pattern, answer)
-    citation_indices = set(int(m) for m in matches)
+    citation_indices = {int(m) for m in matches}
 
     # Map citation numbers to chunks (1-indexed in prompt, 0-indexed in list)
     for idx in citation_indices:

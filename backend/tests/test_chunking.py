@@ -196,7 +196,7 @@ class TestDeterminism:
         chunks2 = chunker.chunk(text, is_markdown=False)
 
         assert len(chunks1) == len(chunks2)
-        for i, (c1, c2) in enumerate(zip(chunks1, chunks2)):
+        for i, (c1, c2) in enumerate(zip(chunks1, chunks2, strict=True)):
             assert c1.content == c2.content, f"Chunk {i} differs"
             assert c1.chunk_index == c2.chunk_index
             assert c1.metadata == c2.metadata
@@ -217,7 +217,7 @@ More content.
         chunks2 = chunker.chunk(markdown, is_markdown=True)
 
         assert len(chunks1) == len(chunks2)
-        for i, (c1, c2) in enumerate(zip(chunks1, chunks2)):
+        for i, (c1, c2) in enumerate(zip(chunks1, chunks2, strict=True)):
             assert c1.content == c2.content, f"Chunk {i} differs"
             assert c1.chunk_index == c2.chunk_index
             assert c1.metadata == c2.metadata
