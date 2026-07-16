@@ -75,7 +75,7 @@ class IngestRequest(BaseModel):
     )
 
     @model_validator(mode="after")
-    def original_pair(self):
+    def original_pair(self) -> "IngestRequest":
         has_b64 = bool(self.original_file_base64)
         has_type = bool(self.original_media_type)
         if has_b64 ^ has_type:

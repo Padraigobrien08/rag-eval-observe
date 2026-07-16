@@ -50,7 +50,7 @@ class RedisRateLimiter:
     async def _get_redis(self) -> "redis.Redis":
         """Get or create Redis client."""
         if self._redis_client is None:
-            self._redis_client = redis.from_url(
+            self._redis_client = redis.from_url(  # type: ignore[no-untyped-call]
                 self.redis_url,
                 decode_responses=True,
                 socket_connect_timeout=2,

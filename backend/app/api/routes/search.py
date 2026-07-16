@@ -19,7 +19,7 @@ router = APIRouter()
 async def search_chunks_endpoint(
     request: Request,
     search_request: SearchRequest,
-):
+) -> SearchResponse:
     """Search for similar chunks using vector similarity."""
     request_id = getattr(request.state, "request_id", "unknown")
 

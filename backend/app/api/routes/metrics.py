@@ -1,3 +1,5 @@
+from typing import Any
+
 import structlog
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import PlainTextResponse
@@ -10,7 +12,7 @@ router = APIRouter()
 
 
 @router.get("/metrics")
-async def get_metrics_endpoint(request: Request):
+async def get_metrics_endpoint(request: Request) -> dict[str, Any]:
     """Get application metrics."""
     request_id = getattr(request.state, "request_id", "unknown")
 
@@ -35,7 +37,7 @@ async def get_metrics_endpoint(request: Request):
 
 
 @router.get("/metrics/prometheus", response_class=PlainTextResponse)
-async def get_metrics_prometheus_endpoint(request: Request):
+async def get_metrics_prometheus_endpoint(request: Request) -> str:
     """In-memory metrics in Prometheus text exposition format (single-process)."""
     request_id = getattr(request.state, "request_id", "unknown")
     try:

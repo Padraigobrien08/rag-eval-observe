@@ -29,14 +29,16 @@ router = APIRouter()
 
 
 @router.post("/chat/threads", response_model=ChatThreadResponse)
-async def create_chat_thread_endpoint(body: ChatThreadCreate):
+async def create_chat_thread_endpoint(body: ChatThreadCreate) -> ChatThreadResponse:
     """Create an empty chat thread."""
     row = await create_chat_thread(body.title)
     return ChatThreadResponse(**row, message_count=0)
 
 
 @router.get("/chat/threads", response_model=ChatThreadListResponse)
-async def list_chat_threads_endpoint(limit: int = Query(50, ge=1, le=200)):
+async def list_chat_threads_endpoint(
+    limit: int = Query(50, ge=1, le=200),
+) -> ChatThreadListResponse:
     """List chat threads ordered by recent activity."""
     rows = await list_chat_threads(limit=limit, offset=0)
     return ChatThreadListResponse(
@@ -54,7 +56,7 @@ async def list_chat_threads_endpoint(limit: int = Query(50, ge=1, le=200)):
 
 
 @router.delete("/chat/threads")
-async def delete_all_chat_threads_endpoint():
+async def delete_all_chat_threads_endpoint() -> JSONResponse:
     """Delete all chat threads and their messages."""
     n = await delete_all_chat_threads()
     return JSONResponse(
@@ -64,7 +66,7 @@ async def delete_all_chat_threads_endpoint():
 
 
 @router.patch("/chat/threads/{thread_id}", response_model=ChatThreadResponse)
-async def patch_chat_thread_endpoint(thread_id: str, body: ChatThreadUpdate):
+async def patch_chat_thread_endpoint(thread_id: str, body: ChatThreadUpdate) -> ChatThreadResponse:
     """Rename a chat thread."""
     existing = await get_chat_thread(thread_id)
     if not existing:
@@ -84,7 +86,7 @@ async def patch_chat_thread_endpoint(thread_id: str, body: ChatThreadUpdate):
 
 
 @router.delete("/chat/threads/{thread_id}")
-async def delete_chat_thread_endpoint(thread_id: str):
+async def delete_chat_thread_endpoint(thread_id: str) -> JSONResponse:
     """Delete a chat thread and its messages."""
     deleted = await delete_chat_thread(thread_id)
     if not deleted:
@@ -95,7 +97,7 @@ async def delete_chat_thread_endpoint(thread_id: str):
 
 
 @router.get("/chat/threads/{thread_id}/messages", response_model=ChatMessagesListResponse)
-async def list_chat_messages_endpoint(thread_id: str):
+async def list_chat_messages_endpoint(thread_id: str) -> ChatMessagesListResponse:
     """List messages for a thread in chronological order."""
     thread = await get_chat_thread(thread_id)
     if not thread:
@@ -126,7 +128,9 @@ async def list_chat_messages_endpoint(thread_id: str):
 
 
 @router.post("/chat/threads/{thread_id}/messages", response_model=ChatMessageResponse)
-async def append_chat_message_endpoint(thread_id: str, body: ChatMessageAppend):
+async def append_chat_message_endpoint(
+    thread_id: str, body: ChatMessageAppend
+) -> ChatMessageResponse:
     """Persist one chat message."""
     thread = await get_chat_thread(thread_id)
     if not thread:

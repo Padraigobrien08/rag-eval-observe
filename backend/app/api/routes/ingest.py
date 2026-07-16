@@ -45,7 +45,7 @@ def _decode_optional_ingest_original(req: IngestRequest) -> tuple[bytes | None, 
 async def ingest_document_endpoint(
     request: Request,
     ingest_request: IngestRequest,
-):
+) -> IngestResponse:
     """Ingest a document into the database."""
     request_id = getattr(request.state, "request_id", "unknown")
 
@@ -145,7 +145,7 @@ async def ingest_document_endpoint(
 async def extract_text_endpoint(
     request: Request,
     file: UploadFile = File(...),
-):
+) -> JSONResponse:
     """Extract text from PDF or DOCX files."""
     request_id = getattr(request.state, "request_id", "unknown")
 
