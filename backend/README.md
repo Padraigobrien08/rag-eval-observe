@@ -228,7 +228,23 @@ make api-test
 uv run pytest
 ```
 
-**Note:** All tests use mocks and do not require network access. OpenAI API calls are mocked.
+**Note:** OpenAI API calls are mocked, so no network access is needed. Most tests
+run against mocks, but the `*_api.py` DB-integration tests need a real Postgres and
+a `DATABASE_URL` pointing at it.
+
+That Postgres must be migrated to Alembic head, not just seeded from `docker/init`.
+`docker/init/*.sql` alone leaves the schema drifted (e.g. missing the
+`chat_messages_query_log_id_fkey` FK from migration 005), and tests that assert on
+those constraints will fail. Bring a local DB up to head the same way CI does:
+
+```bash
+export DATABASE_URL=postgresql://postgres:postgres@localhost:5432/ragdb
+uv run --extra dev python scripts/apply_init_sql.py
+uv run --extra dev alembic upgrade head
+uv run --extra dev pytest
+```
+
+Both setup steps are idempotent, so re-running them on an existing dev DB is safe.
 
 ## CORS Configuration
 

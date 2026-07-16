@@ -42,14 +42,19 @@ async def lifespan(app: FastAPI):
     if redis_limiter:
         logger.info("Redis rate limiting enabled")
 
-    yield
-
-    # Cleanup Redis connection
-    if redis_limiter:
-        await redis_limiter.close()
-
-    logger.info("Shutting down application")
-    await close_db_pool()
+    try:
+        yield
+    finally:
+        # Always tear down on shutdown, even if the app raised — otherwise the
+        # asyncpg pool leaks (and under pytest, where each test gets its own event
+        # loop, a leaked pool bound to a closed loop breaks every later test).
+        logger.info("Shutting down application")
+        if redis_limiter:
+            try:
+                await redis_limiter.close()
+            except Exception:
+                logger.exception("Failed to close Redis rate limiter")
+        await close_db_pool()
 
 
 app = FastAPI(
