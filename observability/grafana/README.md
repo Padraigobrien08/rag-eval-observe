@@ -15,12 +15,12 @@ Two dashboards live next to this folder:
 
 Use the files under `provisioning/`:
 
-| Mount (container path) | Source file |
-|------------------------|-------------|
+| Mount (container path)                                  | Source file                                |
+| ------------------------------------------------------- | ------------------------------------------ |
 | `/etc/grafana/provisioning/datasources/datasource.yaml` | `provisioning/datasources/datasource.yaml` |
-| `/etc/grafana/provisioning/dashboards/default.yaml` | `provisioning/dashboards/default.yaml` |
-| `/etc/grafana/dashboards/rag-eval.json` | `../grafana-rag-eval-prometheus.json` |
-| `/etc/grafana/dashboards/rag-eval-traces.json` | `../grafana-rag-eval-traces.json` |
+| `/etc/grafana/provisioning/dashboards/default.yaml`     | `provisioning/dashboards/default.yaml`     |
+| `/etc/grafana/dashboards/rag-eval.json`                 | `../grafana-rag-eval-prometheus.json`      |
+| `/etc/grafana/dashboards/rag-eval-traces.json`          | `../grafana-rag-eval-traces.json`          |
 
 Edit `datasource.yaml` so `url` points at your Prometheus (`prometheus:9090`) and Tempo (`tempo:3200`). The dashboard provider reads all JSON from `/etc/grafana/dashboards`.
 
@@ -48,7 +48,7 @@ curl -s localhost:8000/api/v1/query \
 2. **Dashboards → RAG Eval — Traces (Tempo waterfall)**.
 3. The **recent-traces** table lists the query — click its **Trace ID** to see
    the `rag.retrieve → openai.embedding / db.vector_search → rag.generate →
-   openai.chat` waterfall, or paste the `trace_id` into the `traceId` variable.
+openai.chat` waterfall, or paste the `trace_id` into the `traceId` variable.
 
 Ports: API `8000`, Grafana `3001`, Prometheus `9090`, Tempo `3200` / OTLP
 `4318`. Add `--profile full` to also run the Next.js UI on `3000`. Tear down
@@ -74,11 +74,11 @@ The waterfall shows one span per pipeline stage — `rag.retrieve` → `openai.e
 
 Scraped from `GET /api/v1/metrics/prometheus`:
 
-| Metric | Type | Labels | Use |
-|--------|------|--------|-----|
-| `http_requests_total` | counter | `route`, `status` | Request/error rate |
-| `http_request_latency_ms` | histogram | `route` | `histogram_quantile(0.95, sum by (le,route) (rate(http_request_latency_ms_bucket[5m])))` |
-| `rag_stage_latency_ms` | histogram | `stage` | Per-stage p95 (`retrieve`, `embedding`, `chat_completion`, …) — shows whether latency is retrieval or generation |
-| `openai_tokens_*` | counter | — | Token spend |
+| Metric                    | Type      | Labels            | Use                                                                                                              |
+| ------------------------- | --------- | ----------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `http_requests_total`     | counter   | `route`, `status` | Request/error rate                                                                                               |
+| `http_request_latency_ms` | histogram | `route`           | `histogram_quantile(0.95, sum by (le,route) (rate(http_request_latency_ms_bucket[5m])))`                         |
+| `rag_stage_latency_ms`    | histogram | `stage`           | Per-stage p95 (`retrieve`, `embedding`, `chat_completion`, …) — shows whether latency is retrieval or generation |
+| `openai_tokens_*`         | counter   | —                 | Token spend                                                                                                      |
 
 For a full per-request trace waterfall (server → `rag.retrieve` → `openai.embedding` / `db.vector_search` → `rag.generate` → `openai.chat`), run the backend with `OTEL_ENABLED=true` (`uv sync --extra otel`) and point `OTEL_EXPORTER_OTLP_ENDPOINT` at Tempo/Jaeger. Logs carry the matching `trace_id`.

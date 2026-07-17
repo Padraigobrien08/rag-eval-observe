@@ -1,7 +1,8 @@
 import { Pool } from 'pg'
 
 export const pool = new Pool({
-  connectionString: process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/ragdb',
+  connectionString:
+    process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/ragdb',
   max: 20,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 2000,

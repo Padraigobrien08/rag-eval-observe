@@ -7,11 +7,13 @@ This document outlines security considerations for the RAG Eval Observability pl
 **Important**: The Next.js API proxy (`/api/backend/[...path]`) protects the **backend URL** but does **not** protect the **API functionality**.
 
 ### What the Proxy Protects ✅
+
 - **Backend URL/IP**: The actual backend URL (`BACKEND_API_BASE_URL`) is server-side only and not visible to clients
 - **CORS issues**: Avoids mixed content warnings (HTTPS frontend → HTTP backend)
 - **Network topology**: Hides backend infrastructure details
 
 ### What the Proxy Does NOT Protect ❌
+
 - **API endpoints**: All endpoints are still publicly accessible through the proxy
 - **API functionality**: Anyone can call `/api/backend/api/v1/query`, `/api/backend/api/v1/ingest`, etc.
 - **Data access**: Users can query, ingest, and delete documents without authentication
@@ -21,16 +23,18 @@ This document outlines security considerations for the RAG Eval Observability pl
 Even with the proxy, users can:
 
 1. **Browser DevTools**:
+
    ```javascript
    // Open DevTools → Network tab → See all API calls
    fetch('/api/backend/api/v1/query', {
      method: 'POST',
      headers: { 'Content-Type': 'application/json' },
-     body: JSON.stringify({ query: 'test' })
+     body: JSON.stringify({ query: 'test' }),
    })
    ```
 
 2. **Direct HTTP requests**:
+
    ```bash
    curl https://your-vercel-app.vercel.app/api/backend/api/v1/query \
      -X POST \
@@ -43,32 +47,38 @@ Even with the proxy, users can:
 ## ✅ Current Security Measures
 
 ### Secrets Management
+
 - ✅ **No hardcoded secrets**: All sensitive values (API keys, database URLs) use environment variables
 - ✅ **Environment files ignored**: `.env` and `.env.local` files are in `.gitignore`
 - ✅ **Example files provided**: `.env.example` files document required variables without exposing secrets
 - ✅ **Backend URL hidden**: Backend URL is server-side only (not exposed to clients)
 
 ### Input Validation
+
 - ✅ **Query length limits**: Maximum 5,000 characters per query
 - ✅ **Payload size limits**: Maximum 10MB for document ingestion
 - ✅ **Empty string validation**: Required fields are validated
 - ✅ **Pydantic schemas**: Request/response validation using Pydantic
 
 ### SQL Injection Protection
+
 - ✅ **Parameterized queries**: All database queries use parameterized statements (`$1`, `$2`, etc.)
 - ✅ **asyncpg**: Database library handles parameterization correctly
 
 ### Rate Limiting
+
 - ✅ **Per-IP rate limiting**: 100 requests per 60 seconds (configurable)
 - ✅ **Redis support**: Optional distributed rate limiting for multi-instance deployments
 - ⚠️ **Note**: Rate limiting helps prevent abuse but doesn't restrict access
 
 ### CORS Configuration
+
 - ✅ **Configurable origins**: CORS origins are configurable via environment variables
 - ✅ **Default localhost**: Includes localhost for development
 - ⚠️ **Note**: CORS only affects browser requests, not direct API calls
 
 ### File Upload Security
+
 - ✅ **File type validation**: Only PDF and DOCX files accepted
 - ✅ **File size limits**: Enforced at multiple levels
 - ✅ **Memory-safe processing**: Files processed in-memory with size limits
@@ -79,25 +89,29 @@ Even with the proxy, users can:
 
 **Current Status**: ❌ **No authentication or authorization implemented**
 
-**Impact**: 
+**Impact**:
+
 - Anyone can access the API through the proxy endpoints
 - No user isolation or access control
 - API endpoints are publicly accessible (via proxy)
 - Rate limiting provides some protection but doesn't restrict access
 
 **When This Is Acceptable**:
+
 - ✅ **Portfolio/demo projects**: Public access is fine for showcasing
 - ✅ **Internal tools**: Behind corporate firewall/VPN
 - ✅ **Open-source projects**: Users add their own authentication
 - ✅ **Low-risk deployments**: When data sensitivity is low
 
 **When This Is NOT Acceptable**:
+
 - ❌ **Production APIs with sensitive data**: Need authentication
 - ❌ **Multi-tenant systems**: Need user isolation
 - ❌ **Cost-sensitive deployments**: Need to prevent abuse
 - ❌ **Regulated industries**: May require authentication/audit trails
 
 **Recommendations**:
+
 1. **For portfolio/demo projects**: Current setup is fine with rate limiting
 2. **For production deployments**, add authentication:
    - API key authentication (simple, suitable for server-to-server)
@@ -109,6 +123,7 @@ Even with the proxy, users can:
    - Consider adding optional authentication middleware
 
 **Example Implementation** (Optional):
+
 ```python
 # backend/app/core/auth.py
 from fastapi import HTTPException, Security
@@ -127,11 +142,13 @@ async def verify_api_key(api_key: str = Security(api_key_header)):
 **Current Status**: ⚠️ **Basic validation only**
 
 **Concerns**:
+
 - Only validates file extension, not MIME type or actual file content
 - Malicious files could potentially be uploaded if renamed
 - PDF/DOCX parsing libraries may have vulnerabilities
 
 **Recommendations**:
+
 1. **Validate MIME type** in addition to extension:
    ```python
    import magic
@@ -148,10 +165,12 @@ async def verify_api_key(api_key: str = Security(api_key_header)):
 **Current Status**: ⚠️ **Some error messages may leak information**
 
 **Concerns**:
+
 - Error messages sometimes include internal details
 - Stack traces may be exposed in development mode
 
 **Recommendations**:
+
 1. **Sanitize error messages** in production:
    ```python
    if settings.ENVIRONMENT == "production":
@@ -167,10 +186,12 @@ async def verify_api_key(api_key: str = Security(api_key_header)):
 **Current Status**: ⚠️ **Markdown rendering needs verification**
 
 **Concerns**:
+
 - User-provided content is rendered as markdown
 - Need to ensure markdown renderer sanitizes HTML
 
 **Recommendations**:
+
 1. **Verify ReactMarkdown** sanitization (it should sanitize by default)
 2. **Consider using `remark-gfm`** with sanitization plugins
 3. **Test with malicious markdown** inputs
@@ -180,10 +201,12 @@ async def verify_api_key(api_key: str = Security(api_key_header)):
 **Current Status**: ⚠️ **No CSRF protection**
 
 **Concerns**:
+
 - Frontend makes direct API calls
 - No CSRF tokens or SameSite cookies
 
 **Recommendations**:
+
 1. **For API-only deployments**: CSRF is less critical (no cookies)
 2. **For cookie-based auth**: Add CSRF tokens
 3. **Use SameSite cookies** if implementing session-based auth
@@ -193,6 +216,7 @@ async def verify_api_key(api_key: str = Security(api_key_header)):
 **Current Status**: ⚠️ **No request signing or replay protection**
 
 **Recommendations**:
+
 1. **Add request signing** for sensitive operations (optional)
 2. **Use HTTPS** in production (required)
 3. **Implement request nonces** for replay protection (optional)

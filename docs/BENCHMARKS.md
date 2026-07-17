@@ -17,12 +17,12 @@ uv run python eval/benchmark_strategies.py                # full corpus
 uv run python eval/benchmark_strategies.py --max-cases 5  # cheap smoke
 ```
 
-| Strategy | Hit@1 | Hit@5 | MRR | Retrieval latency p50 / p95 | Cost / 1k queries | OpenAI calls (embed / chat) |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| `vector-similarity` | 76.9% | 94.9% | **0.840** | 227 ms / 331 ms | $0.0002 | 1 / 0.0 |
-| `hybrid-search` | 75.6% | 94.9% | 0.825 | 220 ms / 292 ms | $0.0002 | 1 / 0.0 |
-| `reranking` | 73.1% | **98.7%** | 0.831 | 1119 ms / 1599 ms | $0.2361 | 1 / 1.0 |
-| `multi-query` | 73.1% | 94.9% | 0.827 | 2089 ms / 2906 ms | $0.0372 | 4 / 1.0 |
+| Strategy            | Hit@1 |     Hit@5 |       MRR | Retrieval latency p50 / p95 | Cost / 1k queries | OpenAI calls (embed / chat) |
+| ------------------- | ----: | --------: | --------: | --------------------------: | ----------------: | --------------------------: |
+| `vector-similarity` | 76.9% |     94.9% | **0.840** |             227 ms / 331 ms |           $0.0002 |                     1 / 0.0 |
+| `hybrid-search`     | 75.6% |     94.9% |     0.825 |             220 ms / 292 ms |           $0.0002 |                     1 / 0.0 |
+| `reranking`         | 73.1% | **98.7%** |     0.831 |           1119 ms / 1599 ms |           $0.2361 |                     1 / 1.0 |
+| `multi-query`       | 73.1% |     94.9% |     0.827 |           2089 ms / 2906 ms |           $0.0372 |                     4 / 1.0 |
 
 _Bundled 78-case corpus, `text-embedding-3-small` + `gpt-4o-mini`, `top_k=8`.
 Latency is wall-clock around `retrieve()` on a local run against a Docker
@@ -33,7 +33,7 @@ lands in `eval/benchmark_results.json`._
 **How to read it.** There is no free lunch: the cheapest, fastest strategy is
 not dominated on quality, and the strategy with the best top-5 recall pays for it
 in latency and cost (an extra LLM call per query). "Which retriever?" is a
-trade-off you resolve against *your* corpus and *your* latency/cost budget — which
+trade-off you resolve against _your_ corpus and _your_ latency/cost budget — which
 is the whole reason the harness exists. Re-run it after any change to embeddings,
 chunking, or `top_k` and the numbers move.
 
@@ -73,36 +73,36 @@ glossary" documents silently demotes the canonical source for 12 questions, and
 the CI gate (`eval/compare_eval.py`) blocks the merge. Full write-up, artifacts,
 and a one-command reproduction: **[`backend/eval/case_study/`](../backend/eval/case_study/README.md)**.
 
-| Field | Value |
-| --- | --- |
-| Dataset | `backend/eval/dataset.jsonl` (78 cases) |
-| Embedding model | `text-embedding-3-small` |
-| Chat model | `gpt-4o-mini` |
-| Change under test | +4 distractor docs (`case_study/distractors/`) |
-| Hit@5 | 94.9% → 97.4% (within run noise) |
-| **MRR (gated)** | **0.840 → 0.812 (−0.028)** |
-| Hit@1 | 76.9% → 70.5% (−6.4pp) |
-| Rank-1 answers | 60 → 55 canonical sources |
-| Gate result | 🔴 **fails (exit 1)** — MRR beyond ±0.02 tolerance |
+| Field             | Value                                              |
+| ----------------- | -------------------------------------------------- |
+| Dataset           | `backend/eval/dataset.jsonl` (78 cases)            |
+| Embedding model   | `text-embedding-3-small`                           |
+| Chat model        | `gpt-4o-mini`                                      |
+| Change under test | +4 distractor docs (`case_study/distractors/`)     |
+| Hit@5             | 94.9% → 97.4% (within run noise)                   |
+| **MRR (gated)**   | **0.840 → 0.812 (−0.028)**                         |
+| Hit@1             | 76.9% → 70.5% (−6.4pp)                             |
+| Rank-1 answers    | 60 → 55 canonical sources                          |
+| Gate result       | 🔴 **fails (exit 1)** — MRR beyond ±0.02 tolerance |
 
 The clean run reproduced the pinned baseline (`eval/baseline.json`) to within a
 case, so the delta is attributable to the distractors, not drift. The takeaway:
 **Hit@5 barely moved — a recall@k-only gate would have shipped this. MRR caught
-it** because it is sensitive to *where* the right document lands, not just whether
+it** because it is sensitive to _where_ the right document lands, not just whether
 it appears. This is why the gate keys on both.
 
 ## Case study template (fill in for your deployment)
 
-| Field | Example |
-| --- | --- |
-| Date | |
-| Commit | |
-| Embedding model | |
-| Chat model | |
-| Dataset | `backend/eval/dataset.jsonl` |
-| Hit@5 | |
-| MRR | |
-| Notes (reranker, top_k, etc.) | |
+| Field                         | Example                      |
+| ----------------------------- | ---------------------------- |
+| Date                          |                              |
+| Commit                        |                              |
+| Embedding model               |                              |
+| Chat model                    |                              |
+| Dataset                       | `backend/eval/dataset.jsonl` |
+| Hit@5                         |                              |
+| MRR                           |                              |
+| Notes (reranker, top_k, etc.) |                              |
 
 ## Interpreting drift
 
