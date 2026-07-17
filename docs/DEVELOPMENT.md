@@ -77,16 +77,28 @@ pnpm demo:e2e
 
 This runs `pnpm build` then `playwright test e2e/demo-automated.spec.ts`. The same spec is included in the default `pnpm exec playwright test` run in CI.
 
-## README walkthrough GIF
+## README screenshots
 
-The root README embeds `docs/images/demo-walkthrough.gif` (five screens: chat with one example Q→A, query logs, eval list, compare, export). Regenerate from mocked Playwright captures:
+The "See it in action" grid embeds `docs/images/live/*.png`, captured from the
+**live deployment** (real data, not mocks) by `scripts/capture-live.mjs`:
 
 ```bash
-pnpm demo:capture   # PNGs → docs/images/demo-frames/ (gitignored)
-pnpm demo:gif       # ImageMagick → docs/images/demo-walkthrough.gif (commit this)
+node scripts/capture-live.mjs   # → docs/images/live/{chat-empty,query-logs,eval-runs,metrics}.png
 ```
 
-`e2e/readme-demo-capture.spec.ts` runs only when `CAPTURE_README_DEMO=1` is set, so normal `pnpm exec playwright test` does not overwrite assets.
+Re-run it after any UI change that lands in the README grid, and commit the PNGs.
+Screenshots of a UI that no longer exists are worse than no screenshots, so treat
+a visual redesign as a reason to re-capture.
+
+## README regression GIF
+
+`docs/images/eval-regression-flow.gif` shows the compare view tripping the
+regression verdict. Regenerate it from deterministic Playwright captures:
+
+```bash
+pnpm demo:capture-regression   # frames via e2e/eval-regression-capture.spec.ts
+pnpm demo:regression-gif       # ImageMagick → docs/images/eval-regression-flow.gif
+```
 
 ## One-command stack (Docker profile `full`)
 
@@ -111,6 +123,28 @@ pnpm build && pnpm exec playwright test
 ```
 
 Playwright starts a production `next start` server on **http://127.0.0.1:4173** (see `playwright.config.ts`) so it does not collide with `pnpm dev` on port 3000.
+
+### What the coverage gate covers
+
+Two independent gates, and each one names its scope on purpose:
+
+| Gate               | Scope                                  | Threshold |
+| ------------------ | -------------------------------------- | --------- |
+| `pytest --cov=app` | the whole FastAPI backend              | 73%       |
+| `jest --coverage`  | `src/lib` (the TypeScript logic layer) | 80%       |
+
+React components under `src/components`, `src/app`, `src/features`, and `src/hooks`
+are **not** in the Jest denominator. That is a deliberate split, not an oversight:
+component behaviour is exercised by Playwright (including `axe-core` on the four
+core pages) against a real production build, which catches routing, streaming, and
+accessibility regressions that a jsdom snapshot cannot. `src/lib/db` (Drizzle) and
+`src/lib/api` (fetch wrappers) are excluded for the same reason — they are covered
+by the integration E2E workflow against a real Postgres and a real FastAPI.
+
+The consequence worth knowing: the README's coverage badge is labelled
+**`coverage (backend + logic)`** because that is its true denominator. Playwright
+coverage is not folded into that number, so the badge understates total tested
+surface rather than overstating it.
 
 **Broader E2E:** `e2e/eval-observability-mocked.spec.ts` covers eval list/detail/compare and query logs with a mocked API. **`e2e/a11y-core-pages.spec.ts`** runs **axe-core** on `/`, `/eval/runs`, `/query-logs`, and `/metrics` (color-contrast disabled; focus on structure and naming — see file header). Both are included in `pnpm exec playwright test` / CI.
 
