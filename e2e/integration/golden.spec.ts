@@ -5,7 +5,7 @@ import { test, expect } from '@playwright/test'
  * with real Auth.js (guest) + Drizzle. No mocks, and no OpenAI (a RAG chat turn
  * needs a key), so we assert the app boots, authenticates a guest against the
  * real DB, and proxies to the real backend.
- * Run locally only when API + DB are up and PW_INTEGRATION=1 (see DEVELOPMENT.md).
+ * Run locally only when API + DB are up and PW_INTEGRATION=1 (see docs/DEVELOPMENT.md).
  */
 test('real stack boots: guest session, chat shell, and backend proxy', async ({ page }) => {
   await page.goto('/')

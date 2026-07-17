@@ -101,4 +101,4 @@ flowchart LR
 
 - **[RUNBOOK.md](./RUNBOOK.md)** — incidents, health checks, and SLOs.
 - **[SECURITY.md](../SECURITY.md)** — security policy and vulnerability reporting.
-- **`ENV_VARS.md`** (repo root) — full variable list.
+- **[`ENV_VARS.md`](./ENV_VARS.md)** — full variable list.

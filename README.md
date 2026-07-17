@@ -92,7 +92,7 @@ docker compose --profile full up -d
 curl http://localhost:8000/api/v1/health   # verify the backend
 ```
 
-Then open **http://localhost:3000**. For the full contributor workflow — hot-reload servers, migrations, seeding, tests, Playwright, Alembic — see **[DEVELOPMENT.md](./DEVELOPMENT.md)**. For every environment variable, see **[ENV_VARS.md](./ENV_VARS.md)**.
+Then open **http://localhost:3000**. For the full contributor workflow — hot-reload servers, migrations, seeding, tests, Playwright, Alembic — see **[DEVELOPMENT.md](./docs/DEVELOPMENT.md)**. For every environment variable, see **[ENV_VARS.md](./docs/ENV_VARS.md)**.
 
 ## Architecture
 
@@ -121,7 +121,7 @@ Then open **http://localhost:3000**. For the full contributor workflow — hot-r
 
 **Backend** — FastAPI (Python 3.11+), PostgreSQL + pgvector, OpenAI (embeddings & chat) behind a provider-neutral [`LLMClient`](./backend/app/llm/base.py) seam, optional Redis for distributed rate limiting.
 
-**Infra** — Docker Compose (local); the live demo runs on Vercel + Render + Neon. The backend is a standard container — deploy it anywhere (see [DEPLOYMENT.md](./DEPLOYMENT.md), or [docs/AZURE_DEPLOY.md](./docs/AZURE_DEPLOY.md) for Azure Container Apps).
+**Infra** — Docker Compose (local); the live demo runs on Vercel + Render + Neon. The backend is a standard container — deploy it anywhere (see [DEPLOYMENT.md](./docs/DEPLOYMENT.md), or [docs/AZURE_DEPLOY.md](./docs/AZURE_DEPLOY.md) for Azure Container Apps).
 
 ## API
 
@@ -148,9 +148,9 @@ curl -X POST http://localhost:8000/api/v1/query \
 
 **[docs/README.md](./docs/README.md) is the full index.** The essentials:
 
-- **Get started** — [Quick start](#quick-start) · [DEVELOPMENT.md](./DEVELOPMENT.md) · [ENV_VARS.md](./ENV_VARS.md)
+- **Get started** — [Quick start](#quick-start) · [DEVELOPMENT.md](./docs/DEVELOPMENT.md) · [ENV_VARS.md](./docs/ENV_VARS.md)
 - **Understand it** — [docs/THESIS.md](./docs/THESIS.md) (the product argument) · [docs/BENCHMARKS.md](./docs/BENCHMARKS.md) · [docs/OBSERVABILITY.md](./docs/OBSERVABILITY.md) · [docs/API_CONTRACT.md](./docs/API_CONTRACT.md)
-- **Ship & operate** — [DEPLOYMENT.md](./DEPLOYMENT.md) · [docs/RUNBOOK.md](./docs/RUNBOOK.md) (health, incidents, SLOs) · [docs/HARDENING.md](./docs/HARDENING.md) (`API_KEY`, threat model) · [docs/EVAL_CI.md](./docs/EVAL_CI.md)
+- **Ship & operate** — [DEPLOYMENT.md](./docs/DEPLOYMENT.md) · [docs/RUNBOOK.md](./docs/RUNBOOK.md) (health, incidents, SLOs) · [docs/HARDENING.md](./docs/HARDENING.md) (`API_KEY`, threat model) · [docs/EVAL_CI.md](./docs/EVAL_CI.md)
 - **Contribute** — [CONTRIBUTING.md](./CONTRIBUTING.md) · [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md) · [CHANGELOG.md](./CHANGELOG.md)
 
 ## Security
