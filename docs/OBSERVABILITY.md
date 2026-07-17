@@ -48,13 +48,13 @@ flowchart LR
 
 ## What "expected" observability looks like — and where this went further
 
-| Signal | Table stakes | What this repo does |
-| --- | --- | --- |
-| **Request metrics** | request count, error rate, average latency | + real **histograms** with p50/p95/p99, per route |
-| **Cost** | total token usage | token counters + per-answer cost in the UI |
-| **Logs** | structured logs with a request id | + `trace_id` bound in, so logs join traces |
-| **Latency** | one total-latency number per request | **per-stage** spans + per-stage p95 — _where_ the time went |
-| **Traces** | (usually absent in RAG demos) | full **pipeline trace waterfall** per request |
+| Signal              | Table stakes                               | What this repo does                                         |
+| ------------------- | ------------------------------------------ | ----------------------------------------------------------- |
+| **Request metrics** | request count, error rate, average latency | + real **histograms** with p50/p95/p99, per route           |
+| **Cost**            | total token usage                          | token counters + per-answer cost in the UI                  |
+| **Logs**            | structured logs with a request id          | + `trace_id` bound in, so logs join traces                  |
+| **Latency**         | one total-latency number per request       | **per-stage** spans + per-stage p95 — _where_ the time went |
+| **Traces**          | (usually absent in RAG demos)              | full **pipeline trace waterfall** per request               |
 
 The two upgrades that matter most — distributed **tracing across the pipeline**
 and **real latency percentiles** — are the ones a senior reviewer notices are

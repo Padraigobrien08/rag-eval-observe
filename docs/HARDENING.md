@@ -47,13 +47,13 @@ A starting point for security review, not a formal certification.
 
 ### Assets
 
-| Asset | Risk if compromised |
-| --- | --- |
-| **`OPENAI_API_KEY`** | Abusive usage, data sent to OpenAI under your billing |
-| **`DATABASE_URL`** | Full read/write to documents, chats, eval runs, query logs |
+| Asset                  | Risk if compromised                                          |
+| ---------------------- | ------------------------------------------------------------ |
+| **`OPENAI_API_KEY`**   | Abusive usage, data sent to OpenAI under your billing        |
+| **`DATABASE_URL`**     | Full read/write to documents, chats, eval runs, query logs   |
 | **`API_KEY`** (if set) | Unauthorized API access from any client that obtains the key |
-| User chat content | Confidentiality / compliance exposure |
-| Uploaded PDFs / docs | Malware storage, PII in object storage or DB |
+| User chat content      | Confidentiality / compliance exposure                        |
+| Uploaded PDFs / docs   | Malware storage, PII in object storage or DB                 |
 
 ### Trust boundaries
 

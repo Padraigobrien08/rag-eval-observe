@@ -27,6 +27,12 @@ jobs:
       - name: Lint
         run: pnpm lint
 
+      # Both halves of `make lint`, which CONTRIBUTING.md tells contributors to
+      # run. CI checked only `pnpm lint`, so formatting drifted on main for
+      # months and the documented workflow failed on a clean checkout.
+      - name: Format check
+        run: pnpm format:check
+
       - name: Typecheck
         run: pnpm typecheck
 

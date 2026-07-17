@@ -7,3 +7,23 @@ coverage
 *.log
 .env*
 
+# Local worktrees (excluded via .git/info/exclude, which Prettier does not read).
+.claude/worktrees
+
+# Generated eval artifacts. These are committed on purpose, but they are written
+# by Python (`json.dumps(..., indent=2)`, which emits no trailing newline), so
+# reformatting them only holds until the next run regenerates them:
+#   baseline.json          <- `make eval-baseline` (cp of eval/summary.json)
+#   benchmark_results.json <- backend/eval/benchmark_strategies.py
+#   case_study/*           <- backend/eval/case_study/reproduce.sh
+# Leaving them byte-identical to what the harness emits also keeps eval diffs
+# readable, which is the whole point of pinning them.
+backend/eval/baseline.json
+backend/eval/benchmark_results.json
+backend/eval/case_study/clean.summary.json
+backend/eval/case_study/regressed.summary.json
+backend/eval/case_study/comment.md
+
+# Grafana dashboard export — round-trips through the Grafana UI, so it should
+# stay in whatever shape Grafana writes. See observability/grafana/README.md.
+observability/grafana-rag-eval-traces.json

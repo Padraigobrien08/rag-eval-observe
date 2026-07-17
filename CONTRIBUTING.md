@@ -27,38 +27,43 @@ Thank you for your interest in contributing! This document provides guidelines a
 ### Setup Steps
 
 1. **Install dependencies:**
+
    ```bash
    # Frontend
    pnpm install
-   
+
    # Backend
    cd backend && uv sync && cd ..
    ```
 
 2. **Set up environment variables:**
+
    ```bash
    # Copy example files
    cp .env.example .env.local
    cp backend/.env.example backend/.env
-   
+
    # Edit with your configuration
    ```
 
 3. **Start the database:**
+
    ```bash
    docker compose up -d postgres
    ```
 
 4. **Run migrations:**
+
    ```bash
    make migrate
    ```
 
 5. **Start development servers:**
+
    ```bash
    # Terminal 1: Backend
    make api-dev
-   
+
    # Terminal 2: Frontend
    make dev
    ```
@@ -71,20 +76,20 @@ Thank you for your interest in contributing! This document provides guidelines a
   ```bash
    pnpm lint        # Check for issues
    pnpm format      # Auto-format code
-   ```
+  ```
 - **Backend**: Follow Black and Ruff formatting
   ```bash
    cd backend
    uv run black app/
    uv run ruff check app/
-   ```
+  ```
 
 ### Type Safety
 
 - **Frontend**: TypeScript strict mode enabled
   ```bash
    pnpm typecheck   # Verify types
-   ```
+  ```
 - **Backend**: Type hints required for all functions
 
 ### Testing
@@ -92,11 +97,11 @@ Thank you for your interest in contributing! This document provides guidelines a
 - **Frontend**: Run tests before submitting
   ```bash
    pnpm test
-   ```
+  ```
 - **Backend**: Run backend tests
   ```bash
    make api-test
-   ```
+  ```
 
 ## Pull Request Process
 
@@ -110,6 +115,7 @@ Thank you for your interest in contributing! This document provides guidelines a
 ### Commit Messages
 
 Use clear, descriptive commit messages:
+
 - `feat: Add document preview feature`
 - `fix: Resolve hydration error in ChatPanel`
 - `docs: Update API documentation`
@@ -145,6 +151,7 @@ When reporting bugs or requesting features:
 ## Code Review
 
 All contributions go through code review. Reviewers will check for:
+
 - Code quality and style
 - Test coverage
 - Documentation completeness
@@ -156,4 +163,3 @@ All contributions go through code review. Reviewers will check for:
 Feel free to open an issue for questions or discussions about the project.
 
 Thank you for contributing! 🎉
-

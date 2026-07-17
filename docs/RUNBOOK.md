@@ -4,11 +4,11 @@ Copy-oriented guide for whoever is on call for a deployment of this stack.
 
 ## Health and readiness
 
-| Check | Command / URL |
-| --- | --- |
-| Liveness | `GET /api/v1/health` — expect `ok: true` |
+| Check           | Command / URL                                             |
+| --------------- | --------------------------------------------------------- |
+| Liveness        | `GET /api/v1/health` — expect `ok: true`                  |
 | DB connectivity | Same response includes `db: true` when the pool can query |
-| Web (Next) | Load `/` — chat shell renders; sidebar fetches documents |
+| Web (Next)      | Load `/` — chat shell renders; sidebar fetches documents  |
 
 **Kubernetes-style:** use `/api/v1/health` for **liveness**; add a separate **readiness** probe only if you need stricter deps (e.g. migrations finished).
 
@@ -58,20 +58,20 @@ contract and monitoring stack.
 
 ### API availability
 
-| SLI | Target | Window |
-| --- | --- | --- |
-| **`GET /api/v1/health` success** | 99.9% | 30 rolling days |
-| **Non-stream query success** (`POST /api/v1/query` 2xx) | 99.5% | 30 rolling days |
-| **Streaming query** (`/api/v1/query/stream` completes without server error) | 99.0% | 30 rolling days |
+| SLI                                                                         | Target | Window          |
+| --------------------------------------------------------------------------- | ------ | --------------- |
+| **`GET /api/v1/health` success**                                            | 99.9%  | 30 rolling days |
+| **Non-stream query success** (`POST /api/v1/query` 2xx)                     | 99.5%  | 30 rolling days |
+| **Streaming query** (`/api/v1/query/stream` completes without server error) | 99.0%  | 30 rolling days |
 
 **Note:** LLM provider outages count toward **dependency** error budgets unless you define an exclusion.
 
 ### Latency (p95)
 
-| Route | Example p95 target |
-| --- | --- |
-| `/api/v1/query` (non-stream, excluding LLM) | < 3 s |
-| Time-to-first-token (stream) | < 2 s |
+| Route                                       | Example p95 target |
+| ------------------------------------------- | ------------------ |
+| `/api/v1/query` (non-stream, excluding LLM) | < 3 s              |
+| Time-to-first-token (stream)                | < 2 s              |
 
 Measure these directly: `/api/v1/metrics` exposes `percentiles` (p50/p95/p99)
 per route and per RAG pipeline stage, and `/api/v1/metrics/prometheus` emits
@@ -88,9 +88,9 @@ When availability falls below target for **7 consecutive days**:
 
 ### UI availability
 
-| SLI | Target |
-| --- | --- |
-| Next.js origin returns **200** for `/` | 99.9% |
+| SLI                                    | Target |
+| -------------------------------------- | ------ |
+| Next.js origin returns **200** for `/` | 99.9%  |
 
 Pair with synthetic checks (e.g. every 1–5 minutes) from multiple regions if you serve globally.
 
@@ -98,8 +98,8 @@ Pair with synthetic checks (e.g. every 1–5 minutes) from multiple regions if y
 
 Not traditionally "SLO'd" like the API, but useful:
 
-| SLI | Target |
-| --- | --- |
+| SLI                                                                                     | Target                   |
+| --------------------------------------------------------------------------------------- | ------------------------ |
 | Harness run completes and persists (`eval_runs` row) when **`EVAL_PERSIST_RUNS`** is on | 95% of scheduled CI runs |
 
 Track in CI dashboards using artifacts from **[EVAL_CI.md](./EVAL_CI.md)**.
