@@ -28,10 +28,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   render the README's two loudest product claims — "answers cite their retrieved
   sources" and "per-message latency, cost, tokens, and a link straight to the
   query-log trace" — and had no unit coverage. 60 → 105 frontend tests.
+- **E2E coverage for the ingest flow** (`e2e/ingest-mocked.spec.ts`). The ingest
+  dialog is a major surface and had **no** test of any kind; the spec drives it from
+  the sidebar through submit to the insight panel, and asserts the pipeline report
+  actually renders (document id, humanized preprocessing steps, formatted stats).
+- Unit tests for `src/lib/ingest-format.ts` (16 cases, 100%).
 - Dependabot coverage for the backend Docker base image (`docker` ecosystem).
 
 ### Changed
 
+- **The API client is now a package, mirroring the backend's `routes/`.**
+  `src/lib/api/client.ts` was a flat 766-line file holding every endpoint. It's now
+  eight resource modules (`rag`, `documents`, `chat`, `observability`, `eval`,
+  `files`, `health`, plus shared `http`), each named after the backend route file it
+  talks to — the same split #29 did to the backend's 1377-line `routes.py`.
+  `client.ts` stays as the barrel (73 lines), so all 12 importers are unchanged and
+  the public surface is **identical**: 34 exports before, 34 after, verified by diff.
+- **`IngestDialog.tsx` split 883 → 508 lines.** The insight panel (`ChunkSpreadBar` +
+  `IngestInsightPanel`, 363 lines) moves to its own file, and the pure label
+  formatters move to `src/lib/ingest-format.ts` — which puts them inside the Jest
+  coverage gate, where they're now at 100%.
 - **The backend coverage gate is now 80%** (was 73%), matching the frontend gate.
   Actual coverage is 81.06%. The old 73% was an artifact of "wherever we landed"
   rather than a decision, and it was the weakest number the repo advertised.
