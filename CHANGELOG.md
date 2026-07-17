@@ -54,7 +54,7 @@ complete. No breaking API changes from 0.1.0.
   change, so the repo's flagship comparison is unit-testable in isolation and
   stays in lock-step with the CI gate (`compare_eval.py`).
 - Marked the Azure Container Apps guide as legacy/optional; the maintained deploy
-  path is Vercel + Render + Neon ([DEPLOYMENT.md](./DEPLOYMENT.md)).
+  path is Vercel + Render + Neon ([DEPLOYMENT.md](./docs/DEPLOYMENT.md)).
 
 ## [0.1.0] - 2026-07-15
 

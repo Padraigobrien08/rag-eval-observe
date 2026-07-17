@@ -2,7 +2,7 @@
 
 This guide covers deploying the RAG Eval Observability system to production.
 
-**Operational add-ons:** after baseline deploy, use **[docs/RUNBOOK.md](./docs/RUNBOOK.md)** (incidents and example SLOs) and **[docs/HARDENING.md](./docs/HARDENING.md)** (`API_KEY`, rate limits, tenancy, and the threat model).
+**Operational add-ons:** after baseline deploy, use **[RUNBOOK.md](./RUNBOOK.md)** (incidents and example SLOs) and **[HARDENING.md](./HARDENING.md)** (`API_KEY`, rate limits, tenancy, and the threat model).
 
 ## Overview
 

@@ -8,8 +8,8 @@ This index maps every doc so you can find the right one fast.
 | Doc | What it covers |
 | --- | --- |
 | [README → Quick Start](../README.md#quick-start) | Fastest path (Docker Compose) and manual dev setup |
-| [DEVELOPMENT.md](../DEVELOPMENT.md) | Full local workflow — Postgres, migrate, seed, API, web, tests, Playwright, Alembic |
-| [ENV_VARS.md](../ENV_VARS.md) | Every environment variable, backend and frontend |
+| [DEVELOPMENT.md](./DEVELOPMENT.md) | Full local workflow — Postgres, migrate, seed, API, web, tests, Playwright, Alembic |
+| [ENV_VARS.md](./ENV_VARS.md) | Every environment variable, backend and frontend |
 
 ## Understand the product
 
@@ -25,7 +25,7 @@ This index maps every doc so you can find the right one fast.
 
 | Doc | What it covers |
 | --- | --- |
-| [DEPLOYMENT.md](../DEPLOYMENT.md) | Production deployment (Vercel + container backend + Postgres) |
+| [DEPLOYMENT.md](./DEPLOYMENT.md) | Production deployment (Vercel + container backend + Postgres) |
 | [AZURE_DEPLOY.md](./AZURE_DEPLOY.md) | Azure Container Apps path (optional/legacy) |
 | [RUNBOOK.md](./RUNBOOK.md) | Health checks, incidents, rollback, escalation, and example SLOs |
 | [EVAL_CI.md](./EVAL_CI.md) | Eval exports, CI artifacts, and the regression gate |

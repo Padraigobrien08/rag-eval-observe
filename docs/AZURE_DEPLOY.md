@@ -1,11 +1,11 @@
 # Azure Container Apps Deployment Guide
 
 > **Legacy / optional.** The project no longer deploys to Azure — the live demo
-> runs on **Vercel + Render + Neon** (see [DEPLOYMENT.md](../DEPLOYMENT.md)). This
+> runs on **Vercel + Render + Neon** (see [DEPLOYMENT.md](./DEPLOYMENT.md)). This
 > guide is kept because the backend is a standard container and the Azure path
 > still works, but it is not part of the maintained deployment story and may lag
 > behind the current stack. For a supported deploy, start with
-> [DEPLOYMENT.md](../DEPLOYMENT.md).
+> [DEPLOYMENT.md](./DEPLOYMENT.md).
 
 ## Prerequisites
 
