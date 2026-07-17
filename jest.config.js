@@ -24,9 +24,11 @@ const customJestConfig = {
     '!src/lib/db/**',
     '!src/lib/api/**',
     '!src/lib/**/*.d.ts',
+    '!src/lib/types.ts', // type-only module — no runtime to exercise
+    '!src/lib/constants.ts', // auth/env bootstrap (bcrypt, NODE_ENV) — covered by integration/e2e
   ],
   coverageThreshold: {
-    global: { statements: 60, branches: 60, functions: 60, lines: 60 },
+    global: { statements: 80, branches: 80, functions: 80, lines: 80 },
   },
   // json-summary feeds the self-hosted coverage badge (scripts/coverage-badge.mjs in CI).
   coverageReporters: ['text', 'lcov', 'json-summary'],
