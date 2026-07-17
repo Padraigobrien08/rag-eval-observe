@@ -133,18 +133,29 @@ Two independent gates, and each one names its scope on purpose:
 | `pytest --cov=app` | the whole FastAPI backend              | 80%       |
 | `jest --coverage`  | `src/lib` (the TypeScript logic layer) | 80%       |
 
-React components under `src/components`, `src/app`, `src/features`, and `src/hooks`
-are **not** in the Jest denominator. That is a deliberate split, not an oversight:
-component behaviour is exercised by Playwright (including `axe-core` on the four
-core pages) against a real production build, which catches routing, streaming, and
-accessibility regressions that a jsdom snapshot cannot. `src/lib/db` (Drizzle) and
-`src/lib/api` (fetch wrappers) are excluded for the same reason — they are covered
-by the integration E2E workflow against a real Postgres and a real FastAPI.
+Components are tested at whichever level actually catches their bugs:
+
+- **jsdom (Jest + Testing Library)** for components that are a pure function of
+  their props — `message-observability`, `message-citations`, `inline-citations`,
+  `EvalCompareResults`. Rendering these is deterministic, so it's cheap to pin the
+  fiddly cases: cost formatting thresholds, `0 chunks` not being swallowed as
+  falsy, out-of-range `[9]` citation refs staying literal text.
+- **Playwright** for anything whose bugs live in integration — routing, streaming,
+  SWR, auth — plus `axe-core` on the four core pages against a real production
+  build. A jsdom snapshot can't catch those.
+- **Integration E2E** (`e2e-integration.yml`) for `src/lib/db` (Drizzle) and
+  `src/lib/api` (fetch wrappers), against a real Postgres and a real FastAPI.
+
+**Component tests are deliberately not in the Jest coverage denominator.** Adding
+only the tested components to `collectCoverageFrom` would cherry-pick the
+denominator and inflate the badge; adding all of `src/components` would set a floor
+so low it gates nothing. So the gate keeps one coherent scope — the logic layer —
+and component tests earn their keep by catching bugs rather than by moving a number.
 
 The consequence worth knowing: the README's coverage badge is labelled
-**`coverage (backend + logic)`** because that is its true denominator. Playwright
-coverage is not folded into that number, so the badge understates total tested
-surface rather than overstating it.
+**`coverage (backend + logic)`** because that is its true denominator. Neither the
+component tests nor Playwright are folded into it, so the badge **understates**
+total tested surface rather than overstating it.
 
 **Broader E2E:** `e2e/eval-observability-mocked.spec.ts` covers eval list/detail/compare and query logs with a mocked API. **`e2e/a11y-core-pages.spec.ts`** runs **axe-core** on `/`, `/eval/runs`, `/query-logs`, and `/metrics` (color-contrast disabled; focus on structure and naming — see file header). Both are included in `pnpm exec playwright test` / CI.
 
