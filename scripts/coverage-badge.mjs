@@ -6,6 +6,12 @@
  * No external service: CI publishes this JSON to the orphan `badges` branch and
  * the README badge reads it via https://img.shields.io/endpoint. See ci.yml.
  *
+ * The label is deliberately "coverage (backend + logic)", not "coverage": the
+ * Jest side of this number measures `src/lib` only (see collectCoverageFrom in
+ * jest.config.js) because React components are covered by Playwright + axe
+ * instead, and Playwright coverage is not in this denominator. A bare
+ * "coverage" label would imply the whole repo and overstate what ran.
+ *
  * Usage: node scripts/coverage-badge.mjs <frontend-summary.json> <backend-coverage.xml>
  * Missing/unreadable inputs are skipped so the badge still renders from whatever
  * coverage is available.
@@ -52,7 +58,7 @@ const pct = valid === 0 ? 0 : Math.round((covered / valid) * 1000) / 10
 process.stdout.write(
   JSON.stringify({
     schemaVersion: 1,
-    label: 'coverage',
+    label: 'coverage (backend + logic)',
     message: `${pct}%`,
     color: color(pct),
   })

@@ -3,9 +3,6 @@ node_modules
 /.pnp
 .pnp.js
 
-# README demo frames (regenerate with pnpm demo:capture; commit the GIF only)
-docs/images/demo-frames/
-
 # testing
 /coverage
 /playwright-report/

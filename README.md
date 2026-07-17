@@ -59,11 +59,13 @@ _The in-app compare view, keyed by `case_id`: the candidate run trips the **Regr
 
 ## See it in action
 
-|                                   Query-log explorer                                    |                                 System metrics                                 |
-| :-------------------------------------------------------------------------------------: | :----------------------------------------------------------------------------: |
-| [![Query logs](./docs/images/live/query-logs.png)](https://pob-rag-chat.xyz/query-logs) | [![Metrics](./docs/images/live/metrics.png)](https://pob-rag-chat.xyz/metrics) |
+|                                    Grounded chat                                     |                                   Query-log explorer                                    |
+| :----------------------------------------------------------------------------------: | :-------------------------------------------------------------------------------------: |
+|       [![Chat](./docs/images/live/chat-empty.png)](https://pob-rag-chat.xyz/)        | [![Query logs](./docs/images/live/query-logs.png)](https://pob-rag-chat.xyz/query-logs) |
+|                               **Persisted eval runs**                                |                                   **System metrics**                                    |
+| [![Eval runs](./docs/images/live/eval-runs.png)](https://pob-rag-chat.xyz/eval/runs) |     [![Metrics](./docs/images/live/metrics.png)](https://pob-rag-chat.xyz/metrics)      |
 
-_Screenshots from the live deployment. The chat streams from the FastAPI RAG backend; the observability pages read the same Postgres._
+_Screenshots from the live deployment — click any to open it. The chat streams from the FastAPI RAG backend; the observability pages read the same Postgres._
 
 ## Trace every answer
 
@@ -162,6 +164,8 @@ See **[docs/HARDENING.md](./docs/HARDENING.md)** and [SECURITY.md](./SECURITY.md
 ## Contributing
 
 Contributions welcome — see [CONTRIBUTING.md](./CONTRIBUTING.md). The short version: fork, branch, make changes, run `make lint && make test`, open a PR. CI runs lint, typecheck, unit tests (Jest on the TypeScript logic layer + pytest on the backend, both under a coverage gate), a build, Playwright E2E (incl. axe-core accessibility), and the eval regression gate.
+
+The coverage badge reads **backend + TypeScript logic layer**. React components are deliberately outside that denominator — they're covered by Playwright E2E and axe-core instead of unit snapshots — which is why the badge names its scope rather than claiming whole-repo coverage. See [jest.config.js](./jest.config.js) and [docs/DEVELOPMENT.md](./docs/DEVELOPMENT.md#tests).
 
 ## License
 

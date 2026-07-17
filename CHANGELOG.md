@@ -9,6 +9,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **The coverage badge now names its denominator: `coverage (backend + logic)`.**
+  The Jest half of that number measures `src/lib` only — React components are
+  covered by Playwright + axe-core instead, and Playwright coverage is not folded
+  in. The scoping was always documented in `jest.config.js`, but a bare `coverage`
+  label implied whole-repo and overstated what ran. The badge now understates
+  tested surface rather than overstating it, which is the right direction for a
+  number people read in two seconds. Scope is spelled out in
+  [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md#tests).
+- **The README "See it in action" grid is now 2×2** and covers all four surfaces
+  (chat, query logs, eval runs, metrics). `capture-live.mjs` had been generating
+  `chat-empty.png` and `eval-runs.png` all along; the README only embedded two of
+  the four. Every tile links to that page on the live deployment.
+
+### Removed
+
+- **`docs/images/demo-walkthrough.gif` and its capture pipeline**
+  (`e2e/readme-demo-capture.spec.ts`, `scripts/stitch-demo-gif.sh`, the
+  `demo:capture` / `demo:gif` scripts). The GIF showed the **pre-template-migration
+  UI** that no longer exists, over placeholder data (`case-1`, `aaaaaaaa-aaaa-…`),
+  and `docs/DEVELOPMENT.md` claimed the root README embedded it — which it did not.
+  The README's regression GIF and the live screenshots both show the current UI
+  with real data, so the walkthrough was strictly worse than what replaced it.
+  Regenerating was considered and rejected: a mocked slideshow adds nothing next to
+  screenshots of the real deployment.
+
 - **`eval-smoke` is now manual-only** (`workflow_dispatch`) instead of a weekly
   cron. The scheduled run existed only to spend OpenAI credits on a canary; on a
   self-hosted portfolio deployment that is opt-in, not a standing cost. Run it on
