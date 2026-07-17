@@ -113,7 +113,7 @@ Set `OPENAI_API_KEY` in your environment before starting. The web service uses `
 ## Tests
 
 ```bash
-cd backend && uv sync --extra dev && uv run pytest tests/ -q --cov=app --cov-fail-under=73
+cd backend && uv sync --extra dev && uv run pytest tests/ -q --cov=app --cov-fail-under=80
 pnpm exec jest --ci
 pnpm typecheck
 pnpm lint
@@ -130,7 +130,7 @@ Two independent gates, and each one names its scope on purpose:
 
 | Gate               | Scope                                  | Threshold |
 | ------------------ | -------------------------------------- | --------- |
-| `pytest --cov=app` | the whole FastAPI backend              | 73%       |
+| `pytest --cov=app` | the whole FastAPI backend              | 80%       |
 | `jest --coverage`  | `src/lib` (the TypeScript logic layer) | 80%       |
 
 React components under `src/components`, `src/app`, `src/features`, and `src/hooks`

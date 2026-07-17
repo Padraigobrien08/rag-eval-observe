@@ -7,25 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Fixed
+### Added
 
-- **The chat history sidebar produced invalid list markup.** `SidebarMenu` renders a
-  `<ul>`, but the date-grouping wrapped each section's `<li>` rows in `<div>`s — so
-  the `<ul>` directly contained `<div>`s and the `<li>`s belonged to no list. axe
-  flags this as both `list` and `listitem`; screen readers lose the item count and
-  list semantics entirely. Each date section now renders its own `<ul>`, which also
-  collapses five copy-pasted section blocks into one data-driven `CHAT_DATE_SECTIONS`
-  map (~100 lines → ~20). Inherited from the upstream template.
-- **The a11y suite was auditing a broken sidebar.** `e2e/a11y-core-pages.spec.ts`
-  didn't mock `/api/history`, and the Playwright env deliberately runs without
-  Postgres — so `/` rendered the sidebar's *failure* state and axe only ever saw an
-  error placeholder. That is what hid the list bug above, and it was also the source
-  of the `Failed to get chats by user id` error printed by every green CI run. The
-  spec now seeds history with real rows and asserts they rendered, so axe audits the
-  populated list.
+- **Tests for the four retrieval strategies** (`tests/test_retrieval_strategies.py`, 36
+  cases). `app/rag/retrieval_strategies.py` was the **least-covered module in the
+  backend at 31%** — despite being the code the README benchmark table and the whole
+  `rag_model` argument rest on. Now 94%, and the tests target the ranking logic rather
+  than line count: RRF must rank a chunk found by _both_ retrievers above single-source
+  hits; the reranker must drop hallucinated/negative indices instead of letting Python's
+  negative indexing silently select the wrong chunk; a garbage LLM response must degrade
+  to vector order rather than raise; multi-query dedupe must keep the _highest_ score.
+  Also pins that filter values are bound as `$N` parameters and never interpolated —
+  the property the module's ruff `S608` exemption claims.
+- **Tests for the Redis distributed rate limiter** (`tests/test_rate_limit_redis.py`, 18
+  cases), 28% → 100%. Pins the two properties docs/HARDENING.md depends on: it denies
+  past the limit (including the off-by-one boundary), and a Redis outage **fails open**
+  rather than taking the API down with it.
+- Dependabot coverage for the backend Docker base image (`docker` ecosystem).
 
 ### Changed
 
+- **The backend coverage gate is now 80%** (was 73%), matching the frontend gate.
+  Actual coverage is 81.06%. The old 73% was an artifact of "wherever we landed"
+  rather than a decision, and it was the weakest number the repo advertised.
 - **The coverage badge now names its denominator: `coverage (backend + logic)`.**
   The Jest half of that number measures `src/lib` only — React components are
   covered by Playwright + axe-core instead, and Playwright coverage is not folded
@@ -38,19 +42,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (chat, query logs, eval runs, metrics). `capture-live.mjs` had been generating
   `chat-empty.png` and `eval-runs.png` all along; the README only embedded two of
   the four. Every tile links to that page on the live deployment.
-
-### Removed
-
-- **`docs/images/demo-walkthrough.gif` and its capture pipeline**
-  (`e2e/readme-demo-capture.spec.ts`, `scripts/stitch-demo-gif.sh`, the
-  `demo:capture` / `demo:gif` scripts). The GIF showed the **pre-template-migration
-  UI** that no longer exists, over placeholder data (`case-1`, `aaaaaaaa-aaaa-…`),
-  and `docs/DEVELOPMENT.md` claimed the root README embedded it — which it did not.
-  The README's regression GIF and the live screenshots both show the current UI
-  with real data, so the walkthrough was strictly worse than what replaced it.
-  Regenerating was considered and rejected: a mocked slideshow adds nothing next to
-  screenshots of the real deployment.
-
 - **`eval-smoke` is now manual-only** (`workflow_dispatch`) instead of a weekly
   cron. The scheduled run existed only to spend OpenAI credits on a canary; on a
   self-hosted portfolio deployment that is opt-in, not a standing cost. Run it on
@@ -64,9 +55,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Multi-query retrieval now logs raw query text at `debug`; `info`-level logs
   carry counts and lengths only.
 
-### Added
+### Removed
 
-- Dependabot coverage for the backend Docker base image (`docker` ecosystem).
+- **`docs/images/demo-walkthrough.gif` and its capture pipeline**
+  (`e2e/readme-demo-capture.spec.ts`, `scripts/stitch-demo-gif.sh`, the
+  `demo:capture` / `demo:gif` scripts). The GIF showed the **pre-template-migration
+  UI** that no longer exists, over placeholder data (`case-1`, `aaaaaaaa-aaaa-…`),
+  and `docs/DEVELOPMENT.md` claimed the root README embedded it — which it did not.
+  The README's regression GIF and the live screenshots both show the current UI
+  with real data, so the walkthrough was strictly worse than what replaced it.
+  Regenerating was considered and rejected: a mocked slideshow adds nothing next to
+  screenshots of the real deployment.
+
+### Fixed
+
+- **The chat history sidebar produced invalid list markup.** `SidebarMenu` renders a
+  `<ul>`, but the date-grouping wrapped each section's `<li>` rows in `<div>`s — so
+  the `<ul>` directly contained `<div>`s and the `<li>`s belonged to no list. axe
+  flags this as both `list` and `listitem`; screen readers lose the item count and
+  list semantics entirely. Each date section now renders its own `<ul>`, which also
+  collapses five copy-pasted section blocks into one data-driven `CHAT_DATE_SECTIONS`
+  map (~100 lines → ~20). Inherited from the upstream template.
+- **The a11y suite was auditing a broken sidebar.** `e2e/a11y-core-pages.spec.ts`
+  didn't mock `/api/history`, and the Playwright env deliberately runs without
+  Postgres — so `/` rendered the sidebar's _failure_ state and axe only ever saw an
+  error placeholder. That is what hid the list bug above, and it was also the source
+  of the `Failed to get chats by user id` error printed by every green CI run. The
+  spec now seeds history with real rows and asserts they rendered, so axe audits the
+  populated list.
 
 ## [1.0.0] - 2026-07-16
 
