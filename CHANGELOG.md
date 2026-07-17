@@ -23,6 +23,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   cases), 28% → 100%. Pins the two properties docs/HARDENING.md depends on: it denies
   past the limit (including the off-by-one boundary), and a Redis outage **fails open**
   rather than taking the API down with it.
+- **Component tests for the grounding and observability UI** (45 cases across
+  `message-observability`, `message-citations`, and `inline-citations`). These three
+  render the README's two loudest product claims — "answers cite their retrieved
+  sources" and "per-message latency, cost, tokens, and a link straight to the
+  query-log trace" — and had no unit coverage. 60 → 105 frontend tests.
 - Dependabot coverage for the backend Docker base image (`docker` ecosystem).
 
 ### Changed
@@ -76,6 +81,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   list semantics entirely. Each date section now renders its own `<ul>`, which also
   collapses five copy-pasted section blocks into one data-driven `CHAT_DATE_SECTIONS`
   map (~100 lines → ~20). Inherited from the upstream template.
+- **An untitled citation rendered its source twice.** `MessageCitations` falls back to
+  showing `source` as the heading when `title` is null, but the source line below it
+  guarded on `c.source !== c.title` rather than on the label actually rendered — so an
+  untitled source printed its filename as both heading and subtitle. Found by the new
+  component tests.
 - **The a11y suite was auditing a broken sidebar.** `e2e/a11y-core-pages.spec.ts`
   didn't mock `/api/history`, and the Playwright env deliberately runs without
   Postgres — so `/` rendered the sidebar's _failure_ state and axe only ever saw an
