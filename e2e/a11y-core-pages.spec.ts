@@ -195,9 +195,20 @@ test.describe('accessibility (axe, mocked API)', () => {
     await expect(
       page.getByRole('link', { name: /How does RAG combine retrieval and generation\?/i })
     ).toBeVisible()
-    // 'region': the template sidebar's group content isn't wrapped in a landmark
-    // (a known template-structural limitation); other rules still enforced.
-    await assertNoAxeViolations(page, ['region'])
+    await assertNoAxeViolations(page)
+  })
+
+  // The mobile sidebar is a separate branch of the `Sidebar` primitive (a Sheet),
+  // so the desktop test above says nothing about its landmark or its contents.
+  test('home / chat shell (mobile sidebar open)', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await page.goto('/')
+    await page.getByRole('button', { name: /toggle sidebar/i }).click()
+    await expect(page.getByRole('navigation', { name: 'Chat history' })).toBeVisible()
+    await expect(
+      page.getByRole('link', { name: /How does RAG combine retrieval and generation\?/i })
+    ).toBeVisible()
+    await assertNoAxeViolations(page)
   })
 
   test('eval runs list', async ({ page }) => {

@@ -53,7 +53,11 @@ export function AppSidebar({ user }: { user: User | undefined }) {
 
   return (
     <>
-      <Sidebar className="group-data-[side=left]:border-r-0">
+      <Sidebar
+        aria-label="Chat history"
+        className="group-data-[side=left]:border-r-0"
+        role="navigation"
+      >
         <SidebarHeader>
           <div className="flex w-full min-w-0 flex-col gap-1">
             <div className="flex flex-row items-center justify-between">
