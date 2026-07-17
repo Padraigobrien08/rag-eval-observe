@@ -36,6 +36,15 @@ export type ChatHistory = {
   hasMore: boolean
 }
 
+/** Render order and headings for the date buckets in `GroupedChats`. */
+const CHAT_DATE_SECTIONS: ReadonlyArray<{ key: keyof GroupedChats; label: string }> = [
+  { key: 'today', label: 'Today' },
+  { key: 'yesterday', label: 'Yesterday' },
+  { key: 'lastWeek', label: 'Last 7 days' },
+  { key: 'lastMonth', label: 'Last 30 days' },
+  { key: 'older', label: 'Older than last month' },
+]
+
 const PAGE_SIZE = 20
 
 const groupChatsByDate = (chats: Chat[]): GroupedChats => {
@@ -192,122 +201,44 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
     )
   }
 
+  const chatsFromHistory = paginatedChatHistories
+    ? paginatedChatHistories.flatMap(paginatedChatHistory => paginatedChatHistory.chats)
+    : []
+  const groupedChats = groupChatsByDate(chatsFromHistory)
+  const sections = CHAT_DATE_SECTIONS.map(section => ({
+    ...section,
+    chats: groupedChats[section.key],
+  })).filter(section => section.chats.length > 0)
+
   return (
     <>
       <SidebarGroup>
         <SidebarGroupContent>
-          <SidebarMenu>
-            {paginatedChatHistories &&
-              (() => {
-                const chatsFromHistory = paginatedChatHistories.flatMap(
-                  paginatedChatHistory => paginatedChatHistory.chats
-                )
-
-                const groupedChats = groupChatsByDate(chatsFromHistory)
-
-                return (
-                  <div className="flex flex-col gap-6">
-                    {groupedChats.today.length > 0 && (
-                      <div>
-                        <div className="px-2 py-1 text-sidebar-foreground/50 text-xs">Today</div>
-                        {groupedChats.today.map(chat => (
-                          <ChatItem
-                            chat={chat}
-                            isActive={chat.id === id}
-                            key={chat.id}
-                            onDelete={chatId => {
-                              setDeleteId(chatId)
-                              setShowDeleteDialog(true)
-                            }}
-                            setOpenMobile={setOpenMobile}
-                          />
-                        ))}
-                      </div>
-                    )}
-
-                    {groupedChats.yesterday.length > 0 && (
-                      <div>
-                        <div className="px-2 py-1 text-sidebar-foreground/50 text-xs">
-                          Yesterday
-                        </div>
-                        {groupedChats.yesterday.map(chat => (
-                          <ChatItem
-                            chat={chat}
-                            isActive={chat.id === id}
-                            key={chat.id}
-                            onDelete={chatId => {
-                              setDeleteId(chatId)
-                              setShowDeleteDialog(true)
-                            }}
-                            setOpenMobile={setOpenMobile}
-                          />
-                        ))}
-                      </div>
-                    )}
-
-                    {groupedChats.lastWeek.length > 0 && (
-                      <div>
-                        <div className="px-2 py-1 text-sidebar-foreground/50 text-xs">
-                          Last 7 days
-                        </div>
-                        {groupedChats.lastWeek.map(chat => (
-                          <ChatItem
-                            chat={chat}
-                            isActive={chat.id === id}
-                            key={chat.id}
-                            onDelete={chatId => {
-                              setDeleteId(chatId)
-                              setShowDeleteDialog(true)
-                            }}
-                            setOpenMobile={setOpenMobile}
-                          />
-                        ))}
-                      </div>
-                    )}
-
-                    {groupedChats.lastMonth.length > 0 && (
-                      <div>
-                        <div className="px-2 py-1 text-sidebar-foreground/50 text-xs">
-                          Last 30 days
-                        </div>
-                        {groupedChats.lastMonth.map(chat => (
-                          <ChatItem
-                            chat={chat}
-                            isActive={chat.id === id}
-                            key={chat.id}
-                            onDelete={chatId => {
-                              setDeleteId(chatId)
-                              setShowDeleteDialog(true)
-                            }}
-                            setOpenMobile={setOpenMobile}
-                          />
-                        ))}
-                      </div>
-                    )}
-
-                    {groupedChats.older.length > 0 && (
-                      <div>
-                        <div className="px-2 py-1 text-sidebar-foreground/50 text-xs">
-                          Older than last month
-                        </div>
-                        {groupedChats.older.map(chat => (
-                          <ChatItem
-                            chat={chat}
-                            isActive={chat.id === id}
-                            key={chat.id}
-                            onDelete={chatId => {
-                              setDeleteId(chatId)
-                              setShowDeleteDialog(true)
-                            }}
-                            setOpenMobile={setOpenMobile}
-                          />
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )
-              })()}
-          </SidebarMenu>
+          <div className="flex flex-col gap-6">
+            {sections.map(section => (
+              <div key={section.key}>
+                <div className="px-2 py-1 text-sidebar-foreground/50 text-xs">{section.label}</div>
+                {/* One <ul> per date section. A single list wrapping all sections
+                    would put the section headers (divs) directly inside the <ul>,
+                    which breaks list semantics — axe flags it as `list` +
+                    `listitem`. See e2e/a11y-core-pages.spec.ts. */}
+                <SidebarMenu>
+                  {section.chats.map(chat => (
+                    <ChatItem
+                      chat={chat}
+                      isActive={chat.id === id}
+                      key={chat.id}
+                      onDelete={chatId => {
+                        setDeleteId(chatId)
+                        setShowDeleteDialog(true)
+                      }}
+                      setOpenMobile={setOpenMobile}
+                    />
+                  ))}
+                </SidebarMenu>
+              </div>
+            ))}
+          </div>
 
           <motion.div
             onViewportEnter={() => {
