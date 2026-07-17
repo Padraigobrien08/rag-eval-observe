@@ -5,8 +5,43 @@
  */
 import { test, expect } from '@playwright/test'
 import AxeBuilder from '@axe-core/playwright'
+import { createChatStore, mockHistory, type ChatStore } from './helpers'
 
 const RUN_A = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
+const USER_ID = '00000000-0000-4000-8000-000000000000'
+
+/**
+ * Seed /api/history with real rows. Two reasons this matters here:
+ *
+ * 1. The Playwright env runs without Postgres (see `PLAYWRIGHT: 'True'` in
+ *    playwright.config.ts), so an unmocked /api/history 400s and the sidebar
+ *    renders its *failed* state — axe would audit an error placeholder rather
+ *    than the history list this suite exists to check.
+ * 2. An empty list hides the interesting a11y surface anyway. Populated rows
+ *    put the real nav landmarks, links, and per-row menu buttons in front of axe.
+ */
+function seededChatStore(): ChatStore {
+  const store = createChatStore()
+  store.chats.push(
+    {
+      id: 'aaaaaaaa-0000-4000-8000-00000000000a',
+      title: 'How does RAG combine retrieval and generation?',
+      createdAt: '2026-01-02T12:00:00.000Z',
+      updatedAt: '2026-01-02T12:00:00.000Z',
+      userId: USER_ID,
+      visibility: 'private',
+    },
+    {
+      id: 'aaaaaaaa-0000-4000-8000-00000000000b',
+      title: 'What are HNSW, hybrid search, and BM25?',
+      createdAt: '2026-01-01T09:30:00.000Z',
+      updatedAt: '2026-01-01T09:30:00.000Z',
+      userId: USER_ID,
+      visibility: 'private',
+    }
+  )
+  return store
+}
 
 function runSummary(id: string) {
   return {
@@ -149,11 +184,17 @@ test.describe('accessibility (axe, mocked API)', () => {
       window.localStorage.setItem('rag-eval-stream-responses', JSON.stringify(false))
     })
     await mockBackendBasics(page)
+    await mockHistory(page, seededChatStore())
   })
 
   test('home / chat shell', async ({ page }) => {
     await page.goto('/')
     await expect(page.getByText(/ask your documents anything/i)).toBeVisible()
+    // Assert the seeded history actually rendered — otherwise a regression that
+    // silently empties the sidebar would still "pass" axe on a smaller page.
+    await expect(
+      page.getByRole('link', { name: /How does RAG combine retrieval and generation\?/i })
+    ).toBeVisible()
     // 'region': the template sidebar's group content isn't wrapped in a landmark
     // (a known template-structural limitation); other rules still enforced.
     await assertNoAxeViolations(page, ['region'])

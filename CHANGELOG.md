@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **The chat history sidebar produced invalid list markup.** `SidebarMenu` renders a
+  `<ul>`, but the date-grouping wrapped each section's `<li>` rows in `<div>`s — so
+  the `<ul>` directly contained `<div>`s and the `<li>`s belonged to no list. axe
+  flags this as both `list` and `listitem`; screen readers lose the item count and
+  list semantics entirely. Each date section now renders its own `<ul>`, which also
+  collapses five copy-pasted section blocks into one data-driven `CHAT_DATE_SECTIONS`
+  map (~100 lines → ~20). Inherited from the upstream template.
+- **The a11y suite was auditing a broken sidebar.** `e2e/a11y-core-pages.spec.ts`
+  didn't mock `/api/history`, and the Playwright env deliberately runs without
+  Postgres — so `/` rendered the sidebar's *failure* state and axe only ever saw an
+  error placeholder. That is what hid the list bug above, and it was also the source
+  of the `Failed to get chats by user id` error printed by every green CI run. The
+  spec now seeds history with real rows and asserts they rendered, so axe audits the
+  populated list.
+
 ### Changed
 
 - **The coverage badge now names its denominator: `coverage (backend + logic)`.**
