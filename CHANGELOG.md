@@ -185,6 +185,6 @@ per-answer query log, and pipeline-level tracing — one repo you can deploy.
   Azure Container Apps. Operational docs: runbook, SLOs, threat model, hardening,
   and API contract.
 
-[Unreleased]: https://github.com/Padraigobrien08/rag-eval-observe/compare/v1.0.0...HEAD
-[1.0.0]: https://github.com/Padraigobrien08/rag-eval-observe/compare/v0.1.0...v1.0.0
-[0.1.0]: https://github.com/Padraigobrien08/rag-eval-observe/releases/tag/v0.1.0
+[Unreleased]: https://github.com/Padraigobrien08/rag-eval-observability/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/Padraigobrien08/rag-eval-observability/compare/v0.1.0...v1.0.0
+[0.1.0]: https://github.com/Padraigobrien08/rag-eval-observability/releases/tag/v0.1.0

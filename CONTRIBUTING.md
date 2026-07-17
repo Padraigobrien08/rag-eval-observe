@@ -7,8 +7,8 @@ Thank you for your interest in contributing! This document provides guidelines a
 1. **Fork the repository** on GitHub
 2. **Clone your fork** locally:
    ```bash
-   git clone https://github.com/your-username/rag-eval-observe.git
-   cd rag-eval-observe
+   git clone https://github.com/your-username/rag-eval-observability.git
+   cd rag-eval-observability
    ```
 3. **Set up the development environment** (see README.md for detailed instructions)
 4. **Create a branch** for your changes:
